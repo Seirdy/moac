@@ -20,7 +20,7 @@ Usage
 -----
 
 ```
-moac-pwtools - password strength using physical limits
+moac-pwtools - analyze password strength with physical limits
 
 USAGE:
   moac-pwtools [OPTIONS] [COMMAND]
@@ -29,8 +29,9 @@ OPTIONS:
   -h	Display this help message.
   -e <energy>	Maximum energy used by attacker (J).
   -s <entropy>	Password entropy.
-  -m <mass>	Mass at attacker's disposal (Kg).
+  -m <mass>	Mass at attacker's disposal (kg).
   -g <energy>	Energy used per guess (J).
+	-P <power>	Power available to the computer (W)
   -t <time>	Time limit for brute-force attack (s).
   -p <password>	Password to analyze.
 
@@ -72,9 +73,8 @@ _Note: given that the Earth wasn't hollow during the book's opening, it's unlike
 Roadmap
 -------
 
-- Add a new given value: power (watts). Use that value to bottleneck other givens such as computation speed and energy available.
 - Add a flag `-q` to account for quantum computers using Grover's Algorithm.
-- Better error handling: validate input, determine if not enough information is provided, etc.
+- Better error handling: validate input, etc.
 - Write tests.
 - Add password generation functionality: generate a password resistant to brute-force attacks with the given constraints.
 - Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.

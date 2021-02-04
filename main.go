@@ -20,6 +20,7 @@ OPTIONS:
   -s <entropy>	Password entropy.
   -m <mass>	Mass at attacker's disposal (kg).
   -g <energy>	Energy used per guess (J).
+	-P <power>	Power available to the computer (W)
   -t <time>	Time limit for brute-force attack (s).
   -p <password>	Password to analyze.
 
@@ -30,7 +31,7 @@ COMMANDS:
 
 func main() {
 	var givens Givens
-	opts, optind, err := getopt.Getopts(os.Args, "he:s:m:g:t:p:")
+	opts, optind, err := getopt.Getopts(os.Args, "he:s:m:g:P:t:p:")
 	if err != nil {
 		panic(err)
 	}
@@ -42,27 +43,38 @@ func main() {
 		case 'e':
 			givens.Energy, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v", err)
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				os.Exit(1)
 			}
 		case 's':
 			givens.Entropy, err = strconv.ParseFloat(opt.Value, 32)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v", err)
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				os.Exit(1)
 			}
 		case 'm':
 			givens.Mass, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v", err)
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				os.Exit(1)
 			}
 		case 'g':
 			givens.EnergyPerGuess, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v", err)
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				os.Exit(1)
+			}
+		case 'P':
+			givens.Power, err = strconv.ParseFloat(opt.Value, 64)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				os.Exit(1)
 			}
 		case 't':
 			givens.Time, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v", err)
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				os.Exit(1)
 			}
 		case 'p':
 			givens.Password = opt.Value
@@ -76,14 +88,29 @@ func main() {
 		cmd := args[0]
 		switch cmd {
 		case "strength":
-			fmt.Printf("%.3g\n", bruteForceability(&givens))
+			likelihood, err := BruteForceability(&givens)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Printf("%.3g\n", likelihood)
 		case "entropy-limit":
-			fmt.Printf("%.3g\n", minEntropy(&givens))
+			entropyLimit, err := MinEntropy(&givens)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Printf("%.3g\n", entropyLimit)
 		default:
 			log.Println(Usage)
 			os.Exit(1)
 		}
 	} else {
-		fmt.Printf("%.3g\n", bruteForceability(&givens))
+		likelihood, err := BruteForceability(&givens)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%.3g\n", likelihood)
 	}
 }

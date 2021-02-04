@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"math"
 
 	"github.com/nbutton23/zxcvbn-go"
@@ -18,7 +19,8 @@ type Givens struct {
 	Mass             float64 // mass used to build a computer or convert to energy
 	Time             float64 // Duration of the attack, in seconds.
 	EnergyPerGuess   float64
-	guessesPerSecond float64
+	Power            float64
+	GuessesPerSecond float64
 }
 
 const (
@@ -51,8 +53,30 @@ func calculateEntropy(password string) float64 {
 	return zxcvbn.PasswordStrength(password, nil).Entropy
 }
 
+func calculatePower(givens *Givens) {
+	powerFromComputationSpeed := givens.GuessesPerSecond * givens.EnergyPerGuess
+	powerFromEnergy := givens.Energy / givens.Time
+	computedPowers := [2]float64{powerFromComputationSpeed, powerFromEnergy}
+	for _, power := range computedPowers {
+		if givens.Power == 0 || (power > 0 && power < givens.Power) {
+			givens.Power = power
+		}
+	}
+}
+
+func calculateEnergy(givens *Givens) {
+	massEnergy := givens.Mass * C * C
+	energyFromPower := givens.Power * givens.Time
+	computedEnergies := [2]float64{massEnergy, energyFromPower}
+	for _, energy := range computedEnergies {
+		if givens.Energy == 0 || (energy > 0 && energy < givens.Energy) {
+			givens.Energy = energy
+		}
+	}
+}
+
 // populate will solve for the variables we need to find password strength if they aren't given. If they are given, it updates them if the computed value is a greater bottleneck than the given value.
-func (givens *Givens) populate() {
+func (givens *Givens) populate() error {
 	populateDefaults(givens)
 	if givens.Password != "" {
 		computedEntropy := calculateEntropy(givens.Password)
@@ -60,40 +84,51 @@ func (givens *Givens) populate() {
 			givens.Entropy = computedEntropy
 		}
 	}
-	computedEnergy := givens.Mass * C * C
-	if givens.Energy == 0 || givens.Energy > computedEnergy {
-		givens.Energy = computedEnergy
+	if givens.GuessesPerSecond == 0 && givens.Mass != 0 {
+		givens.GuessesPerSecond = Bremermann * givens.Mass
 	}
-	if givens.guessesPerSecond == 0 && givens.Mass != 0 {
-		givens.guessesPerSecond = Bremermann * givens.Mass
+	calculatePower(givens)
+	calculateEnergy(givens)
+	if givens.Entropy == 0 {
+		return errors.New("need a password and/or entropy")
 	}
+	if givens.Energy == 0 && givens.Time == 0 {
+		return errors.New("need energy, mass, and/or time")
+	}
+	return nil
 }
 
-// bruteForceability computes the liklihood that a password will be
+// BruteForceability computes the liklihood that a password will be
 // brute-forced given the contstraints in givens.
-// if 0 < bruteForceability <= 1, it represents the probability that the
+// if 0 < BruteForceability <= 1, it represents the probability that the
 // password can be brute-forced.
-// if bruteForceability > 1, it represents the number of times a password
+// if BruteForceability > 1, it represents the number of times a password
 // can be brute-forced with certainty.
-func bruteForceability(givens *Givens) float64 {
-	givens.populate()
-	guessesRequired := math.Pow(2, givens.Entropy)
+func BruteForceability(givens *Givens) (float64, error) {
+	err := givens.populate()
+	if err != nil {
+		return 0, err
+	}
+	guessesRequired := math.Exp2(givens.Entropy)
 	energyBound := givens.Energy / (guessesRequired * givens.EnergyPerGuess)
 	if givens.Time > 0 {
-		timeToGuess := guessesRequired / givens.guessesPerSecond
+		timeToGuess := guessesRequired / givens.GuessesPerSecond
 		timeBound := givens.Time / timeToGuess
-		return math.Min(energyBound, timeBound)
+		return math.Min(energyBound, timeBound), nil
 	}
-	return energyBound
+	return energyBound, nil
 }
 
-// minEntropy calculates the maximum password entropy that the MOAC can certainly brute-force. Passwords need an entropy greater than this to have a chance of not being guessed.
-func minEntropy(givens *Givens) float64 {
-	givens.populate()
+// MinEntropy calculates the maximum password entropy that the MOAC can certainly brute-force. Passwords need an entropy greater than this to have a chance of not being guessed.
+func MinEntropy(givens *Givens) (float64, error) {
+	err := givens.populate()
+	if err != nil {
+		return 0, err
+	}
 	energyBound := math.Log2(givens.Energy / givens.EnergyPerGuess)
 	if givens.Time > 0 {
-		timeBound := math.Log2(givens.Time * givens.guessesPerSecond)
-		return math.Min(energyBound, timeBound)
+		timeBound := math.Log2(givens.Time * givens.GuessesPerSecond)
+		return math.Min(energyBound, timeBound), nil
 	}
-	return energyBound
+	return energyBound, nil
 }
