@@ -27,6 +27,7 @@ USAGE:
 
 OPTIONS:
   -h	Display this help message.
+  -q	Account for quantum computers using Grover's algorithm
   -e <energy>	Maximum energy used by attacker (J).
   -s <entropy>	Password entropy.
   -m <mass>	Mass at attacker's disposal (kg).
@@ -54,26 +55,25 @@ Time and energy are the two bottlenecks to computation; the final result will be
 
 The novel _The Hitchhiker's Guide to the Galaxy_ revealed the Earth to be a supercomputer built to understand "the answer to Life, the Universe, and Everything". The computation was supposed to finish sometime around now.
 
-Let's assume this computer is maximally efficient and that all its energy comes from the Earth's mass:
+Let's assume this is a maximally efficient quantum computer powered by the Earth's mass-energy:
 
 - Age of the Earth: ~4.6 billion years, or ~1.45e17 seconds
 - Mass of the Earth: ~5.97e24 kg
 
 ```sh
-$ moac-pwtools -m 5.97e24 -t 1.45e17 entropy-limit
-213.7
-$ moac-pwtools -m 5.97e24 -t 1.45e17 -p 'ÂÞ+ììqÂÈÔG½ØÎPEcãd¸ý?' strength  # for scale
-0.0521
+$ moac-pwtools -qm 5.97e24 -t 1.45e17 entropy-limit
+427
+$ moac-pwtools -qm 5.97e24 -t 1.45e17 -p '*N¦¯ÿëWÝÃ¼"¹ù5Ùù rt¡§¨¡1þ³½¯¹kõ¸¦Gãt)ë_ut' strength  # for scale
+0.0789
 ```
 
-Understanding the answer to Life, the Universe, and Everything requires less than `2^214` computations. If the same computer instead tried to guess the password `ÂÞ+ììqÂÈÔG½ØÎPEcãd¸ý?`, it _probably_ wouldn't have succeeded in time.
+Understanding the answer to Life, the Universe, and Everything requires less than `2^427` computations. If the same computer instead tried to guess the password `*N¦¯ÿëWÝÃ¼"¹ù5Ùù rt¡§¨¡1þ³½¯¹kõ¸¦Gãt)ë_ut`, it _probably_ wouldn't have succeeded in time.
 
 _Note: given that the Earth wasn't hollow during the book's opening, it's unlikely that the Earth consumed its own mass to compute. Further research is necessary; perhaps it used solar power, or secret shipments of tiny black-hole batteries? Organic life was supposed to provide a large part of its functionality, so maybe we should restrict ourselves to the Earth's biomass._
 
 Roadmap
 -------
 
-- Add a flag `-q` to account for quantum computers using Grover's Algorithm.
 - Better error handling: validate input, etc.
 - Write tests.
 - Add password generation functionality: generate a password resistant to brute-force attacks with the given constraints.

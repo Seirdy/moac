@@ -16,6 +16,7 @@ USAGE:
 
 OPTIONS:
   -h	Display this help message.
+  -q	Account for quantum computers using Grover's algorithm
   -e <energy>	Maximum energy used by attacker (J).
   -s <entropy>	Password entropy.
   -m <mass>	Mass at attacker's disposal (kg).
@@ -30,8 +31,11 @@ COMMANDS:
 `
 
 func main() {
-	var givens Givens
-	opts, optind, err := getopt.Getopts(os.Args, "he:s:m:g:P:t:p:")
+	var (
+		givens  Givens
+		quantum bool
+	)
+	opts, optind, err := getopt.Getopts(os.Args, "hqe:s:m:g:P:t:p:")
 	if err != nil {
 		panic(err)
 	}
@@ -40,6 +44,8 @@ func main() {
 		case 'h':
 			fmt.Println(Usage)
 			os.Exit(0)
+		case 'q':
+			quantum = true
 		case 'e':
 			givens.Energy, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
@@ -88,14 +94,14 @@ func main() {
 		cmd := args[0]
 		switch cmd {
 		case "strength":
-			likelihood, err := BruteForceability(&givens)
+			likelihood, err := BruteForceability(&givens, quantum)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
 				os.Exit(1)
 			}
 			fmt.Printf("%.3g\n", likelihood)
 		case "entropy-limit":
-			entropyLimit, err := MinEntropy(&givens)
+			entropyLimit, err := MinEntropy(&givens, quantum)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
 				os.Exit(1)
@@ -106,7 +112,7 @@ func main() {
 			os.Exit(1)
 		}
 	} else {
-		likelihood, err := BruteForceability(&givens)
+		likelihood, err := BruteForceability(&givens, quantum)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
 			os.Exit(1)

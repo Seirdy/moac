@@ -56,6 +56,7 @@ func calculateEntropy(password string) float64 {
 func calculatePower(givens *Givens) {
 	powerFromComputationSpeed := givens.GuessesPerSecond * givens.EnergyPerGuess
 	powerFromEnergy := givens.Energy / givens.Time
+	// loop over an array for this since its length will grow in the future
 	computedPowers := [2]float64{powerFromComputationSpeed, powerFromEnergy}
 	for _, power := range computedPowers {
 		if givens.Power == 0 || (power > 0 && power < givens.Power) {
@@ -89,9 +90,6 @@ func (givens *Givens) populate() error {
 	}
 	calculatePower(givens)
 	calculateEnergy(givens)
-	if givens.Entropy == 0 {
-		return errors.New("need a password and/or entropy")
-	}
 	if givens.Energy == 0 && givens.Time == 0 {
 		return errors.New("need energy, mass, and/or time")
 	}
@@ -104,12 +102,22 @@ func (givens *Givens) populate() error {
 // password can be brute-forced.
 // if BruteForceability > 1, it represents the number of times a password
 // can be brute-forced with certainty.
-func BruteForceability(givens *Givens) (float64, error) {
+func BruteForceability(givens *Givens, quantum bool) (float64, error) {
 	err := givens.populate()
 	if err != nil {
 		return 0, err
 	}
-	guessesRequired := math.Exp2(givens.Entropy)
+	if givens.Entropy == 0 {
+		return 0, errors.New("need a password and/or entropy")
+	}
+	// with Grover's algorithm, quantum computers get an exponential speedup
+	var effectiveEntropy float64
+	if quantum {
+		effectiveEntropy = givens.Entropy / 2
+	} else {
+		effectiveEntropy = givens.Entropy
+	}
+	guessesRequired := math.Exp2(effectiveEntropy)
 	energyBound := givens.Energy / (guessesRequired * givens.EnergyPerGuess)
 	if givens.Time > 0 {
 		timeToGuess := guessesRequired / givens.GuessesPerSecond
@@ -120,15 +128,21 @@ func BruteForceability(givens *Givens) (float64, error) {
 }
 
 // MinEntropy calculates the maximum password entropy that the MOAC can certainly brute-force. Passwords need an entropy greater than this to have a chance of not being guessed.
-func MinEntropy(givens *Givens) (float64, error) {
-	err := givens.populate()
+func MinEntropy(givens *Givens, quantum bool) (entropy float64, err error) {
+	err = givens.populate()
 	if err != nil {
 		return 0, err
 	}
 	energyBound := math.Log2(givens.Energy / givens.EnergyPerGuess)
 	if givens.Time > 0 {
 		timeBound := math.Log2(givens.Time * givens.GuessesPerSecond)
-		return math.Min(energyBound, timeBound), nil
+		entropy = math.Min(energyBound, timeBound)
+	} else {
+		entropy = energyBound
 	}
-	return energyBound, nil
+
+	if quantum {
+		return entropy * 2, nil
+	}
+	return entropy, nil
 }
