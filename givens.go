@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"math"
 
 	"github.com/nbutton23/zxcvbn-go"
@@ -72,6 +73,11 @@ func calculateEnergy(givens *Givens) {
 	}
 }
 
+var (
+	errMissingEMT = errors.New("missing energy, mass, and/or time")
+	errMissingPE  = errors.New("missing password and/or entropy")
+)
+
 // populate will solve for entropy, guesses per second, and energy if they aren't given. If they are given, it updates them if the computed value is a greater bottleneck than the given value.
 func (givens *Givens) populate() error {
 	populateDefaults(givens)
@@ -94,7 +100,7 @@ func (givens *Givens) populate() error {
 	}
 	calculateEnergy(givens)
 	if givens.Energy == 0 && givens.Time == 0 {
-		return errors.New("need energy, mass, and/or time")
+		return fmt.Errorf("populating givens: %w", errMissingEMT)
 	}
 	return nil
 }
@@ -111,7 +117,7 @@ func BruteForceability(givens *Givens, quantum bool) (float64, error) {
 		return 0, err
 	}
 	if givens.Entropy == 0 {
-		return 0, errors.New("need a password and/or entropy")
+		return 0, fmt.Errorf("BruteForceability: %w", errMissingPE)
 	}
 	// with Grover's algorithm, quantum computers get an exponential speedup
 	var effectiveEntropy float64

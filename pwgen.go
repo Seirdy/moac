@@ -2,6 +2,7 @@ package main
 
 import (
 	cryptoRand "crypto/rand"
+	"fmt"
 	"math"
 	"math/big"
 	"math/rand"
@@ -18,7 +19,7 @@ const (
 func randRune(runes []rune) (rune, error) {
 	i, err := cryptoRand.Int(cryptoRand.Reader, big.NewInt(int64(len(runes))))
 	if err != nil {
-		return ' ', err
+		return ' ', fmt.Errorf("randRune: %w", err)
 	}
 	return runes[i.Int64()], nil
 }
@@ -51,7 +52,7 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropy float64) (string, er
 		charsToPickFrom += string(charset)
 		newChar, err := randRune(charset)
 		if err != nil {
-			return pw, err
+			return pw, fmt.Errorf("genpw: %w", err)
 		}
 		pw += string(newChar)
 	}
@@ -60,7 +61,7 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropy float64) (string, er
 	for i := 0; i < minLength-len(charsetsGiven); i++ {
 		newChar, err := randRune(runesToPickFrom)
 		if err != nil {
-			return pw, err
+			return pw, fmt.Errorf("genpw: %w", err)
 		}
 		pw += string(newChar)
 	}
@@ -71,7 +72,7 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropy float64) (string, er
 		}
 		newChar, err := randRune(runesToPickFrom)
 		if err != nil {
-			return pw, err
+			return pw, fmt.Errorf("genpw: %w", err)
 		}
 		pw += string(newChar)
 		// shuffle every three character additions

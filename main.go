@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 
@@ -39,7 +38,8 @@ func main() {
 	)
 	opts, optind, err := getopt.Getopts(os.Args, "hqe:s:m:g:P:t:p:")
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
+		os.Exit(1)
 	}
 	for _, opt := range opts {
 		switch opt.Option {
@@ -57,31 +57,31 @@ func main() {
 		case 's':
 			givens.Entropy, err = strconv.ParseFloat(opt.Value, 32)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
 				os.Exit(1)
 			}
 		case 'm':
 			givens.Mass, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
 				os.Exit(1)
 			}
 		case 'g':
 			givens.EnergyPerGuess, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
 				os.Exit(1)
 			}
 		case 'P':
 			givens.Power, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
 				os.Exit(1)
 			}
 		case 't':
 			givens.Time, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
 				os.Exit(1)
 			}
 		case 'p':
@@ -125,10 +125,10 @@ func main() {
 			}
 			fmt.Println(pw)
 		default:
-			log.Println(Usage)
+			fmt.Fprintln(os.Stderr, Usage)
 			os.Exit(1)
 		}
-	} else if len(args) == 0 {
+	} else {
 		likelihood, err := BruteForceability(&givens, quantum)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
