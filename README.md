@@ -1,7 +1,7 @@
 moac-pwtools
 ============
 
-[![sourcehut](https://img.shields.io/badge/repository-sourcehut-lightgrey.svg?logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==)](https://git.sr.ht/~seirdy/moac-pwtools) [![GitLab mirror](https://img.shields.io/badge/mirror-GitLab-orange.svg?logo=gitlab)](https://gitlab.com/Seirdy/moac-pwtools) [![GitHub mirror](https://img.shields.io/badge/mirror-GitHub-black.svg?logo=github)](https://github.com/Seirdy/moac-pwtools)
+[![sourcehut](https://img.shields.io/badge/repository-sourcehut-lightgrey.svg?logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==)](https://sr.ht/~seirdy/moac-pwtools) [![GitLab mirror](https://img.shields.io/badge/mirror-GitLab-orange.svg?logo=gitlab)](https://gitlab.com/Seirdy/moac-pwtools) [![GitHub mirror](https://img.shields.io/badge/mirror-GitHub-black.svg?logo=github)](https://github.com/Seirdy/moac-pwtools)
 
 `moac-pwtools` is a tool to analyze password strength given physical limits to computation. It's inspired by a blog post I wrote: [Becoming physically immune to brute-force attacks](https://seirdy.one/2021/01/12/password-strength.html).
 
@@ -51,7 +51,7 @@ If the user supplies both a password and a password entropy, the given entropy w
 
 Time and energy are the two bottlenecks to computation; the final result will be based on whichever is a greater bottleneck. With the default energy per guess (the Landauer limit), energy should always be a greater bottleneck.
 
-#### Example
+### Example
 
 The novel _The Hitchhiker's Guide to the Galaxy_ revealed the Earth to be a supercomputer built to understand "the answer to Life, the Universe, and Everything". The computation was supposed to finish sometime around now.
 
@@ -60,25 +60,37 @@ Let's assume this is a maximally efficient quantum computer powered by the Earth
 - Age of the Earth: ~4.6 billion years, or ~1.45e17 seconds
 - Mass of the Earth: ~5.97e24 kg
 
-```sh
+```console
 $ moac-pwtools -qm 5.97e24 -t 1.45e17 entropy-limit
 427
-$ moac-pwtools -qm 5.97e24 -t 1.45e17 -p '*N¦¯ÿëWÝÃ¼"¹ù5Ùù rt¡§¨¡1þ³½¯¹kõ¸¦Gãt)ë_ut' strength  # for scale
-0.0789
 ```
 
-Understanding the answer to Life, the Universe, and Everything requires less than `2^427` computations. If the same computer instead tried to guess the password `*N¦¯ÿëWÝÃ¼"¹ù5Ùù rt¡§¨¡1þ³½¯¹kõ¸¦Gãt)ë_ut`, it _probably_ wouldn't have succeeded in time.
+Understanding the answer to Life, the Universe, and Everything requires less than `2^427` computations. If the same computer instead tried to brute-force a password, what kind of password might be out of its reach?
+
+```console
+$ moac-pwtools -qm 5.97e24 -t 1.45e17 pwgen lowercase uppercase numbers symbols extendedASCII
+v¢JÊÙúQ§4mÀÛªZûYÍé©mËiÐ× "½J6y.ñíí'è¦ïÏµ°~
+```
+
+If the same computer instead tried to guess the password `v¢JÊÙúQ§4mÀÛªZûYÍé©mËiÐ× "½J6y.ñíí'è¦ïÏµ°~`, there's a chance that it wouldn't have succeeded in time.
 
 _Note: given that the Earth wasn't hollow during the book's opening, it's unlikely that the Earth consumed its own mass to compute. Further research is necessary; perhaps it used solar power, or secret shipments of tiny black-hole batteries? Organic life was supposed to provide a large part of its functionality, so maybe we should restrict ourselves to the Earth's biomass._
 
-Roadmap
--------
+Roadmap for 0.1.0
+-----------------
 
+Consider this project highly unstable before v0.1.0.
+
+- godocs and manpage
 - Better error handling: validate input, etc.
 - Write tests.
-- Add password generation functionality: generate a password resistant to brute-force attacks with the given constraints.
-- Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
+- Separate command-line package from the rest of the code in a `cmd/` directory.
+
+Roadmap for 0.2.0
+-----------------
+
 - Read from a config file.
+- Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
 - zxcvbn-go has a lot of functionality that `moac-pwtools` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
 
 ### Ideas for other programs that can use `moac-pwtools`

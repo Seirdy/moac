@@ -12,7 +12,7 @@ import (
 const Usage = `moac-pwtools - analyze password strength with physical limits
 
 USAGE:
-  moac-pwtools [OPTIONS] [COMMAND]
+  moac-pwtools [OPTIONS] [COMMAND] [ARGS]
 
 OPTIONS:
   -h	Display this help message.
@@ -21,13 +21,15 @@ OPTIONS:
   -s <entropy>	Password entropy.
   -m <mass>	Mass at attacker's disposal (kg).
   -g <energy>	Energy used per guess (J).
-	-P <power>	Power available to the computer (W)
+  -P <power>	Power available to the computer (W)
   -t <time>	Time limit for brute-force attack (s).
   -p <password>	Password to analyze.
 
 COMMANDS:
   strength	Calculate the liklihood of a successful guess 
   entropy-limit	Calculate the minimum entropy for a brute-force attack failure.
+  pwgen	generate a password resistant to the described brute-force attack,
+        using charsets specified by [ARGS] (defaults to all provided charsets)
 `
 
 func main() {
@@ -87,10 +89,7 @@ func main() {
 		}
 	}
 	args := os.Args[optind:]
-	if len(args) > 1 {
-		log.Println(Usage)
-		os.Exit(1)
-	} else if len(args) == 1 {
+	if len(args) >= 1 {
 		cmd := args[0]
 		switch cmd {
 		case "strength":
@@ -107,11 +106,29 @@ func main() {
 				os.Exit(1)
 			}
 			fmt.Printf("%.3g\n", entropyLimit)
+		case "pwgen":
+			entropyLimit, err := MinEntropy(&givens, quantum)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				os.Exit(1)
+			}
+			var charsets []string
+			if len(args) > 1 {
+				charsets = args[1:]
+			} else {
+				charsets = []string{"lowercase", "uppercase", "numbers", "symbols", "extendedASCII", " "}
+			}
+			pw, err := GenPW(charsets, entropyLimit)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println(pw)
 		default:
 			log.Println(Usage)
 			os.Exit(1)
 		}
-	} else {
+	} else if len(args) == 0 {
 		likelihood, err := BruteForceability(&givens, quantum)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)

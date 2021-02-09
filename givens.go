@@ -8,10 +8,6 @@ import (
 )
 
 // Givens holds the values used to compute password strength.
-// This will grow as the program matures.
-// Eventually it'll get its own file and functions to solve for missing vals
-// TODO: add power, and use it to compute guesses per second.
-// final guesses per second = min(computed, given, Bremermann's limit)
 type Givens struct {
 	Password         string
 	Entropy          float64
@@ -76,7 +72,7 @@ func calculateEnergy(givens *Givens) {
 	}
 }
 
-// populate will solve for the variables we need to find password strength if they aren't given. If they are given, it updates them if the computed value is a greater bottleneck than the given value.
+// populate will solve for entropy, guesses per second, and energy if they aren't given. If they are given, it updates them if the computed value is a greater bottleneck than the given value.
 func (givens *Givens) populate() error {
 	populateDefaults(givens)
 	if givens.Password != "" {
@@ -85,10 +81,17 @@ func (givens *Givens) populate() error {
 			givens.Entropy = computedEntropy
 		}
 	}
+	var bremermannGPS float64
 	if givens.GuessesPerSecond == 0 && givens.Mass != 0 {
-		givens.GuessesPerSecond = Bremermann * givens.Mass
+		bremermannGPS = Bremermann * givens.Mass
 	}
 	calculatePower(givens)
+	powerGPS := givens.Power / givens.EnergyPerGuess
+	for _, gps := range [2]float64{bremermannGPS, powerGPS} {
+		if givens.GuessesPerSecond == 0 || (gps > 0 && gps < givens.GuessesPerSecond) {
+			givens.GuessesPerSecond = gps
+		}
+	}
 	calculateEnergy(givens)
 	if givens.Energy == 0 && givens.Time == 0 {
 		return errors.New("need energy, mass, and/or time")
