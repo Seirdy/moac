@@ -1,4 +1,4 @@
-package main
+package moac
 
 import (
 	cryptoRand "crypto/rand"

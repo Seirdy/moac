@@ -1,4 +1,4 @@
-module git.sr.ht/~seirdy/moac-pwtools
+module git.sr.ht/~seirdy/moac
 
 go 1.16
 

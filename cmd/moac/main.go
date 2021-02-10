@@ -5,13 +5,14 @@ import (
 	"os"
 	"strconv"
 
+	"git.sr.ht/~seirdy/moac"
 	"git.sr.ht/~sircmpwn/getopt"
 )
 
-const Usage = `moac-pwtools - analyze password strength with physical limits
+const Usage = `moac - analyze password strength with physical limits
 
 USAGE:
-  moac-pwtools [OPTIONS] [COMMAND] [ARGS]
+  moac [OPTIONS] [COMMAND] [ARGS]
 
 OPTIONS:
   -h	Display this help message.
@@ -33,12 +34,12 @@ COMMANDS:
 
 func main() {
 	var (
-		givens  Givens
+		givens  moac.Givens
 		quantum bool
 	)
 	opts, optind, err := getopt.Getopts(os.Args, "hqe:s:m:g:P:t:p:")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
+		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
 		os.Exit(1)
 	}
 	for _, opt := range opts {
@@ -51,37 +52,37 @@ func main() {
 		case 'e':
 			givens.Energy, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 				os.Exit(1)
 			}
 		case 's':
 			givens.Entropy, err = strconv.ParseFloat(opt.Value, 32)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
+				fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
 				os.Exit(1)
 			}
 		case 'm':
 			givens.Mass, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
+				fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
 				os.Exit(1)
 			}
 		case 'g':
 			givens.EnergyPerGuess, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
+				fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
 				os.Exit(1)
 			}
 		case 'P':
 			givens.Power, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
+				fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
 				os.Exit(1)
 			}
 		case 't':
 			givens.Time, err = strconv.ParseFloat(opt.Value, 64)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n%s", err, Usage)
+				fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
 				os.Exit(1)
 			}
 		case 'p':
@@ -93,23 +94,23 @@ func main() {
 		cmd := args[0]
 		switch cmd {
 		case "strength":
-			likelihood, err := BruteForceability(&givens, quantum)
+			likelihood, err := moac.BruteForceability(&givens, quantum)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 				os.Exit(1)
 			}
 			fmt.Printf("%.3g\n", likelihood)
 		case "entropy-limit":
-			entropyLimit, err := MinEntropy(&givens, quantum)
+			entropyLimit, err := moac.MinEntropy(&givens, quantum)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 				os.Exit(1)
 			}
 			fmt.Printf("%.3g\n", entropyLimit)
 		case "pwgen":
-			entropyLimit, err := MinEntropy(&givens, quantum)
+			entropyLimit, err := moac.MinEntropy(&givens, quantum)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 				os.Exit(1)
 			}
 			var charsets []string
@@ -118,9 +119,9 @@ func main() {
 			} else {
 				charsets = []string{"lowercase", "uppercase", "numbers", "symbols", "extendedASCII", " "}
 			}
-			pw, err := GenPW(charsets, entropyLimit)
+			pw, err := moac.GenPW(charsets, entropyLimit)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+				fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 				os.Exit(1)
 			}
 			fmt.Println(pw)
@@ -129,9 +130,9 @@ func main() {
 			os.Exit(1)
 		}
 	} else {
-		likelihood, err := BruteForceability(&givens, quantum)
+		likelihood, err := moac.BruteForceability(&givens, quantum)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "moac-pwtools: %v\n", err)
+			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Printf("%.3g\n", likelihood)

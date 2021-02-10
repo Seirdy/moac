@@ -1,29 +1,29 @@
-moac-pwtools
+moac
 ============
 
-[![sourcehut](https://img.shields.io/badge/repository-sourcehut-lightgrey.svg?logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==)](https://sr.ht/~seirdy/moac-pwtools) [![GitLab mirror](https://img.shields.io/badge/mirror-GitLab-orange.svg?logo=gitlab)](https://gitlab.com/Seirdy/moac-pwtools) [![GitHub mirror](https://img.shields.io/badge/mirror-GitHub-black.svg?logo=github)](https://github.com/Seirdy/moac-pwtools)
+[![sourcehut](https://img.shields.io/badge/repository-sourcehut-lightgrey.svg?logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==)](https://sr.ht/~seirdy/MOAC) [![GitLab mirror](https://img.shields.io/badge/mirror-GitLab-orange.svg?logo=gitlab)](https://gitlab.com/Seirdy/moac) [![GitHub mirror](https://img.shields.io/badge/mirror-GitHub-black.svg?logo=github)](https://github.com/Seirdy/moac)
 
-`moac-pwtools` is a tool to analyze password strength given physical limits to computation. It's inspired by a blog post I wrote: [Becoming physically immune to brute-force attacks](https://seirdy.one/2021/01/12/password-strength.html).
+`moac` is a tool to analyze password strength given physical limits to computation. It's inspired by a blog post I wrote: [Becoming physically immune to brute-force attacks](https://seirdy.one/2021/01/12/password-strength.html).
 
-Users provide given values like the mass available to attackers, a time limit for the brute-force attack, and the energy available. `moac-pwtools` outputs the likelihood of a successful attack or the minimum password entropy for a possible brute-force failure.
+Users provide given values like the mass available to attackers, a time limit for the brute-force attack, and the energy available. `moac` outputs the likelihood of a successful attack or the minimum password entropy for a possible brute-force failure.
 
-`moac-pwtools` uses [zxcvbn-go](https://github.com/nbutton23/zxcvbn-go) to calculate password entropy.
+`moac` uses [zxcvbn-go](https://github.com/nbutton23/zxcvbn-go) to calculate password entropy.
 
 Installation
 ------------
 
 ```sh
-GO111MODULE=on go install git.sr.ht/~seirdy/moac-pwtools
+GO111MODULE=on go install git.sr.ht/~seirdy/moac/cmd/moac
 ```
 
 Usage
 -----
 
 ```
-moac-pwtools - analyze password strength with physical limits
+moac - analyze password strength with physical limits
 
 USAGE:
-  moac-pwtools [OPTIONS] [COMMAND]
+  moac [OPTIONS] [COMMAND]
 
 OPTIONS:
   -h	Display this help message.
@@ -61,14 +61,14 @@ Let's assume this is a maximally efficient quantum computer powered by the Earth
 - Mass of the Earth: ~5.97e24 kg
 
 ```console
-$ moac-pwtools -qm 5.97e24 -t 1.45e17 entropy-limit
+$ moac -qm 5.97e24 -t 1.45e17 entropy-limit
 427
 ```
 
 Understanding the answer to Life, the Universe, and Everything requires less than `2^427` computations. If the same computer instead tried to brute-force a password, what kind of password might be out of its reach?
 
 ```console
-$ moac-pwtools -qm 5.97e24 -t 1.45e17 pwgen lowercase uppercase numbers symbols extendedASCII
+$ moac -qm 5.97e24 -t 1.45e17 pwgen lowercase uppercase numbers symbols extendedASCII
 v¢JÊÙúQ§4mÀÛªZûYÍé©mËiÐ× "½J6y.ñíí'è¦ïÏµ°~
 ```
 
@@ -84,16 +84,15 @@ Consider this project highly unstable before v0.1.0.
 - godocs and manpage
 - Better error handling: validate input, etc.
 - Write tests.
-- Separate command-line package from the rest of the code in a `cmd/` directory.
 
 Roadmap for 0.2.0
 -----------------
 
 - Read from a config file.
 - Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
-- zxcvbn-go has a lot of functionality that `moac-pwtools` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
+- zxcvbn-go has a lot of functionality that `moac` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
 
-### Ideas for other programs that can use `moac-pwtools`
+### Ideas for other programs that can use `moac`
 
 - A separate program to "benchmark" external password-generation programs/scripts by repeatedly running them and giving measurements of the worst output.
 - A GUI
