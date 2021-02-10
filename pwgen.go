@@ -34,7 +34,7 @@ func shuffle(password string) string {
 
 // passwordLengthEstimate's results are slightly lower than the expected
 // password length to allow pre-generating the first several characters
-// of a password before slow entropy measurements
+// of a password before slow entropy measurements.
 func passwordLengthEstimate(charsetSize int, entropy float64) int {
 	// combinations is 2^entropy, or 2ⁿ
 	// password length estimate is the logarithm of that with base charsetSize

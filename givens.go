@@ -28,10 +28,9 @@ const (
 	Boltzmann = 1.3806503e-23  // Boltzmann's constant, J/K
 	Planck    = 6.62607015e-35 // Planck's Constant, J*s
 
-	// mass of the observable universe
-	UMass      = C * C * C / (2 * G * Hubble)
-	Bremermann = C * C / Planck              // Bremermann's limit
-	Landauer   = Boltzmann * Temp * math.Ln2 // Landauer limit
+	UMass      = C * C * C / (2 * G * Hubble) // mass of the observable universe.
+	Bremermann = C * C / Planck               // Bremermann's limit
+	Landauer   = Boltzmann * Temp * math.Ln2  // Landauer limit
 )
 
 func populateDefaults(givens *Givens) {
@@ -78,7 +77,8 @@ var (
 	errMissingPE  = errors.New("missing password and/or entropy")
 )
 
-// populate will solve for entropy, guesses per second, and energy if they aren't given. If they are given, it updates them if the computed value is a greater bottleneck than the given value.
+// populate will solve for entropy, guesses per second, and energy if they aren't given.
+// If they are given, it updates them if the computed value is a greater bottleneck than the given value.
 func (givens *Givens) populate() error {
 	populateDefaults(givens)
 	if givens.Password != "" {
@@ -136,7 +136,8 @@ func BruteForceability(givens *Givens, quantum bool) (float64, error) {
 	return energyBound, nil
 }
 
-// MinEntropy calculates the maximum password entropy that the MOAC can certainly brute-force. Passwords need an entropy greater than this to have a chance of not being guessed.
+// MinEntropy calculates the maximum password entropy that the MOAC can certainly brute-force.
+// Passwords need an entropy greater than this to have a chance of not being guessed.
 func MinEntropy(givens *Givens, quantum bool) (entropy float64, err error) {
 	err = givens.populate()
 	if err != nil {

@@ -1,7 +1,7 @@
 moac
 ============
 
-[![sourcehut](https://img.shields.io/badge/repository-sourcehut-lightgrey.svg?logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==)](https://sr.ht/~seirdy/MOAC) [![GitLab mirror](https://img.shields.io/badge/mirror-GitLab-orange.svg?logo=gitlab)](https://gitlab.com/Seirdy/moac) [![GitHub mirror](https://img.shields.io/badge/mirror-GitHub-black.svg?logo=github)](https://github.com/Seirdy/moac)
+[![godocs.io](https://godocs.io/git.sr.ht/~sircmpwn/sourcehut-go?status.svg)](https://godocs.io/git.sr.ht/~sircmpwn/sourcehut-go) [![sourcehut](https://img.shields.io/badge/repository-sourcehut-lightgrey.svg?logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==)](https://sr.ht/~seirdy/MOAC) [![GitLab mirror](https://img.shields.io/badge/mirror-GitLab-orange.svg?logo=gitlab)](https://gitlab.com/Seirdy/moac) [![GitHub mirror](https://img.shields.io/badge/mirror-GitHub-black.svg?logo=github)](https://github.com/Seirdy/moac)
 
 `moac` is a tool to analyze password strength given physical limits to computation. It's inspired by a blog post I wrote: [Becoming physically immune to brute-force attacks](https://seirdy.one/2021/01/12/password-strength.html).
 
@@ -23,7 +23,7 @@ Usage
 moac - analyze password strength with physical limits
 
 USAGE:
-  moac [OPTIONS] [COMMAND]
+  moac [OPTIONS] [COMMAND] [ARGS]
 
 OPTIONS:
   -h	Display this help message.
@@ -32,13 +32,15 @@ OPTIONS:
   -s <entropy>	Password entropy.
   -m <mass>	Mass at attacker's disposal (kg).
   -g <energy>	Energy used per guess (J).
-	-P <power>	Power available to the computer (W)
+  -P <power>	Power available to the computer (W)
   -t <time>	Time limit for brute-force attack (s).
   -p <password>	Password to analyze.
 
 COMMANDS:
   strength	Calculate the liklihood of a successful guess 
   entropy-limit	Calculate the minimum entropy for a brute-force attack failure.
+  pwgen	generate a password resistant to the described brute-force attack,
+        using charsets specified by [ARGS] (defaults to all provided charsets)
 ```
 
 ### Bottlenecks and redundancy
