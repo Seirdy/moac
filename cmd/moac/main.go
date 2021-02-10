@@ -32,17 +32,13 @@ COMMANDS:
         using charsets specified by [ARGS] (defaults to all provided charsets)
 `
 
-func main() {
+func parseOpts(opts *[]getopt.Option) (moac.Givens, bool, error) {
 	var (
 		givens  moac.Givens
 		quantum bool
+		err     error
 	)
-	opts, optind, err := getopt.Getopts(os.Args, "hqe:s:m:g:P:t:p:")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
-		os.Exit(1)
-	}
-	for _, opt := range opts {
+	for _, opt := range *opts {
 		switch opt.Option {
 		case 'h':
 			fmt.Println(Usage)
@@ -51,90 +47,83 @@ func main() {
 			quantum = true
 		case 'e':
 			givens.Energy, err = strconv.ParseFloat(opt.Value, 64)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-				os.Exit(1)
-			}
 		case 's':
 			givens.Entropy, err = strconv.ParseFloat(opt.Value, 32)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
-				os.Exit(1)
-			}
 		case 'm':
 			givens.Mass, err = strconv.ParseFloat(opt.Value, 64)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
-				os.Exit(1)
-			}
 		case 'g':
 			givens.EnergyPerGuess, err = strconv.ParseFloat(opt.Value, 64)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
-				os.Exit(1)
-			}
 		case 'P':
 			givens.Power, err = strconv.ParseFloat(opt.Value, 64)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
-				os.Exit(1)
-			}
 		case 't':
 			givens.Time, err = strconv.ParseFloat(opt.Value, 64)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
-				os.Exit(1)
-			}
 		case 'p':
 			givens.Password = opt.Value
 		}
+		if err != nil {
+			return givens, quantum, fmt.Errorf("bad value for -%c: %w", opt.Option, err)
+		}
+	}
+	return givens, quantum, nil
+}
+
+func main() {
+	opts, optind, err := getopt.Getopts(os.Args, "hqe:s:m:g:P:t:p:")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
+		os.Exit(1)
+	}
+	givens, quantum, err := parseOpts(&opts)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
+		os.Exit(1)
 	}
 	args := os.Args[optind:]
-	if len(args) >= 1 {
-		cmd := args[0]
-		switch cmd {
-		case "strength":
-			likelihood, err := moac.BruteForceability(&givens, quantum)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-				os.Exit(1)
-			}
-			fmt.Printf("%.3g\n", likelihood)
-		case "entropy-limit":
-			entropyLimit, err := moac.MinEntropy(&givens, quantum)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-				os.Exit(1)
-			}
-			fmt.Printf("%.3g\n", entropyLimit)
-		case "pwgen":
-			entropyLimit, err := moac.MinEntropy(&givens, quantum)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-				os.Exit(1)
-			}
-			var charsets []string
-			if len(args) > 1 {
-				charsets = args[1:]
-			} else {
-				charsets = []string{"lowercase", "uppercase", "numbers", "symbols", "extendedASCII", " "}
-			}
-			pw, err := moac.GenPW(charsets, entropyLimit)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-				os.Exit(1)
-			}
-			fmt.Println(pw)
-		default:
-			fmt.Fprintln(os.Stderr, Usage)
-			os.Exit(1)
-		}
-	} else {
+	if len(args) == 0 {
 		likelihood, err := moac.BruteForceability(&givens, quantum)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Printf("%.3g\n", likelihood)
+		os.Exit(0)
+	}
+	cmd := args[0]
+	switch cmd {
+	case "strength":
+		likelihood, err := moac.BruteForceability(&givens, quantum)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%.3g\n", likelihood)
+	case "entropy-limit":
+		entropyLimit, err := moac.MinEntropy(&givens, quantum)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%.3g\n", entropyLimit)
+	case "pwgen":
+		entropyLimit, err := moac.MinEntropy(&givens, quantum)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
+			os.Exit(1)
+		}
+		var charsets []string
+		if len(args) > 1 {
+			charsets = args[1:]
+		} else {
+			charsets = []string{"lowercase", "uppercase", "numbers", "symbols", "extendedASCII", " "}
+		}
+		pw, err := moac.GenPW(charsets, entropyLimit)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println(pw)
+	default:
+		fmt.Fprintln(os.Stderr, Usage)
+		os.Exit(1)
 	}
 }
