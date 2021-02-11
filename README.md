@@ -13,7 +13,7 @@ Installation
 ------------
 
 ```sh
-GO111MODULE=on go install git.sr.ht/~seirdy/moac/cmd/moac
+GO111MODULE=on go install git.sr.ht/~seirdy/moac/cmd/moac@latest
 ```
 
 Usage
