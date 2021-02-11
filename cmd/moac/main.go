@@ -9,8 +9,8 @@ import (
 	"git.sr.ht/~sircmpwn/getopt"
 )
 
-const Usage = `moac - analyze password strength with physical limits
-
+const (
+	Usage = `
 USAGE:
   moac [OPTIONS] [COMMAND] [ARGS]
 
@@ -29,10 +29,12 @@ COMMANDS:
   strength	Calculate the liklihood of a successful guess 
   entropy-limit	Calculate the minimum entropy for a brute-force attack failure.
   pwgen	generate a password resistant to the described brute-force attack,
-        using charsets specified by [ARGS] (defaults to all provided charsets)
+       	using charsets specified by [ARGS] (defaults to all provided charsets)
 `
+	helpText = "moac - analyze password strength with physical limits" + Usage
+)
 
-func parseOpts(opts *[]getopt.Option) (moac.Givens, bool, error) {
+func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, error) {
 	var (
 		givens  moac.Givens
 		quantum bool
@@ -41,7 +43,7 @@ func parseOpts(opts *[]getopt.Option) (moac.Givens, bool, error) {
 	for _, opt := range *opts {
 		switch opt.Option {
 		case 'h':
-			fmt.Println(Usage)
+			fmt.Println(helpText)
 			os.Exit(0)
 		case 'q':
 			quantum = true
@@ -61,10 +63,28 @@ func parseOpts(opts *[]getopt.Option) (moac.Givens, bool, error) {
 			givens.Password = opt.Value
 		}
 		if err != nil {
-			return givens, quantum, fmt.Errorf("bad value for -%c: %w", opt.Option, err)
+			return &givens, quantum, fmt.Errorf("invalid value for -%c: %s", opt.Option, opt.Value)
 		}
 	}
-	return givens, quantum, nil
+	return &givens, quantum, nil
+}
+
+func getBruteForceability(givens *moac.Givens, quantum bool) float64 {
+	likelihood, err := moac.BruteForceability(givens, quantum)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "moac: %v\n", err)
+		os.Exit(1)
+	}
+	return likelihood
+}
+
+func getMinEntropy(givens *moac.Givens, quantum bool) float64 {
+	entropyLimit, err := moac.MinEntropy(givens, quantum)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "moac: %v\n", err)
+		os.Exit(1)
+	}
+	return entropyLimit
 }
 
 func main() {
@@ -80,36 +100,17 @@ func main() {
 	}
 	args := os.Args[optind:]
 	if len(args) == 0 {
-		likelihood, err := moac.BruteForceability(&givens, quantum)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Printf("%.3g\n", likelihood)
+		fmt.Printf("%.3g\n", getBruteForceability(givens, quantum))
 		os.Exit(0)
 	}
 	cmd := args[0]
 	switch cmd {
 	case "strength":
-		likelihood, err := moac.BruteForceability(&givens, quantum)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Printf("%.3g\n", likelihood)
+		fmt.Printf("%.3g\n", getBruteForceability(givens, quantum))
 	case "entropy-limit":
-		entropyLimit, err := moac.MinEntropy(&givens, quantum)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Printf("%.3g\n", entropyLimit)
+		fmt.Printf("%.3g\n", getMinEntropy(givens, quantum))
 	case "pwgen":
-		entropyLimit, err := moac.MinEntropy(&givens, quantum)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-			os.Exit(1)
-		}
+		entropyLimit := getMinEntropy(givens, quantum)
 		var charsets []string
 		if len(args) > 1 {
 			charsets = args[1:]
@@ -123,7 +124,7 @@ func main() {
 		}
 		fmt.Println(pw)
 	default:
-		fmt.Fprintln(os.Stderr, Usage)
+		fmt.Fprintf(os.Stderr, "moac: unknown command %v\n%s", cmd, Usage)
 		os.Exit(1)
 	}
 }
