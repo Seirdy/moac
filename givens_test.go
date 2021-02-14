@@ -1,15 +1,17 @@
-package moac
+package moac_test
 
 import (
 	"math"
 	"testing"
+
+	"git.sr.ht/~seirdy/moac"
 )
 
 const margin = 0.05 // acceptable error
 
-var tests = []struct {
+var givensTests = []struct {
 	name    string
-	given   Givens
+	given   moac.Givens
 	quantum bool
 	// Expected values should be within 10% error
 	expectedBF float64
@@ -18,7 +20,7 @@ var tests = []struct {
 	{ // from README
 		name:    "hitchhiker",
 		quantum: true,
-		given: Givens{
+		given: moac.Givens{
 			Mass:     5.97e24,
 			Time:     1.45e17,
 			Password: "v¢JÊÙúQ§4mÀÛªZûYÍé©mËiÐ× \"½J6y.ñíí'è¦ïÏµ°~",
@@ -29,7 +31,7 @@ var tests = []struct {
 	{ // from blog post: https://seirdy.one/2021/01/12/password-strength.html
 		name:    "universe",
 		quantum: false,
-		given: Givens{
+		given: moac.Givens{
 			// default mass is the mass of the observable universe
 			Entropy: 510,
 		},
@@ -39,9 +41,9 @@ var tests = []struct {
 }
 
 func TestBruteForceability(t *testing.T) {
-	for _, test := range tests {
+	for _, test := range givensTests {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := BruteForceability(&test.given, test.quantum)
+			got, err := moac.BruteForceability(&test.given, test.quantum)
 			if err != nil {
 				t.Fatalf("BruteForceability() = %v", err)
 			}
@@ -53,9 +55,9 @@ func TestBruteForceability(t *testing.T) {
 }
 
 func TestMinEntropy(t *testing.T) {
-	for _, test := range tests {
+	for _, test := range givensTests {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := MinEntropy(&test.given, test.quantum)
+			got, err := moac.MinEntropy(&test.given, test.quantum)
 			if err != nil {
 				t.Fatalf("MinEntropy() = %v", err)
 			}

@@ -85,11 +85,7 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropy float64) (string, er
 	return pw, nil
 }
 
-// GenPW generates a random password using characters from the charsets enumerated by charsetsWanted.
-// At least one element of each charset is used.
-// Available charsets include "lowercase", "uppercase", "numbers", "symbols", and "extendASCII".
-// Anything else will be treated as a string containing elements of a new custom charset to use.
-func GenPW(charsetsWanted []string, entropyWanted float64) (string, error) {
+func buildCharsets(charsetsEnumerated *[]string) [][]rune {
 	var charsetsGiven [][]rune
 	charsets := map[string][]rune{
 		"lowercase":     []rune(lowercase),
@@ -98,12 +94,21 @@ func GenPW(charsetsWanted []string, entropyWanted float64) (string, error) {
 		"symbols":       []rune(symbols),
 		"extendedASCII": []rune(extendedASCII),
 	}
-	for _, charset := range charsetsWanted {
+	for _, charset := range *charsetsEnumerated {
 		if charsetRunes, found := charsets[charset]; found {
 			charsetsGiven = append(charsetsGiven, charsetRunes)
 		} else {
 			charsetsGiven = append(charsetsGiven, []rune(charset))
 		}
 	}
+	return charsetsGiven
+}
+
+// GenPW generates a random password using characters from the charsets enumerated by charsetsWanted.
+// At least one element of each charset is used.
+// Available charsets include "lowercase", "uppercase", "numbers", "symbols", and "extendASCII".
+// Anything else will be treated as a string containing elements of a new custom charset to use.
+func GenPW(charsetsEnumerated []string, entropyWanted float64) (string, error) {
+	charsetsGiven := buildCharsets(&charsetsEnumerated)
 	return genpwFromGivenCharsets(charsetsGiven, entropyWanted)
 }
