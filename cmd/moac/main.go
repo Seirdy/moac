@@ -110,7 +110,12 @@ func main() {
 	case "entropy-limit":
 		fmt.Printf("%.3g\n", getMinEntropy(givens, quantum))
 	case "pwgen":
-		entropyLimit := getMinEntropy(givens, quantum)
+		// If the only user-supplied given is entropy, then just use that
+		// entropy level and skip calculating the strength of a brute-force attack.
+		entropyLimit := givens.Entropy
+		if givens.Energy+givens.Mass+givens.Power+givens.Time != 0 {
+			entropyLimit = getMinEntropy(givens, quantum)
+		}
 		var charsets []string
 		if len(args) > 1 {
 			charsets = args[1:]
