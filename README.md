@@ -1,4 +1,4 @@
-moac
+MOAC
 ====
 
 [![godocs.io](https://godocs.io/git.sr.ht/~seirdy/moac?status.svg)](https://godocs.io/git.sr.ht/~seirdy/moac) [![sourcehut](https://img.shields.io/badge/repository-sourcehut-lightgrey.svg?logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==)](https://sr.ht/~seirdy/MOAC) [![GitLab mirror](https://img.shields.io/badge/mirror-GitLab-orange.svg?logo=gitlab)](https://gitlab.com/Seirdy/moac) [![GitHub mirror](https://img.shields.io/badge/mirror-GitHub-black.svg?logo=github)](https://github.com/Seirdy/moac)
@@ -10,6 +10,8 @@ Users provide given values like the mass available to attackers, a time limit fo
 `moac` can also generate passwords capable of withstanding a brute-force attack limited by given physical quantities.
 
 [zxcvbn-go](https://github.com/nbutton23/zxcvbn-go) calculates password entropy.
+
+My original intent when making this tool was to illustrate how easy it is to make a password whose strength is "overkill". 
 
 Installation
 ------------
@@ -23,7 +25,6 @@ Usage
 
 ```
 moac - analyze password strength with physical limits
-
 USAGE:
   moac [OPTIONS] [COMMAND] [ARGS]
 
@@ -42,7 +43,7 @@ COMMANDS:
   strength	Calculate the liklihood of a successful guess 
   entropy-limit	Calculate the minimum entropy for a brute-force attack failure.
   pwgen	generate a password resistant to the described brute-force attack,
-        using charsets specified by [ARGS] (defaults to all provided charsets)
+       	using charsets specified by [ARGS] (defaults to all provided charsets)
 ```
 
 ### Bottlenecks and redundancy
@@ -74,25 +75,13 @@ $ moac -qm 5.97e24 -t 1.45e17 entropy-limit
 Understanding the answer to Life, the Universe, and Everything requires less than `2^427` computations. If the same computer instead tried to brute-force a password, what kind of password might be out of its reach?
 
 ```console
-$ moac -qm 5.97e24 -t 1.45e17 pwgen lowercase uppercase numbers symbols extendedASCII
-v¢JÊÙúQ§4mÀÛªZûYÍé©mËiÐ× "½J6y.ñíí'è¦ïÏµ°~
+$ moac -qm 5.97e24 -t 1.45e17 pwgen lowercase uppercase numbers symbols latin
+Ȭy@Bɿɵ=ƻɓ!0ĮȼǒȳǵĖȏCƂɬǀĴȆƣǺʁ<Ȣųɏŕ}dśɌəȓ>
 ```
 
-If the same computer instead tried to guess the password `v¢JÊÙúQ§4mÀÛªZûYÍé©mËiÐ× "½J6y.ñíí'è¦ïÏµ°~`, there's a chance that it wouldn't have succeeded in time.
+If the same computer instead tried to guess the password `Ȭy@Bɿɵ=ƻɓ!0ĮȼǒȳǵĖȏCƂɬǀĴȆƣǺʁ<Ȣųɏŕ}dśɌəȓ>`, there's a chance that it wouldn't have succeeded in time.
 
 _Note: given that the Earth wasn't hollow during the book's opening, it's unlikely that the Earth consumed its own mass to compute. Further research is necessary; perhaps it used solar power, or secret shipments of tiny black-hole batteries? Organic life was supposed to provide a large part of its functionality, so maybe we should restrict ourselves to the Earth's biomass._
-
-### Example: skip the physics generate/measure passwords
-
-Roadmap for 0.1.0
------------------
-
-Consider this project highly unstable before v0.1.0.
-
-- godocs and manpage
-- Better error handling: validate input, etc.
-- Write tests.
-- Analyze custom charsets to see if any characters fit in known charsets
 
 Roadmap for 0.2.0
 -----------------

@@ -9,11 +9,13 @@ import (
 )
 
 const (
-	lowercase     = "abcdefghijklmnopqrstuvwxyz"
-	uppercase     = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	numbers       = "0123456789"
-	symbols       = "!\"#%&'()*+,-./:;<=>?@[\\]^_`{|}~$-"
-	extendedASCII = "¡¦§¨©«¬®¯°±´¶·¸»¿×÷¤¢£¥¹½¼²³¾ªáÁàÀâÂåÅäÄãÃæÆçÇðÐéÉèÈêÊëËíÍìÌîÎïÏñÑºóÓòÒôÔöÖõÕøØßúÚùÙûÛüÜýÝÿþÞµ"
+	lowercase      = "abcdefghijklmnopqrstuvwxyz"
+	uppercase      = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	numbers        = "0123456789"
+	symbols        = "!\"#%&'()*+,-./:;<=>?@[\\]^_`{|}~$-"
+	latinExtendedA = "ĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſ"
+	latinExtendedB = "ƀƁƂƃƄƅƆƇƈƉƊƋƌƍƎƏƐƑƒƓƔƕƖƗƘƙƚƛƜƝƞƟƠơƢƣƤƥƦƧƨƩƪƫƬƭƮƯưƱƲƳƴƵƶƷƸƹƺƻƼƽƾƿǀǁǂǃǄǅǆǇǈǉǊǋǌǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǝǞǟǠǡǢǣǤǥǦǧǨǩǪǫǬǭǮǯǰǱǲǳǴǵǶǷǸǹǺǻǼǽǾǿȀȁȂȃȄȅȆȇȈȉȊȋȌȍȎȏȐȑȒȓȔȕȖȗȘșȚțȜȝȞȟȠȡȢȣȤȥȦȧȨȩȪȫȬȭȮȯȰȱȲȳȴȵȶȷȸȹȺȻȼȽȾȿɀɁɂɃɄɅɆɇɈɉɊɋɌɍɎɏ"
+	ipaExtensions  = "ɐɑɒɓɔɕɖɗɘəɚɛɜɝɞɟɠɡɢɣɤɥɦɧɨɩɪɫɬɭɮɯɰɱɲɳɴɵɶɷɸɹɺɻɼɽɾɿʀʁʂʃʄʅʆʇʈʉʊʋʌʍʎʏʐʑʒʓʔʕʖʗʘʙʚʛʜʝʞʟʠʡʢʣʤʥʦʧʨʩʪʫʬʭʮʯ"
 )
 
 func randRune(runes []rune) (rune, error) {
@@ -88,15 +90,19 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropy float64) (string, er
 func buildCharsets(charsetsEnumerated *[]string) [][]rune {
 	var charsetsGiven [][]rune
 	charsets := map[string][]rune{
-		"lowercase":     []rune(lowercase),
-		"uppercase":     []rune(uppercase),
-		"numbers":       []rune(numbers),
-		"symbols":       []rune(symbols),
-		"extendedASCII": []rune(extendedASCII),
+		"lowercase":      []rune(lowercase),
+		"uppercase":      []rune(uppercase),
+		"numbers":        []rune(numbers),
+		"symbols":        []rune(symbols),
+		"latinExtendedA": []rune(latinExtendedA),
+		"latinExtendedB": []rune(latinExtendedB),
+		"ipaExtensions":  []rune(ipaExtensions),
 	}
 	for _, charset := range *charsetsEnumerated {
 		if charsetRunes, found := charsets[charset]; found {
 			charsetsGiven = append(charsetsGiven, charsetRunes)
+		} else if charset == "latin" {
+			charsetsGiven = append(charsetsGiven, charsets["latinExtendedA"], charsets["latinExtendedB"], charsets["ipaExtensions"])
 		} else {
 			charsetsGiven = append(charsetsGiven, []rune(charset))
 		}
@@ -106,8 +112,10 @@ func buildCharsets(charsetsEnumerated *[]string) [][]rune {
 
 // GenPW generates a random password using characters from the charsets enumerated by charsetsWanted.
 // At least one element of each charset is used.
-// Available charsets include "lowercase", "uppercase", "numbers", "symbols", and "extendASCII".
-// Anything else will be treated as a string containing elements of a new custom charset to use.
+// Available charsets include "lowercase", "uppercase", "numbers", "symbols", "latinExtendedA",
+// "latinExtendedB", and "ipaExtensions". "latin" is also available and is equivalent to specifying
+// "latinExtendedA latinExtendedB ipaExtensions". Anything else will be treated as a string
+// containing runes of a new custom charset to use.
 func GenPW(charsetsEnumerated []string, entropyWanted float64) (string, error) {
 	charsetsGiven := buildCharsets(&charsetsEnumerated)
 	return genpwFromGivenCharsets(charsetsGiven, entropyWanted)

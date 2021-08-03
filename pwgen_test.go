@@ -11,7 +11,7 @@ var pwgenTests = []struct {
 }{
 	{
 		name:           "everything",
-		charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "extendedASCII", "世界🧛"},
+		charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "世界🧛"},
 		entropyWanted:  256,
 	},
 	{
@@ -22,7 +22,7 @@ var pwgenTests = []struct {
 	{
 		name: "tinyPassword",
 		charsetsWanted: []string{
-			"uppercase", "numbers", "lowercase", "numbers", "numbers", "symbols", "lowercase", "extendedASCII", "🧛",
+			"uppercase", "numbers", "lowercase", "numbers", "numbers", "symbols", "lowercase", "ipaExtensions", "🧛",
 		},
 		entropyWanted: 1,
 	},
