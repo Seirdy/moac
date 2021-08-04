@@ -135,7 +135,7 @@ func main() {
 		if len(args) > 1 {
 			charsets = args[1:]
 		} else {
-			charsets = []string{"lowercase", "uppercase", "numbers", "symbols", "extendedASCII", " "}
+			charsets = []string{"lowercase", "uppercase", "numbers", "symbols", "latin", " "}
 		}
 		pw, err := moac.GenPW(charsets, entropyLimit)
 		if err != nil {
