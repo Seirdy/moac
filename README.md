@@ -55,7 +55,7 @@ If a value is provided _and_ that value can be computed from other given values,
 
 If the user supplies both mass and energy, the given energy will be replaced with the mass-energy of the provided mass if the given mass-energy is lower.
 
-If the user supplies both a password and a password entropy, the given entropy will be replaced with the calculated entropy of the provided password if the calculated entropy is lower.
+If the user supplies both a password and a password entropy, the given entropy will be replaced with the calculated entropy of the provided password if the calculated entropy is lower. If the user does not supply entropy or the physical values necessary to calculate it, the default entropy is `256` (the key length of AES-256).
 
 Time and energy are the two bottlenecks to computation; the final result will be based on whichever is a greater bottleneck. With the default energy per guess (the Landauer limit), energy should always be a greater bottleneck.
 

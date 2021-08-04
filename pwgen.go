@@ -116,7 +116,12 @@ func buildCharsets(charsetsEnumerated *[]string) [][]rune {
 // "latinExtendedB", and "ipaExtensions". "latin" is also available and is equivalent to specifying
 // "latinExtendedA latinExtendedB ipaExtensions". Anything else will be treated as a string
 // containing runes of a new custom charset to use.
+// If entropyWanted is 0, the generated password has at least 256 bits of entropy; otherwise, it
+// has entropyWanted bits of entropy.
 func GenPW(charsetsEnumerated []string, entropyWanted float64) (string, error) {
 	charsetsGiven := buildCharsets(&charsetsEnumerated)
+	if entropyWanted == 0 {
+		return genpwFromGivenCharsets(charsetsGiven, 256)
+	}
 	return genpwFromGivenCharsets(charsetsGiven, entropyWanted)
 }

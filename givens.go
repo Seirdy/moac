@@ -32,16 +32,22 @@ const (
 	UMass      = C * C * C / (2 * G * Hubble) // mass of the observable universe.
 	Bremermann = C * C / Planck               // Bremermann's limit
 	Landauer   = Boltzmann * Temp * math.Ln2  // Landauer limit
+
+	defaultEntropy = 256
 )
 
+// populateDefaults fills in default values for entropy calculation if not provided
 func populateDefaults(givens *Givens) {
-	if givens.Mass == 0 {
-		// mass of the observable universe
-		givens.Mass = UMass
-	}
-	if givens.EnergyPerGuess == 0 {
-		// maybe put something more elaborate here given different constraints
-		givens.EnergyPerGuess = Landauer
+	if givens.Entropy == 0 {
+		if givens.Mass + givens.EnergyPerGuess == 0 {
+			givens.Entropy = defaultEntropy
+		} else if givens.Mass == 0 {
+			// mass of the observable universe
+			givens.Mass = UMass
+		} else if givens.EnergyPerGuess == 0 {
+			// maybe put something more elaborate here given different constraints
+			givens.EnergyPerGuess = Landauer
+		}
 	}
 }
 
