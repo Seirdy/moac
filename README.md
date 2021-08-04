@@ -11,7 +11,9 @@ Users provide given values like the mass available to attackers, a time limit fo
 
 [zxcvbn-go](https://github.com/nbutton23/zxcvbn-go) calculates password entropy.
 
-My original intent when making this tool was to illustrate how easy it is to make a password whose strength is "overkill". 
+My original intent when making this tool was to illustrate how easy it is to make a password whose strength is "overkill".
+
+**Note: until version 1.0.0 is released, MOAC is only suitable for educational/exploratory use. Do not use it with your actual passwords.**
 
 Installation
 ------------
@@ -83,12 +85,28 @@ If the same computer instead tried to guess the password `Ȭy@Bɿɵ=ƻɓ!0Įȼǒ
 
 _Note: given that the Earth wasn't hollow during the book's opening, it's unlikely that the Earth consumed its own mass to compute. Further research is necessary; perhaps it used solar power, or secret shipments of tiny black-hole batteries? Organic life was supposed to provide a large part of its functionality, so maybe we should restrict ourselves to the Earth's biomass._
 
-Roadmap for 0.2.0
------------------
+Roadmap
+-------
+
+### Roadmap for 0.2.0
+
+- Manpage
+- Securely enter passwords (rather than using a cmdline arg)
+- zxcvbn-go has a lot of functionality that `moac` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
+- Output computed entropy
+- CI/CD
+
+### Roadmap for 0.3.0
 
 - Read from a config file.
 - Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
-- zxcvbn-go has a lot of functionality that `moac` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
+- Shell completion
+
+### Roadmap for 1.0.0
+
+- Set up signed releases
+- Get `moac`'s code reviewed by some people with more experience in software security.
+- Link to it in my old blog post on brute-force immunity
 
 ### Ideas for other programs that can use `moac`
 
