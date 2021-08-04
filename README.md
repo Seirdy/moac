@@ -33,13 +33,14 @@ USAGE:
 OPTIONS:
   -h	Display this help message.
   -q	Account for quantum computers using Grover's algorithm
+  -r	Interactively enter a password in the terminal; overrides -p
   -e <energy>	Maximum energy used by attacker (J).
   -s <entropy>	Password entropy.
   -m <mass>	Mass at attacker's disposal (kg).
   -g <energy>	Energy used per guess (J).
   -P <power>	Power available to the computer (W)
   -t <time>	Time limit for brute-force attack (s).
-  -p <password>	Password to analyze.
+  -p <password>	Password to analyze (do not use a real password).
 
 COMMANDS:
   strength	Calculate the liklihood of a successful guess 
@@ -90,17 +91,17 @@ Roadmap
 
 ### Roadmap for 0.2.0
 
-- Manpage
-- Securely enter passwords (rather than using a cmdline arg)
-- zxcvbn-go has a lot of functionality that `moac` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
-- Output computed entropy
-- CI/CD
+- [ ] Manpage
+- [X] Securely enter passwords (rather than using a cmdline arg)
+- [ ] zxcvbn-go has a lot of functionality that `moac` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
+- [ ] Output computed entropy
+- [ ] CI/CD
 
 ### Roadmap for 0.3.0
 
-- Read from a config file.
-- Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
-- Shell completion
+- [ ] Read from a config file.
+- [ ] Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
+- [ ] Shell completion
 
 ### Roadmap for 1.0.0
 

@@ -9,6 +9,7 @@ import (
 )
 
 // Givens holds the values used to compute password strength.
+// These values are all physical quantities, measured using standard SI units.
 type Givens struct {
 	Password         string
 	Entropy          float64

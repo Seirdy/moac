@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"syscall"
 
 	"git.sr.ht/~seirdy/moac"
 	"git.sr.ht/~sircmpwn/getopt"
+	"golang.org/x/term"
 )
 
 const (
@@ -17,13 +19,14 @@ USAGE:
 OPTIONS:
   -h	Display this help message.
   -q	Account for quantum computers using Grover's algorithm
+  -r	Interactively enter a password in the terminal; overrides -p
   -e <energy>	Maximum energy used by attacker (J).
   -s <entropy>	Password entropy.
   -m <mass>	Mass at attacker's disposal (kg).
   -g <energy>	Energy used per guess (J).
   -P <power>	Power available to the computer (W)
   -t <time>	Time limit for brute-force attack (s).
-  -p <password>	Password to analyze.
+  -p <password>	Password to analyze (do not use a real password).
 
 COMMANDS:
   strength	Calculate the liklihood of a successful guess 
@@ -34,11 +37,12 @@ COMMANDS:
 	helpText = "moac - analyze password strength with physical limits" + Usage
 )
 
-func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, error) {
+func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, bool, error) {
 	var (
-		givens  moac.Givens
-		quantum bool
-		err     error
+		givens       moac.Givens
+		quantum      bool
+		readPassword bool
+		err          error
 	)
 	for _, opt := range *opts {
 		switch opt.Option {
@@ -47,6 +51,8 @@ func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, error) {
 			os.Exit(0)
 		case 'q':
 			quantum = true
+		case 'r':
+			readPassword = true
 		case 'e':
 			givens.Energy, err = strconv.ParseFloat(opt.Value, 64)
 		case 's':
@@ -63,10 +69,10 @@ func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, error) {
 			givens.Password = opt.Value
 		}
 		if err != nil {
-			return &givens, quantum, fmt.Errorf("invalid value for -%c: %s", opt.Option, opt.Value)
+			return &givens, quantum, readPassword, fmt.Errorf("invalid value for -%c: %s", opt.Option, opt.Value)
 		}
 	}
-	return &givens, quantum, nil
+	return &givens, quantum, readPassword, nil
 }
 
 func getBruteForceability(givens *moac.Givens, quantum bool) float64 {
@@ -88,15 +94,24 @@ func getMinEntropy(givens *moac.Givens, quantum bool) float64 {
 }
 
 func main() {
-	opts, optind, err := getopt.Getopts(os.Args, "hqe:s:m:g:P:t:p:")
+	opts, optind, err := getopt.Getopts(os.Args, "hqre:s:m:g:P:t:p:")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
 		os.Exit(1)
 	}
-	givens, quantum, err := parseOpts(&opts)
+	givens, quantum, readPassword, err := parseOpts(&opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
 		os.Exit(1)
+	}
+	if readPassword {
+		fmt.Print("Enter password: ")
+		bytepw, err := term.ReadPassword(int(syscall.Stdin))
+		fmt.Println()
+		if err != nil {
+			os.Exit(1)
+		}
+		givens.Password = string(bytepw)
 	}
 	args := os.Args[optind:]
 	if len(args) == 0 {
