@@ -44,6 +44,7 @@ func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, bool, error) {
 		readPassword bool
 		err          error
 	)
+
 	for _, opt := range *opts {
 		switch opt.Option {
 		case 'h':
@@ -68,10 +69,12 @@ func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, bool, error) {
 		case 'p':
 			givens.Password = opt.Value
 		}
+
 		if err != nil {
 			return &givens, quantum, readPassword, fmt.Errorf("invalid value for -%c: %s", opt.Option, opt.Value)
 		}
 	}
+
 	return &givens, quantum, readPassword, nil
 }
 
@@ -81,6 +84,7 @@ func getBruteForceability(givens *moac.Givens, quantum bool) float64 {
 		fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 		os.Exit(1)
 	}
+
 	return likelihood
 }
 
@@ -90,7 +94,22 @@ func getMinEntropy(givens *moac.Givens, quantum bool) float64 {
 		fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 		os.Exit(1)
 	}
+
 	return entropyLimit
+}
+
+func fetchPassword(password *string) {
+	fmt.Print("Enter password: ")
+
+	bytepw, err := term.ReadPassword(syscall.Stdin)
+
+	fmt.Println()
+
+	if err != nil {
+		os.Exit(1)
+	}
+
+	*password = string(bytepw)
 }
 
 func main() {
@@ -99,25 +118,23 @@ func main() {
 		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
 		os.Exit(1)
 	}
+
 	givens, quantum, readPassword, err := parseOpts(&opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
 		os.Exit(1)
 	}
+
 	if readPassword {
-		fmt.Print("Enter password: ")
-		bytepw, err := term.ReadPassword(int(syscall.Stdin))
-		fmt.Println()
-		if err != nil {
-			os.Exit(1)
-		}
-		givens.Password = string(bytepw)
+		fetchPassword(&givens.Password)
 	}
+
 	args := os.Args[optind:]
 	if len(args) == 0 {
 		fmt.Printf("%.3g\n", getBruteForceability(givens, quantum))
 		os.Exit(0)
 	}
+
 	cmd := args[0]
 	switch cmd {
 	case "strength":
@@ -128,20 +145,25 @@ func main() {
 		// If the only user-supplied given is entropy, then just use that
 		// entropy level and skip calculating the strength of a brute-force attack.
 		entropyLimit := givens.Entropy
+
 		if givens.Energy+givens.Mass+givens.Power+givens.Time != 0 {
 			entropyLimit = getMinEntropy(givens, quantum)
 		}
+
 		var charsets []string
+
 		if len(args) > 1 {
 			charsets = args[1:]
 		} else {
 			charsets = []string{"lowercase", "uppercase", "numbers", "symbols", "latin", " "}
 		}
+
 		pw, err := moac.GenPW(charsets, entropyLimit)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 			os.Exit(1)
 		}
+
 		fmt.Println(pw)
 	default:
 		fmt.Fprintf(os.Stderr, "moac: unknown command %v\n%s", cmd, Usage)

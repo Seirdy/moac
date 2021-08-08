@@ -38,8 +38,11 @@ func Entropy(password string) (float64, error) {
 }
 
 func findCharsetsUsed(password string) [][]rune {
-	filteredPassword := password
-	var charsetsUsed [][]rune
+	var (
+		filteredPassword = password
+		charsetsUsed     [][]rune
+	)
+
 	for _, charset := range Charsets {
 		if strings.ContainsAny(filteredPassword, string(charset)) {
 			charsetsUsed = append(charsetsUsed, charset)
@@ -51,6 +54,7 @@ func findCharsetsUsed(password string) [][]rune {
 	if len(filteredPassword) > 0 {
 		return append(charsetsUsed, []rune(filteredPassword))
 	}
+
 	return charsetsUsed
 }
 
@@ -75,7 +79,9 @@ func FromCharsets(charsetsUsed *[][]rune, length int) (float64, error) {
 	if len(*charsetsUsed) > length {
 		return 0.0, errors.New("FromCharsets: password does not use all charsets")
 	}
+
 	charSizeSum := 0
+
 	for _, charset := range *charsetsUsed {
 		charSizeSum += len(charset)
 	}

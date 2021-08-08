@@ -15,6 +15,7 @@ func randRune(runes []rune) (rune, error) {
 	if err != nil {
 		return ' ', fmt.Errorf("randRune: %w", err)
 	}
+
 	return runes[i.Int64()], nil
 }
 
@@ -23,7 +24,9 @@ func addRuneToPw(password *string, runes []rune) error {
 	if err != nil {
 		return fmt.Errorf("genpw: %w", err)
 	}
+
 	*password += string(newChar)
+
 	return nil
 }
 
@@ -32,6 +35,7 @@ func shuffle(password string) string {
 	rand.Shuffle(len(runified), func(i, j int) {
 		runified[i], runified[j] = runified[j], runified[i]
 	})
+
 	return string(runified)
 }
 
@@ -43,16 +47,17 @@ func computePasswordLength(charsetSize int, pwEntropy float64) int {
 }
 
 func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64) (string, error) {
-	var charsToPickFrom string
-	pw := ""
+	var charsToPickFrom, pw string
+
 	// at least one element from each charset
 	for _, charset := range charsetsGiven {
 		charsToPickFrom += string(charset)
-		err := addRuneToPw(&pw, charset)
-		if err != nil {
+
+		if err := addRuneToPw(&pw, charset); err != nil {
 			return pw, fmt.Errorf("genpw: %w", err)
 		}
 	}
+
 	runesToPickFrom := []rune(charsToPickFrom)
 	// figure out the minimum length of the password and fill that up before measuring entropy.
 	minLength := computePasswordLength(len(runesToPickFrom), entropyWanted)
@@ -62,11 +67,13 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64) (stri
 			return pw, fmt.Errorf("genpw: %w", err)
 		}
 	}
+
 	for {
 		err := addRuneToPw(&pw, runesToPickFrom)
 		if err != nil {
 			return pw, fmt.Errorf("genpw: %w", err)
 		}
+
 		computedEntropy, err := entropy.FromCharsets(&charsetsGiven, len(pw))
 		if err != nil || entropyWanted < computedEntropy {
 			return shuffle(pw), err
@@ -76,18 +83,23 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64) (stri
 
 func buildCharsets(charsetsEnumerated *[]string) [][]rune {
 	var charsetsGiven [][]rune
+
 	for _, charset := range *charsetsEnumerated {
-		if charsetRunes, found := entropy.Charsets[charset]; found {
+		charsetRunes, found := entropy.Charsets[charset]
+
+		switch {
+		case found:
 			charsetsGiven = append(charsetsGiven, charsetRunes)
-		} else if charset == "latin" {
+		case charset == "latin":
 			charsetsGiven = append(
 				charsetsGiven,
 				entropy.Charsets["latinExtendedA"], entropy.Charsets["latinExtendedB"], entropy.Charsets["ipaExtensions"],
 			)
-		} else {
+		default:
 			charsetsGiven = append(charsetsGiven, []rune(charset))
 		}
 	}
+
 	return charsetsGiven
 }
 
@@ -104,5 +116,6 @@ func GenPW(charsetsEnumerated []string, entropyWanted float64) (string, error) {
 	if entropyWanted == 0 {
 		return genpwFromGivenCharsets(charsetsGiven, 256)
 	}
+
 	return genpwFromGivenCharsets(charsetsGiven, entropyWanted)
 }
