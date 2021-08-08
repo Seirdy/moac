@@ -6,16 +6,8 @@ import (
 	"math"
 	"math/big"
 	"math/rand"
-)
 
-const (
-	lowercase      = "abcdefghijklmnopqrstuvwxyz"
-	uppercase      = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	numbers        = "0123456789"
-	symbols        = "!\"#%&'()*+,-./:;<=>?@[\\]^_`{|}~$-"
-	latinExtendedA = "ĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſ"
-	latinExtendedB = "ƀƁƂƃƄƅƆƇƈƉƊƋƌƍƎƏƐƑƒƓƔƕƖƗƘƙƚƛƜƝƞƟƠơƢƣƤƥƦƧƨƩƪƫƬƭƮƯưƱƲƳƴƵƶƷƸƹƺƻƼƽƾƿǀǁǂǃǄǅǆǇǈǉǊǋǌǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǝǞǟǠǡǢǣǤǥǦǧǨǩǪǫǬǭǮǯǰǱǲǳǴǵǶǷǸǹǺǻǼǽǾǿȀȁȂȃȄȅȆȇȈȉȊȋȌȍȎȏȐȑȒȓȔȕȖȗȘșȚțȜȝȞȟȠȡȢȣȤȥȦȧȨȩȪȫȬȭȮȯȰȱȲȳȴȵȶȷȸȹȺȻȼȽȾȿɀɁɂɃɄɅɆɇɈɉɊɋɌɍɎɏ"
-	ipaExtensions  = "ɐɑɒɓɔɕɖɗɘəɚɛɜɝɞɟɠɡɢɣɤɥɦɧɨɩɪɫɬɭɮɯɰɱɲɳɴɵɶɷɸɹɺɻɼɽɾɿʀʁʂʃʄʅʆʇʈʉʊʋʌʍʎʏʐʑʒʓʔʕʖʗʘʙʚʛʜʝʞʟʠʡʢʣʤʥʦʧʨʩʪʫʬʭʮʯ"
+	"git.sr.ht/~seirdy/moac/entropy"
 )
 
 func randRune(runes []rune) (rune, error) {
@@ -26,6 +18,15 @@ func randRune(runes []rune) (rune, error) {
 	return runes[i.Int64()], nil
 }
 
+func addRuneToPw(password *string, runes []rune) error {
+	newChar, err := randRune(runes)
+	if err != nil {
+		return fmt.Errorf("genpw: %w", err)
+	}
+	*password += string(newChar)
+	return nil
+}
+
 func shuffle(password string) string {
 	runified := []rune(password)
 	rand.Shuffle(len(runified), func(i, j int) {
@@ -34,75 +35,55 @@ func shuffle(password string) string {
 	return string(runified)
 }
 
-// passwordLengthEstimate's results are slightly lower than the expected
-// password length to allow pre-generating the first several characters
-// of a password before slow entropy measurements.
-func passwordLengthEstimate(charsetSize int, entropy float64) int {
-	// combinations is 2^entropy, or 2ⁿ
+func computePasswordLength(charsetSize int, pwEntropy float64) int {
+	// combinations is 2^entropy, or 2^s
 	// password length estimate is the logarithm of that with base charsetSize
-	// logₛ(2ⁿ) = n*logₛ(2) = n/log₂(s)
-	return int(entropy / math.Log2(float64(charsetSize)) * 0.8)
+	// logn(2^s) = s*logn(2) = s/log2(n)
+	return int(math.Ceil(pwEntropy / math.Log2(float64(charsetSize))))
 }
 
-func genpwFromGivenCharsets(charsetsGiven [][]rune, entropy float64) (string, error) {
-	var (
-		charsToPickFrom string
-		pw              string
-	)
+func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64) (string, error) {
+	var charsToPickFrom string
+	pw := ""
 	// at least one element from each charset
 	for _, charset := range charsetsGiven {
 		charsToPickFrom += string(charset)
-		newChar, err := randRune(charset)
+		err := addRuneToPw(&pw, charset)
 		if err != nil {
 			return pw, fmt.Errorf("genpw: %w", err)
 		}
-		pw += string(newChar)
 	}
 	runesToPickFrom := []rune(charsToPickFrom)
-	minLength := passwordLengthEstimate(len(runesToPickFrom), entropy)
+	// figure out the minimum length of the password and fill that up before measuring entropy.
+	minLength := computePasswordLength(len(runesToPickFrom), entropyWanted)
 	for i := 0; i < minLength-len(charsetsGiven); i++ {
-		newChar, err := randRune(runesToPickFrom)
+		err := addRuneToPw(&pw, runesToPickFrom)
 		if err != nil {
 			return pw, fmt.Errorf("genpw: %w", err)
 		}
-		pw += string(newChar)
 	}
-	pw = shuffle(pw)
-	for i := 0; ; i++ {
-		if calculateEntropy(pw) > entropy {
-			break
-		}
-		newChar, err := randRune(runesToPickFrom)
+	for {
+		err := addRuneToPw(&pw, runesToPickFrom)
 		if err != nil {
 			return pw, fmt.Errorf("genpw: %w", err)
 		}
-		pw += string(newChar)
-		// shuffle every three character additions
-		// so that we don't get one of each symbol crammed at the beginning;
-		// that'd be less random.
-		if i%3 == 0 {
-			pw = shuffle(pw)
+		computedEntropy, err := entropy.FromCharsets(&charsetsGiven, len(pw))
+		if err != nil || entropyWanted < computedEntropy {
+			return shuffle(pw), err
 		}
 	}
-	return pw, nil
 }
 
 func buildCharsets(charsetsEnumerated *[]string) [][]rune {
 	var charsetsGiven [][]rune
-	charsets := map[string][]rune{
-		"lowercase":      []rune(lowercase),
-		"uppercase":      []rune(uppercase),
-		"numbers":        []rune(numbers),
-		"symbols":        []rune(symbols),
-		"latinExtendedA": []rune(latinExtendedA),
-		"latinExtendedB": []rune(latinExtendedB),
-		"ipaExtensions":  []rune(ipaExtensions),
-	}
 	for _, charset := range *charsetsEnumerated {
-		if charsetRunes, found := charsets[charset]; found {
+		if charsetRunes, found := entropy.Charsets[charset]; found {
 			charsetsGiven = append(charsetsGiven, charsetRunes)
 		} else if charset == "latin" {
-			charsetsGiven = append(charsetsGiven, charsets["latinExtendedA"], charsets["latinExtendedB"], charsets["ipaExtensions"])
+			charsetsGiven = append(
+				charsetsGiven,
+				entropy.Charsets["latinExtendedA"], entropy.Charsets["latinExtendedB"], entropy.Charsets["ipaExtensions"],
+			)
 		} else {
 			charsetsGiven = append(charsetsGiven, []rune(charset))
 		}

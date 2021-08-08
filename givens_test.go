@@ -23,9 +23,9 @@ var givensTests = []struct {
 		given: moac.Givens{
 			Mass:     5.97e24,
 			Time:     1.45e17,
-			Password: "v¢JÊÙúQ§4mÀÛªZûYÍé©mËiÐ× \"½J6y.ñíí'è¦ïÏµ°~",
+			Password: "ȣMǚHǨȎ#ŕģ=ʬƦQoţ}tʂŦȃťŇ+ħHǰĸȵʣɐɼŋĬŧǺʀǜǬɰ'ʮ0ʡěɱ6ȫŭ",
 		},
-		expectedBF: 0.6807,
+		expectedBF: 2.3e-49,
 		expectedME: 427.3,
 	},
 	{ // from blog post: https://seirdy.one/2021/01/12/password-strength.html

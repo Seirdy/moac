@@ -2,6 +2,8 @@ package moac
 
 import (
 	"testing"
+
+	"git.sr.ht/~seirdy/moac/entropy"
 )
 
 var pwgenTests = []struct {
@@ -102,8 +104,13 @@ func TestGenPw(t *testing.T) {
 					t.Errorf("GenPW() = %s; used invalid character \"%v\"", password, string(invalidRune))
 					i = 10
 				}
-				if entropy := calculateEntropy(password); entropy < *entropyWanted {
-					t.Errorf("GenPW() = %s; entropy was %.3g, wanted %.3g", password, entropy, *entropyWanted)
+				entropyCalculated, err := entropy.Entropy(password)
+				if err != nil {
+					t.Errorf("Error calculating entropy: %w", err)
+					i = 10
+				}
+				if entropyCalculated < *entropyWanted {
+					t.Errorf("GenPW() = %s; entropy was %.3g, wanted %.3g", password, entropyCalculated, *entropyWanted)
 					i = 10
 				}
 			}

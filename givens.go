@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/nbutton23/zxcvbn-go"
+	"git.sr.ht/~seirdy/moac/entropy"
 )
 
 // Givens holds the values used to compute password strength.
@@ -50,12 +50,6 @@ func populateDefaults(givens *Givens) {
 		// maybe put something more elaborate here given different constraints
 		givens.EnergyPerGuess = Landauer
 	}
-
-}
-
-func calculateEntropy(password string) float64 {
-	// currently wraps zxcvbn-go. This might change in the future.
-	return zxcvbn.PasswordStrength(password, nil).Entropy
 }
 
 func calculatePower(givens *Givens) {
@@ -91,7 +85,10 @@ var (
 func (givens *Givens) populate() error {
 	populateDefaults(givens)
 	if givens.Password != "" {
-		computedEntropy := calculateEntropy(givens.Password)
+		computedEntropy, err := entropy.Entropy(givens.Password)
+		if err != nil {
+			return fmt.Errorf("error measuring generated password: %w", err)
+		}
 		if givens.Entropy == 0 || givens.Entropy > computedEntropy {
 			givens.Entropy = computedEntropy
 		}

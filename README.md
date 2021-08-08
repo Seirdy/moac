@@ -5,11 +5,9 @@ MOAC
 
 `moac` is a tool to analyze password strength given physical limits to computation. It's inspired by a blog post I wrote: [Becoming physically immune to brute-force attacks](https://seirdy.one/2021/01/12/password-strength.html).
 
-Users provide given values like the mass available to attackers, a time limit for the brute-force attack, and the energy available. `moac` outputs the likelihood of a successful attack or the minimum password entropy for a possible brute-force failure.
+Users provide given values like the mass available to attackers, a time limit for the brute-force attack, and the energy available. `moac` outputs the likelihood of a successful attack or the minimum password entropy for a possible brute-force failure. Entropy is calculated with the assumption that passwords are randomly generated.
 
 `moac` can also generate passwords capable of withstanding a brute-force attack limited by given physical quantities.
-
-[zxcvbn-go](https://github.com/nbutton23/zxcvbn-go) calculates password entropy.
 
 My original intent when making this tool was to illustrate how easy it is to make a password whose strength is "overkill".
 
@@ -79,10 +77,10 @@ Understanding the answer to Life, the Universe, and Everything requires less tha
 
 ```console
 $ moac -qm 5.97e24 -t 1.45e17 pwgen lowercase uppercase numbers symbols latin
-Ȭy@Bɿɵ=ƻɓ!0ĮȼǒȳǵĖȏCƂɬǀĴȆƣǺʁ<Ȣųɏŕ}dśɌəȓ>
+,ȿĢıqɽȂīĲďɖȟMǧiœcɪʊȦĻțșŌƺȰ&ǡśŗȁĵɍɞƋIŀƷ?}ʯ4ůʑʅęȳŞ
 ```
 
-If the same computer instead tried to guess the password `Ȭy@Bɿɵ=ƻɓ!0ĮȼǒȳǵĖȏCƂɬǀĴȆƣǺʁ<Ȣųɏŕ}dśɌəȓ>`, there's a chance that it wouldn't have succeeded in time.
+If the same computer instead tried to guess the password `,ȿĢıqɽȂīĲďɖȟMǧiœcɪʊȦĻțșŌƺȰ&ǡśŗȁĵɍɞƋIŀƷ?}ʯ4ůʑʅęȳŞ`, there's a chance that it wouldn't have succeeded in time.
 
 _Note: given that the Earth wasn't hollow during the book's opening, it's unlikely that the Earth consumed its own mass to compute. Further research is necessary; perhaps it used solar power, or secret shipments of tiny black-hole batteries? Organic life was supposed to provide a large part of its functionality, so maybe we should restrict ourselves to the Earth's biomass._
 
@@ -93,7 +91,7 @@ Roadmap
 
 - [ ] Manpage
 - [X] Securely enter passwords (rather than using a cmdline arg)
-- [ ] zxcvbn-go has a lot of functionality that `moac` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
+- [X] zxcvbn-go has a lot of functionality that `moac` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
 - [ ] Output computed entropy
 - [ ] CI/CD
 
