@@ -94,6 +94,7 @@ Roadmap
 - [X] zxcvbn-go has a lot of functionality that `moac` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
 - [ ] Output computed entropy
 - [ ] CI/CD
+- [ ] Support min/max length for dealing with bad password validators
 
 ### Roadmap for 0.3.0
 
