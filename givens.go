@@ -38,19 +38,22 @@ const (
 
 // populateDefaults fills in default values for entropy calculation if not provided.
 func populateDefaults(givens *Givens) {
-	if givens.Entropy == 0 {
-		if givens.Mass+givens.EnergyPerGuess == 0 {
-			givens.Entropy = defaultEntropy
-		} else if givens.Mass == 0 {
-			// mass of the observable universe
-			givens.Mass = UMass
-		}
-	}
-
 	if givens.EnergyPerGuess == 0 {
 		// maybe put something more elaborate here given different constraints
 		givens.EnergyPerGuess = Landauer
 	}
+
+	if givens.Energy+givens.Mass == 0 {
+		// mass of the observable universe
+		givens.Mass = UMass
+	}
+
+	if givens.Entropy == 0 {
+		if givens.Mass+givens.EnergyPerGuess == 0 {
+			givens.Entropy = defaultEntropy
+		}
+	}
+
 }
 
 func calculatePower(givens *Givens) {
@@ -138,9 +141,26 @@ func BruteForceability(givens *Givens, quantum bool) (float64, error) {
 		return 0, err
 	}
 
-	if givens.Entropy == 0 {
-		return 0, fmt.Errorf("BruteForceability: %w", errMissingPE)
+	if givens.Entropy + givens.Time == 0 {
+		return 0, fmt.Errorf("BruteForceability: cannot compute entropy: %w", errMissingPE)
 	}
+
+	var (
+		computedBruteForceability = bruteForceability(givens, quantum)
+		err                       error
+	)
+
+	switch computedBruteForceability {
+	case 0:
+		err = fmt.Errorf("BruteForceability: %v", errMissingPE)
+	case math.NaN():
+		err = fmt.Errorf("BruteForceability: %v", errMissingPE)
+	}
+
+	return computedBruteForceability, err
+}
+
+func bruteForceability(givens *Givens, quantum bool) float64 {
 	// with Grover's algorithm, quantum computers get an exponential speedup
 	var effectiveEntropy float64
 
@@ -158,10 +178,11 @@ func BruteForceability(givens *Givens, quantum bool) (float64, error) {
 	if givens.Time > 0 {
 		timeBound := givens.Time * givens.GuessesPerSecond / guessesRequired
 
-		return math.Min(energyBound, timeBound), nil
+		fmt.Println(timeBound)
+		return math.Min(energyBound, timeBound)
 	}
 
-	return energyBound, nil
+	return energyBound
 }
 
 // MinEntropy calculates the maximum password entropy that the MOAC can certainly brute-force.
