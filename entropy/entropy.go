@@ -4,6 +4,7 @@ package entropy
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"strings"
 )
@@ -13,14 +14,14 @@ const (
 	uppercase      = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	numbers        = "0123456789"
 	symbols        = "!\"#%&'()*+,-./:;<=>?@[\\]^_`{|}~$-"
-	latinExtendedA = "ĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſ"
-	latinExtendedB = "ƀƁƂƃƄƅƆƇƈƉƊƋƌƍƎƏƐƑƒƓƔƕƖƗƘƙƚƛƜƝƞƟƠơƢƣƤƥƦƧƨƩƪƫƬƭƮƯưƱƲƳƴƵƶƷƸƹƺƻƼƽƾƿǀǁǂǃǄǅǆǇǈǉǊǋǌǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǝǞǟǠǡǢǣǤǥǦǧǨǩǪǫǬǭǮǯǰǱǲǳǴǵǶǷǸǹǺǻǼǽǾǿȀȁȂȃȄȅȆȇȈȉȊȋȌȍȎȏȐȑȒȓȔȕȖȗȘșȚțȜȝȞȟȠȡȢȣȤȥȦȧȨȩȪȫȬȭȮȯȰȱȲȳȴȵȶȷȸȹȺȻȼȽȾȿɀɁɂɃɄɅɆɇɈɉɊɋɌɍɎɏ"
-	ipaExtensions  = "ɐɑɒɓɔɕɖɗɘəɚɛɜɝɞɟɠɡɢɣɤɥɦɧɨɩɪɫɬɭɮɯɰɱɲɳɴɵɶɷɸɹɺɻɼɽɾɿʀʁʂʃʄʅʆʇʈʉʊʋʌʍʎʏʐʑʒʓʔʕʖʗʘʙʚʛʜʝʞʟʠʡʢʣʤʥʦʧʨʩʪʫʬʭʮʯ"
+	latinExtendedA = "ĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſ"                                                                                 //nolint:lll
+	latinExtendedB = "ƀƁƂƃƄƅƆƇƈƉƊƋƌƍƎƏƐƑƒƓƔƕƖƗƘƙƚƛƜƝƞƟƠơƢƣƤƥƦƧƨƩƪƫƬƭƮƯưƱƲƳƴƵƶƷƸƹƺƻƼƽƾƿǀǁǂǃǄǅǆǇǈǉǊǋǌǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǝǞǟǠǡǢǣǤǥǦǧǨǩǪǫǬǭǮǯǰǱǲǳǴǵǶǷǸǹǺǻǼǽǾǿȀȁȂȃȄȅȆȇȈȉȊȋȌȍȎȏȐȑȒȓȔȕȖȗȘșȚțȜȝȞȟȠȡȢȣȤȥȦȧȨȩȪȫȬȭȮȯȰȱȲȳȴȵȶȷȸȹȺȻȼȽȾȿɀɁɂɃɄɅɆɇɈɉɊɋɌɍɎɏ" //nolint:lll
+	ipaExtensions  = "ɐɑɒɓɔɕɖɗɘəɚɛɜɝɞɟɠɡɢɣɤɥɦɧɨɩɪɫɬɭɮɯɰɱɲɳɴɵɶɷɸɹɺɻɼɽɾɿʀʁʂʃʄʅʆʇʈʉʊʋʌʍʎʏʐʑʒʓʔʕʖʗʘʙʚʛʜʝʞʟʠʡʢʣʤʥʦʧʨʩʪʫʬʭʮʯ"                                                                                                                 //nolint:lll
 )
 
 // Charsets is a dictionary of known Unicode code blocks to use when generating passwords.
 // All runes are printable and single-width.
-var Charsets = map[string][]rune{
+var Charsets = map[string][]rune{ //nolint:gochecknoglobals // maps can't be const
 	"lowercase":      []rune(lowercase),
 	"uppercase":      []rune(uppercase),
 	"numbers":        []rune(numbers),
@@ -34,6 +35,7 @@ var Charsets = map[string][]rune{
 // assumingly it was randomly generated.
 func Entropy(password string) (float64, error) {
 	charsetsUsed := findCharsetsUsed(password)
+
 	return FromCharsets(&charsetsUsed, len(password))
 }
 
@@ -66,18 +68,21 @@ func filterFromString(str *string, banned []rune) {
 					return -1
 				}
 			}
+
 			return r
 		},
 		*str,
 	)
 }
 
+var errPasswordInvalid = errors.New("invalid password")
+
 // FromCharsets computes the number of entropy bits in a string
 // with the given length that utilizes at least one character from each
 // of the given charsets.
 func FromCharsets(charsetsUsed *[][]rune, length int) (float64, error) {
 	if len(*charsetsUsed) > length {
-		return 0.0, errors.New("FromCharsets: password does not use all charsets")
+		return 0.0, fmt.Errorf("password too short to use all available charsets: %w", errPasswordInvalid)
 	}
 
 	charSizeSum := 0

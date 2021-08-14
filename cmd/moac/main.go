@@ -37,7 +37,7 @@ COMMANDS:
 	helpText = "moac - analyze password strength with physical limits" + Usage
 )
 
-func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, bool, error) {
+func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, bool) {
 	var (
 		givens       moac.Givens
 		quantum      bool
@@ -71,11 +71,12 @@ func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, bool, error) {
 		}
 
 		if err != nil {
-			return &givens, quantum, readPassword, fmt.Errorf("invalid value for -%c: %s", opt.Option, opt.Value)
+			fmt.Fprintf(os.Stderr, "invalid value for -%c: %s\n%s", opt.Option, helpText, opt.Value)
+			os.Exit(1)
 		}
 	}
 
-	return &givens, quantum, readPassword, nil
+	return &givens, quantum, readPassword
 }
 
 func getBruteForceability(givens *moac.Givens, quantum bool) float64 {
@@ -119,12 +120,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	givens, quantum, readPassword, err := parseOpts(&opts)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
-		os.Exit(1)
-	}
-
+	givens, quantum, readPassword := parseOpts(&opts)
 	if readPassword {
 		fetchPassword(&givens.Password)
 	}
