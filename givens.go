@@ -53,7 +53,6 @@ func populateDefaults(givens *Givens) {
 			givens.Entropy = defaultEntropy
 		}
 	}
-
 }
 
 func calculatePower(givens *Givens) {
@@ -141,7 +140,7 @@ func BruteForceability(givens *Givens, quantum bool) (float64, error) {
 		return 0, err
 	}
 
-	if givens.Entropy + givens.Time == 0 {
+	if givens.Entropy+givens.Time == 0 {
 		return 0, fmt.Errorf("BruteForceability: cannot compute entropy: %w", errMissingPE)
 	}
 
@@ -150,11 +149,11 @@ func BruteForceability(givens *Givens, quantum bool) (float64, error) {
 		err                       error
 	)
 
-	switch computedBruteForceability {
-	case 0:
-		err = fmt.Errorf("BruteForceability: %v", errMissingPE)
-	case math.NaN():
-		err = fmt.Errorf("BruteForceability: %v", errMissingPE)
+	switch {
+	case computedBruteForceability == 0:
+		err = fmt.Errorf("BruteForceability: %w", errMissingPE)
+	case math.IsNaN(computedBruteForceability):
+		err = fmt.Errorf("BruteForceability: %w", errMissingPE)
 	}
 
 	return computedBruteForceability, err
@@ -178,7 +177,6 @@ func bruteForceability(givens *Givens, quantum bool) float64 {
 	if givens.Time > 0 {
 		timeBound := givens.Time * givens.GuessesPerSecond / guessesRequired
 
-		fmt.Println(timeBound)
 		return math.Min(energyBound, timeBound)
 	}
 
