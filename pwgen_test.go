@@ -26,43 +26,40 @@ type minMaxLen struct {
 // We run each test case multiple times because of the non-determinism inherent to GenPW().
 const loops int = 16
 
-var pwgenCharsets = []struct {
-	name           string
-	charsetsWanted []string
-}{
-	{
-		name:           "everything",
-		charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "世界🧛"},
-	},
-	{
-		name:           "alnum",
-		charsetsWanted: []string{"lowercase", "uppercases", "numbers"},
-	},
-	{
-		name: "tinyPassword",
-		charsetsWanted: []string{
-			"uppercase", "numbers", "lowercase", "numbers", "numbers", "symbols", "lowercase", "ipaExtensions", "🧛",
-		},
-	},
-	{
-		name: "multipleCustomCharsets",
-		charsetsWanted: []string{
-			"uppercase",
-			"numbers",
-			"lowercase",
-			"𓂸",
-			"عظ؆ص",
-			"ἀἁἂἃἄἅἆἇἈἉἊἋἌἍἎἏἐἑἒἓἔἕἘἙἚἛἜἝἠἡἢἣἤἥἦἧἨἩἪἫἬἭἮἯἰἱἲἳἴἵἶἷἸἹἺἻἼἽἾἿὀὁὂὃὄὅὈὉὊὋὌὍὐὑὒὓὔὕὖὗὙὛὝὟὠὡὢὣὤὥὦὧὨὩὪὫὬὭὮὯὰάὲέὴήὶίὸόὺύὼώᾀᾁᾂᾃᾄᾅᾆᾇᾈᾉᾊᾋᾌᾍᾎᾏᾐᾑᾒᾓᾔᾕᾖᾗᾘᾙᾚᾛᾜᾝᾞᾟᾠᾡᾢᾣᾤᾥᾦᾧᾨᾩᾪᾫᾬᾭᾮᾯᾰᾱᾲᾳᾴᾶᾷᾸᾹᾺΆᾼ᾽ι᾿῀῁ῂῃῄῆῇῈΈῊΉῌ῍῎῏ῐῑῒΐῖῗῘῙῚΊ῝῞῟ῠῡῢΰῤῥῦῧῨῩῪΎῬ῭΅`ῲῳῴῶῷῸΌῺΏῼ", //nolint:lll
-		},
-	},
-}
-
-var (
-	minMaxLengths   = []minMaxLen{{0, 0}, {0, 32}, {0, 65537}, {80, 0}, {12, 50}}
-	entropiesWanted = []float64{0, 1, 32, 64, 256, 512}
-)
-
 func buildTestCases() []pwgenTestCase {
+	pwgenCharsets := []struct {
+		name           string
+		charsetsWanted []string
+	}{
+		{
+			name:           "everything",
+			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "世界🧛"},
+		},
+		{
+			name:           "alnum",
+			charsetsWanted: []string{"lowercase", "uppercases", "numbers"},
+		},
+		{
+			name: "tinyPassword",
+			charsetsWanted: []string{
+				"uppercase", "numbers", "lowercase", "numbers", "numbers", "symbols", "lowercase", "ipaExtensions", "🧛",
+			},
+		},
+		{
+			name: "multipleCustomCharsets",
+			charsetsWanted: []string{
+				"uppercase", "numbers", "lowercase",
+				"𓂸",
+				"عظ؆ص",
+				// lots of duplicate chars
+				"ἀἁἂἃἄἅἆἇἈἉἊἋἌἍἎἏἐἑἒἓἔἕἘἙἚἛἜἝἠἡἢἣἤἥἦἧἨἩἪἫἬἭἮἯἰἱἲἳἴἵἶἷἸἹἺἻἼἽἾἿὀὁὂὃὄὅὈὉὊὋὌὍὐὑὒὓὔὕὖὗὙὛὝὟὠὡὢὣὤὥὦὧὨὩὪὫὬὭὮὯὰάὲέὴήὶίὸόὺύὼώᾀᾁᾂᾃᾄᾅᾆᾇᾈᾉᾊᾋᾌᾍᾎᾏᾐᾑᾒᾓᾔᾕᾖᾗᾘᾙᾚᾛᾜᾝᾞᾟᾠᾡᾢᾣᾤᾥᾦᾧᾨᾩᾪᾫᾬᾭᾮᾯᾰᾱᾲᾳᾴᾶᾷᾸᾹᾺΆᾼ᾽ι᾿῀῁ῂῃῄῆῇῈΈῊΉῌ῍῎῏ῐῑῒΐῖῗῘῙῚΊ῝῞῟ῠῡῢΰῤῥῦῧῨῩῪΎῬ῭΅`ῲῳῴῶῷῸΌῺΏῼ", //nolint:lll
+				"𓂸",
+			},
+		},
+	}
+	minMaxLengths := []minMaxLen{{0, 0}, {0, 32}, {0, 65537}, {80, 0}, {12, 50}}
+	entropiesWanted := []float64{0, 1, 32, 64, 256, 512}
+
 	log.Printf(
 		"running %d pwgen test cases %d times each\n",
 		len(pwgenCharsets)*len(minMaxLengths)*len(entropiesWanted), loops,
