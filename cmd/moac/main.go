@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"git.sr.ht/~seirdy/moac"
+	"git.sr.ht/~seirdy/moac/entropy"
 	"git.sr.ht/~sircmpwn/getopt"
 	"golang.org/x/term"
 )
@@ -32,8 +33,9 @@ OPTIONS:
 
 COMMANDS:
   strength	Calculate the liklihood of a successful guess 
+  entropy	Calculate the entropy of the given password
   entropy-limit	Calculate the minimum entropy for a brute-force attack failure.
-  pwgen	generate a password resistant to the described brute-force attack,
+  pwgen	Generate a password resistant to the described brute-force attack,
        	using charsets specified by [ARGS] (defaults to all provided charsets)
 `
 	helpText = "moac - analyze password strength with physical limits" + Usage
@@ -99,6 +101,21 @@ func getBruteForceability(givens *moac.Givens, quantum bool) float64 {
 	return likelihood
 }
 
+func getEntropy(givens *moac.Givens) float64 {
+	if givens.Password == "" {
+		fmt.Fprintf(os.Stderr, "moac: cannot compute entropy: missing password\n")
+		os.Exit(1)
+	}
+
+	computedEntropy, err := entropy.Entropy(givens.Password)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "moac: %v\n", err)
+		os.Exit(1)
+	}
+
+	return computedEntropy
+}
+
 func getMinEntropy(givens *moac.Givens, quantum bool) float64 {
 	entropyLimit, err := moac.MinEntropy(givens, quantum)
 	if err != nil {
@@ -145,6 +162,8 @@ func main() {
 	switch cmd {
 	case "strength":
 		fmt.Printf("%.3g\n", getBruteForceability(givens, quantum))
+	case "entropy":
+		fmt.Printf("%.3g\n", getEntropy(givens))
 	case "entropy-limit":
 		fmt.Printf("%.3g\n", getMinEntropy(givens, quantum))
 	case "pwgen":
