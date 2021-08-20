@@ -141,7 +141,7 @@ func fetchPassword(password *string) {
 }
 
 func main() {
-	opts, optind, err := getopt.Getopts(os.Args, "hqre:s:m:g:P:t:p:")
+	opts, optind, err := getopt.Getopts(os.Args, "hqre:s:m:g:P:t:p:l:L:")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
 		os.Exit(1)
