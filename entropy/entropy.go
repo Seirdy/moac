@@ -53,7 +53,7 @@ func findCharsetsUsed(password string) [][]rune {
 	}
 	// any leftover characters that aren't from one of the hardcoded
 	// charsets become a new charset of their own
-	if len(filteredPassword) > 0 {
+	if filteredPassword != "" {
 		return append(charsetsUsed, []rune(filteredPassword))
 	}
 
