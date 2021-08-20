@@ -27,6 +27,8 @@ OPTIONS:
   -P <power>	Power available to the computer (W)
   -t <time>	Time limit for brute-force attack (s).
   -p <password>	Password to analyze (do not use a real password).
+  -l <length>	minimum generated password length; can override (increase) -s
+  -L <length>	maximum generated password length; can override (decrease) -s
 
 COMMANDS:
   strength	Calculate the liklihood of a successful guess 
@@ -37,11 +39,15 @@ COMMANDS:
 	helpText = "moac - analyze password strength with physical limits" + Usage
 )
 
-func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, bool) {
+func parseOpts( //nolint:cyclop // complexity solely determined by global opts
+	opts *[]getopt.Option,
+) (*moac.Givens, bool, bool, int, int) {
 	var (
 		givens       moac.Givens
 		quantum      bool
 		readPassword bool
+		minLen       int64
+		maxLen       int64
 		err          error
 	)
 
@@ -68,6 +74,10 @@ func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, bool) {
 			givens.Time, err = strconv.ParseFloat(opt.Value, 64)
 		case 'p':
 			givens.Password = opt.Value
+		case 'l':
+			minLen, err = strconv.ParseInt(opt.Value, 10, 32)
+		case 'L':
+			maxLen, err = strconv.ParseInt(opt.Value, 10, 32)
 		}
 
 		if err != nil {
@@ -76,7 +86,7 @@ func parseOpts(opts *[]getopt.Option) (*moac.Givens, bool, bool) {
 		}
 	}
 
-	return &givens, quantum, readPassword
+	return &givens, quantum, readPassword, int(minLen), int(maxLen)
 }
 
 func getBruteForceability(givens *moac.Givens, quantum bool) float64 {
@@ -120,7 +130,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	givens, quantum, readPassword := parseOpts(&opts)
+	givens, quantum, readPassword, minLen, maxLen := parseOpts(&opts)
 	if readPassword {
 		fetchPassword(&givens.Password)
 	}
@@ -154,7 +164,7 @@ func main() {
 			charsets = []string{"lowercase", "uppercase", "numbers", "symbols", "latin", " "}
 		}
 
-		pw, err := moac.GenPW(charsets, entropyLimit)
+		pw, err := moac.GenPW(charsets, entropyLimit, minLen, maxLen)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 			os.Exit(1)

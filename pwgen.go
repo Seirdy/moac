@@ -2,10 +2,12 @@ package moac
 
 import (
 	cryptoRand "crypto/rand"
+	"errors"
 	"fmt"
 	"math"
 	"math/big"
 	"math/rand"
+	"unicode/utf8"
 
 	"git.sr.ht/~seirdy/moac/entropy"
 )
@@ -39,14 +41,28 @@ func shuffle(password string) string {
 	return string(runified)
 }
 
-func computePasswordLength(charsetSize int, pwEntropy float64) int {
+var errInvalidLenBounds = errors.New("bad length bounds")
+
+func computePasswordLength(charsetSize int, pwEntropy float64, minLen, maxLen int) (int, error) {
+	if maxLen > 0 && minLen > maxLen {
+		return 0, fmt.Errorf("%w: maxLen can't be less than minLen", errInvalidLenBounds)
+	}
 	// combinations is 2^entropy, or 2^s
 	// password length estimate is the logarithm of that with base charsetSize
 	// logn(2^s) = s*logn(2) = s/log2(n)
-	return int(math.Ceil(pwEntropy / math.Log2(float64(charsetSize))))
+	length := int(math.Ceil(pwEntropy / math.Log2(float64(charsetSize))))
+	if length < minLen {
+		length = minLen
+	}
+
+	if maxLen > 0 && length > maxLen {
+		length = maxLen
+	}
+
+	return length, nil
 }
 
-func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64) (string, error) {
+func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64, minLen, maxLen int) (string, error) {
 	var charsToPickFrom, pw string
 
 	// at least one element from each charset
@@ -59,26 +75,32 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64) (stri
 	}
 
 	runesToPickFrom := []rune(charsToPickFrom)
-	// figure out the minimum length of the password and fill that up before measuring entropy.
-	minLength := computePasswordLength(len(runesToPickFrom), entropyWanted)
-	for i := 0; i < minLength-len(charsetsGiven); i++ {
+	// figure out the minimum acceptable length of the password and fill that up before measuring entropy.
+	pwLength, err := computePasswordLength(len(runesToPickFrom), entropyWanted, minLen, maxLen)
+	if err != nil {
+		return "", fmt.Errorf("can't generate password: %w", err)
+	}
+
+	for utf8.RuneCountInString(pw) < pwLength {
 		err := addRuneToPw(&pw, runesToPickFrom)
 		if err != nil {
 			return pw, fmt.Errorf("genpw: %w", err)
 		}
 	}
 
-	for {
+	for maxLen == 0 || utf8.RuneCountInString(pw) < maxLen {
 		err := addRuneToPw(&pw, runesToPickFrom)
 		if err != nil {
 			return pw, fmt.Errorf("genpw: %w", err)
 		}
 
-		computedEntropy, err := entropy.FromCharsets(&charsetsGiven, len(pw))
+		computedEntropy, err := entropy.Entropy(pw)
 		if err != nil || entropyWanted < computedEntropy {
 			return shuffle(pw), err
 		}
 	}
+
+	return shuffle(pw), nil
 }
 
 func buildCharsets(charsetsEnumerated *[]string) [][]rune {
@@ -105,17 +127,20 @@ func buildCharsets(charsetsEnumerated *[]string) [][]rune {
 
 // GenPW generates a random password using characters from the charsets enumerated by charsetsWanted.
 // At least one element of each charset is used.
-// Available charsets include "lowercase", "uppercase", "numbers", "symbols", "latinExtendedA",
-// "latinExtendedB", and "ipaExtensions". "latin" is also available and is equivalent to specifying
-// "latinExtendedA latinExtendedB ipaExtensions". Anything else will be treated as a string
-// containing runes of a new custom charset to use.
-// If entropyWanted is 0, the generated password has at least 256 bits of entropy; otherwise, it
-// has entropyWanted bits of entropy.
-func GenPW(charsetsEnumerated []string, entropyWanted float64) (string, error) {
+// Available charsets include "lowercase", "uppercase", "numbers", "symbols",
+// "latinExtendedA", "latinExtendedB", and "ipaExtensions". "latin" is also available
+// and is equivalent to specifying "latinExtendedA latinExtendedB ipaExtensions".
+// Anything else will be treated as a string containing runes of a new custom charset
+// to use.
+// If entropyWanted is 0, the generated password has at least 256 bits of entropy;
+// otherwise, it has entropyWanted bits of entropy.
+// minLen and maxLen are ignored when set to zero; otherwise, they set lower/upper
+// bounds on password character count and override entropyWanted if necessary.
+func GenPW(charsetsEnumerated []string, entropyWanted float64, minLen, maxLen int) (string, error) {
 	charsetsGiven := buildCharsets(&charsetsEnumerated)
 	if entropyWanted == 0 {
-		return genpwFromGivenCharsets(charsetsGiven, 256)
+		return genpwFromGivenCharsets(charsetsGiven, 256, minLen, maxLen)
 	}
 
-	return genpwFromGivenCharsets(charsetsGiven, entropyWanted)
+	return genpwFromGivenCharsets(charsetsGiven, entropyWanted, minLen, maxLen)
 }
