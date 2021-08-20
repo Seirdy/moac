@@ -3,27 +3,34 @@ MOAC
 
 [![godocs.io](https://godocs.io/git.sr.ht/~seirdy/moac?status.svg)](https://godocs.io/git.sr.ht/~seirdy/moac) [![sourcehut](https://img.shields.io/badge/repository-sourcehut-lightgrey.svg?logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==)](https://sr.ht/~seirdy/MOAC) [![GitLab mirror](https://img.shields.io/badge/mirror-GitLab-orange.svg?logo=gitlab)](https://gitlab.com/Seirdy/moac) [![GitHub mirror](https://img.shields.io/badge/mirror-GitHub-black.svg?logo=github)](https://github.com/Seirdy/moac)
 
-`moac` is a tool to analyze password strength given physical limits to computation. It's inspired by a blog post I wrote: [Becoming physically immune to brute-force attacks](https://seirdy.one/2021/01/12/password-strength.html).
+`moac` is a tool that takes a unique approach to generating passwords and analyzing their strength. It's concerned only with password strength, and knows nothing about the context in which passwords will be used; as such, it makes the assumption that password guessability is the only metric that matters, and a brute-force attack is constrained only by the laws of physics. It's inspired by a blog post I wrote: [Becoming physically immune to brute-force attacks](https://seirdy.one/2021/01/12/password-strength.html).
 
 Users provide given values like the mass available to attackers, a time limit for the brute-force attack, and the energy available. `moac` outputs the likelihood of a successful attack or the minimum password entropy for a possible brute-force failure. Entropy is calculated with the assumption that passwords are randomly generated.
 
 `moac` can also generate passwords capable of withstanding a brute-force attack limited by given physical quantities.
 
-My original intent when making this tool was to illustrate how easy it is to make a password whose strength is "overkill".
+My original intent when making this tool was to illustrate how easy it is to make a password whose strength is "overkill". It has since evolved into a generic password generator and evaluator.
 
-**Note: until version 1.0.0 is released, MOAC is only suitable for educational/exploratory use. Do not use it with your actual passwords.**
+**Note: until version 1.0.0 is released, MOAC is only suitable for educational/exploratory use and should not be considered stable. Do not use it with your actual passwords yet.**
 
 Installation
 ------------
+
+Latest stable version:
 
 ```sh
 GO111MODULE=on go install git.sr.ht/~seirdy/moac/cmd/moac@latest
 ```
 
+Bleeding edge version:
+
+```sh
+GO111MODULE=on go install git.sr.ht/~seirdy/moac/cmd/moac@master
+
 Usage
 -----
 
-```
+``` text
 moac - analyze password strength with physical limits
 USAGE:
   moac [OPTIONS] [COMMAND] [ARGS]
@@ -39,6 +46,8 @@ OPTIONS:
   -P <power>	Power available to the computer (W)
   -t <time>	Time limit for brute-force attack (s).
   -p <password>	Password to analyze (do not use a real password).
+  -l <length>	minimum generated password length; can override (increase) -s
+  -L <length>	maximum generated password length; can override (decrease) -s
 
 COMMANDS:
   strength	Calculate the liklihood of a successful guess 
@@ -55,7 +64,7 @@ If the user supplies both mass and energy, the given energy will be replaced wit
 
 If the user supplies both a password and a password entropy, the given entropy will be replaced with the calculated entropy of the provided password if the calculated entropy is lower. If the user does not supply entropy or the physical values necessary to calculate it, the default entropy is `256` (the key length of AES-256).
 
-Time and energy are the two bottlenecks to computation; the final result will be based on whichever is a greater bottleneck. With the default energy per guess (the Landauer limit), energy should always be a greater bottleneck.
+Time and energy are the two bottlenecks to computation; the final result will be based on whichever is a greater bottleneck. Unless the lower bound of the energy per guess is orders of magnitude below the Landauer limit, energy should always be a greater bottleneck.
 
 When physical quantities are not given, default physical quantities are the mass of the visible universe and the power required to achieve Bremermann's limit at the energy efficiency given by the Landauer limit.
 
@@ -89,16 +98,21 @@ Roadmap
 
 ### Roadmap for 0.2.0
 
-- [ ] Manpage
 - [X] Securely enter passwords (rather than using a cmdline arg)
 - [X] zxcvbn-go has a lot of functionality that `moac` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
 - [ ] Output computed entropy
 - [ ] CI/CD
-- [ ] Support min/max length for dealing with bad password validators
+- [X] Support min/max length for dealing with bad password validators
 
 ### Roadmap for 0.3.0
 
+0.3.0 should have full functionality.
+
+- [ ] CLI: Separate global and command-specific options
+- [ ] Manpage for CLI
+- [ ] Makefile
 - [ ] Read from a config file.
+- [ ] Manpage for config file
 - [ ] Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
 - [ ] Shell completion
 
@@ -113,6 +127,15 @@ Roadmap
 - A separate program to "benchmark" external password-generation programs/scripts by repeatedly running them and giving measurements of the worst output.
 - A GUI
 - Plugins for existing password managers. Account for key length used in encryption; if the key length is lower than the password entropy, the key length is the bottleneck.
+
+Alternatives
+------------
+
+- [libpwquality](https://github.com/libpwquality/libpwquality/)
+- [zxcvbn](https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/wheeler)
+- [pwgen](http://sf.net/projects/pwgen)
+- [cracklib](https://github.com/cracklib/cracklib)
+- The password generator/evaluator in [KeePassXC](https://keepassxc.org/)
 
 License
 -------
