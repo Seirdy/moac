@@ -100,8 +100,8 @@ Roadmap
 
 - [X] Securely enter passwords (rather than using a cmdline arg)
 - [X] zxcvbn-go has a lot of functionality that `moac` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
+- [X] Makefile
 - [X] Output computed entropy
-- [ ] CI/CD
 - [X] Support min/max length for dealing with bad password validators
 
 ### Roadmap for 0.3.0
@@ -109,8 +109,8 @@ Roadmap
 0.3.0 should have full functionality.
 
 - [ ] CLI: Separate global and command-specific options
+- [ ] CI/CD
 - [ ] Manpage for CLI
-- [ ] Makefile
 - [ ] Read from a config file.
 - [ ] Manpage for config file
 - [ ] Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
