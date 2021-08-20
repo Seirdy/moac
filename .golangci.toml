@@ -1,0 +1,92 @@
+[run]
+deadline = "1m"
+skip-files = []
+
+[linters]
+disable-all=true
+enable = [
+	"asciicheck",
+	"bodyclose",
+	"cyclop",
+	"deadcode",
+	"depguard",
+	"dogsled",
+	"dupl",
+	"durationcheck",
+	"errcheck",
+	"errname",
+	"errorlint",
+	"exhaustive",
+	"exhaustivestruct",
+	"exportloopref",
+	"forbidigo",
+	"forcetypeassert",
+	"funlen",
+	"gci",
+	"gochecknoglobals",
+	"gochecknoinits",
+	"gocognit",
+	"goconst",
+	"gocritic",
+	"gocyclo",
+	"godot",
+	"godox",
+	"gofmt",
+	"gofumpt",
+	"goheader",
+	"goimports",
+	"gomoddirectives",
+	"gomodguard",
+	"goprintffuncname",
+	"ifshort",
+	"importas",
+	"ineffassign",
+	"lll",
+	"makezero",
+	"misspell",
+	"nakedret",
+	"nestif",
+	"nilerr",
+	"nlreturn",
+	"noctx",
+	"nolintlint",
+	"prealloc",
+	"predeclared",
+	"promlinter",
+	"revive",
+	"rowserrcheck",
+	"sqlclosecheck",
+	"structcheck",
+	"stylecheck",
+	"tagliatelle",
+	"testpackage",
+	"thelper",
+	"tparallel",
+	"typecheck",
+	"unconvert",
+	"unparam",
+	"varcheck",
+	"wastedassign",
+	"whitespace",
+	"wrapcheck",
+	"wsl",
+]
+
+[linters-settings]
+
+	[linters-settings.cyclop]
+		max-complexity = 13
+
+[issues]
+	exclude-use-default = true
+	[[issues.exclude-rules]]
+		path = "cmd/moac/main.go"
+		linters = ["forbidigo"]
+		text = "use of `fmt.Print(ln|f)?` forbidden by pattern"
+	[[issues.exclude-rules]]
+		path = "(.+)_test.go"
+		linters = ["gochecknoglobals"] # test cases defined in global vars
+	[[issues.exclude-rules]]
+		path = "givens_test.go"
+		# we're testing what happens when we leave vals uninitialized
+		linters = ["exhaustivestruct"]
