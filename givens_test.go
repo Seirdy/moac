@@ -28,7 +28,7 @@ func givensTestCases() []givensTestCase {
 				Time:     1.45e17,
 				Password: "ȣMǚHǨȎ#ŕģ=ʬƦQoţ}tʂŦȃťŇ+ħHǰĸȵʣɐɼŋĬŧǺʀǜǬɰ'ʮ0ʡěɱ6ȫŭ",
 			},
-			expectedBF: 2.3e-49,
+			expectedBF: 0.0986,
 			expectedME: 427.3,
 		},
 		{ // from blog post: https://seirdy.one/2021/01/12/password-strength.html

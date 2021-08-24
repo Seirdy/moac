@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"unicode/utf8"
 )
 
 const (
@@ -36,7 +37,7 @@ var Charsets = map[string][]rune{ //nolint:gochecknoglobals // maps can't be con
 func Entropy(password string) (float64, error) {
 	charsetsUsed := findCharsetsUsed(password)
 
-	return FromCharsets(&charsetsUsed, len(password))
+	return FromCharsets(&charsetsUsed, utf8.RuneCountInString(password))
 }
 
 func findCharsetsUsed(password string) [][]rune {
