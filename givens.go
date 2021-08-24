@@ -22,16 +22,25 @@ type Givens struct {
 }
 
 const (
-	C         = 299792458      // speed of light in a vacuum, m/s
-	G         = 6.67408e-11    // gravitation constant, m^3/kg/s^2
-	Hubble    = 2.2e-18        // Hubble's Constant, hertz
-	Temp      = 2.7            // cosmic radiation temperature (low estimate), kelvin
-	Boltzmann = 1.3806503e-23  // Boltzmann's constant, J/K
-	Planck    = 6.62607015e-35 // Planck's Constant, J*s
+	// C is the speed of light in a vacuum, m/s.
+	C = 299792458
+	// G is the gravitation constant, m^3/kg/s^2.
+	G = 6.67408e-11
+	// Hubble is Hubble's Constant, hertz.
+	Hubble = 2.2e-18
+	// Temp is the temperature a low estimate for the temperature of cosmic background radiation, kelvin.
+	Temp = 2.7
+	// Boltzmann is Boltzmann's constant, J/K.
+	Boltzmann = 1.3806503e-23
+	// Planck is Planck's Constant, J*s.
+	Planck = 6.62607015e-35
 
-	UMass      = C * C * C / (2 * G * Hubble) // mass of the observable universe.
-	Bremermann = C * C / Planck               // Bremermann's limit
-	Landauer   = Boltzmann * Temp * math.Ln2  // Landauer limit
+	// UMass is the mass of the observable universe.
+	UMass = C * C * C / (2 * G * Hubble)
+	// Bremermann is Bremermann's limit.
+	Bremermann = C * C / Planck
+	// Landauer limit.
+	Landauer = Boltzmann * Temp * math.Ln2
 
 	defaultEntropy = 256
 )

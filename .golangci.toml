@@ -35,10 +35,13 @@ enable = [
 	"gofumpt",
 	"goheader",
 	"goimports",
+	"gomnd",
 	"gomoddirectives",
 	"gomodguard",
 	"goprintffuncname",
 	"gosec",
+	"gosimple",
+	"govet",
 	"ifshort",
 	"importas",
 	"ineffassign",
@@ -57,6 +60,7 @@ enable = [
 	"revive",
 	"rowserrcheck",
 	"sqlclosecheck",
+	"staticcheck",
 	"structcheck",
 	"stylecheck",
 	"tagliatelle",
@@ -66,20 +70,29 @@ enable = [
 	"typecheck",
 	"unconvert",
 	"unparam",
+	"unused",
 	"varcheck",
 	"wastedassign",
 	"whitespace",
 	"wrapcheck",
 	"wsl",
+	# "goerr113",
+	# "golint",       # deprecated
+	# "interfacer",   # deprecated
+	# "maligned",     # deprecated
+	# "paralleltest", # not applicable, tests are fast enough already
+	# "scopelint",    # deprecated
 ]
 
 [linters-settings]
 
 	[linters-settings.cyclop]
 		max-complexity = 13
+	[linters-settings.gomnd.settings.mnd]
+		ignored-numbers = [2, 10, 32, 64]
 
 [issues]
-	exclude-use-default = true
+	exclude-use-default = false
 	[[issues.exclude-rules]]
 		path = "cmd/moac/main.go"
 		linters = ["forbidigo"]

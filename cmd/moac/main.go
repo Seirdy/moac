@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	Usage = `
+	usage = `
 USAGE:
   moac [OPTIONS] [COMMAND] [ARGS]
 
@@ -38,7 +38,7 @@ COMMANDS:
   pwgen	Generate a password resistant to the described brute-force attack,
        	using charsets specified by [ARGS] (defaults to all provided charsets)
 `
-	helpText = "moac - analyze password strength with physical limits" + Usage
+	helpText = "moac - analyze password strength with physical limits" + usage
 )
 
 func parseOpts( //nolint:cyclop // complexity solely determined by global opts
@@ -129,7 +129,7 @@ func getMinEntropy(givens *moac.Givens, quantum bool) float64 {
 func fetchPassword(password *string) {
 	fmt.Print("Enter password: ")
 
-	bytepw, err := term.ReadPassword(syscall.Stdin)
+	bytepw, err := term.ReadPassword(int(syscall.Stdin)) //nolint:unconvert // needed for some platforms
 
 	fmt.Println()
 
@@ -143,7 +143,7 @@ func fetchPassword(password *string) {
 func main() {
 	opts, optind, err := getopt.Getopts(os.Args, "hqre:s:m:g:P:t:p:l:L:")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, Usage)
+		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, usage)
 		os.Exit(1)
 	}
 
@@ -191,7 +191,7 @@ func main() {
 
 		fmt.Println(pw)
 	default:
-		fmt.Fprintf(os.Stderr, "moac: unknown command %v\n%s", cmd, Usage)
+		fmt.Fprintf(os.Stderr, "moac: unknown command %v\n%s", cmd, usage)
 		os.Exit(1)
 	}
 }
