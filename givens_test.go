@@ -7,7 +7,7 @@ import (
 	"git.sr.ht/~seirdy/moac"
 )
 
-const margin = 0.05 // acceptable error
+const margin = 0.0025 // acceptable error
 
 type givensTestCase struct {
 	name    string
@@ -40,6 +40,16 @@ func givensTestCases() []givensTestCase {
 			},
 			expectedBF: 9.527e-62,
 			expectedME: 307.3,
+		},
+		{ // Should use the default provided entropy but fall back to the
+			// lower computed value
+			name:    "only energy",
+			quantum: false,
+			given: moac.Givens{
+				Energy: 4e52,
+			},
+			expectedBF: 0.0134,
+			expectedME: 250,
 		},
 	}
 }

@@ -38,11 +38,6 @@ const (
 
 // populateDefaults fills in default values for entropy calculation if not provided.
 func populateDefaults(givens *Givens) {
-	if givens.EnergyPerGuess == 0 {
-		// maybe put something more elaborate here given different constraints
-		givens.EnergyPerGuess = Landauer
-	}
-
 	if givens.Energy+givens.Mass == 0 {
 		// mass of the observable universe
 		givens.Mass = UMass
@@ -52,6 +47,11 @@ func populateDefaults(givens *Givens) {
 		if givens.Mass+givens.EnergyPerGuess == 0 {
 			givens.Entropy = defaultEntropy
 		}
+	}
+
+	if givens.EnergyPerGuess == 0 {
+		// maybe put something more elaborate here given different constraints
+		givens.EnergyPerGuess = Landauer
 	}
 }
 
