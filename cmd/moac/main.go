@@ -83,7 +83,7 @@ func parseOpts( //nolint:cyclop // complexity solely determined by global opts
 		}
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "invalid value for -%c: %s\n%s", opt.Option, helpText, opt.Value)
+			fmt.Fprintf(os.Stderr, "invalid value for -%c: %s\n%s", opt.Option, opt.Value, helpText)
 			os.Exit(1)
 		}
 	}
