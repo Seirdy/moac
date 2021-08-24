@@ -106,19 +106,24 @@ Roadmap
 
 ### Roadmap for 0.3.0
 
-0.3.0 should have full functionality.
-
+- [ ] More comprehensive tests
+- [ ] Move password generation to its own sub-package
 - [ ] CLI: Separate global and command-specific options
+- [ ] Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
+
+### Roadmap for 0.4.0
+
+0.4.0 should have full functionality.
+
 - [ ] CI/CD
 - [ ] Manpage for CLI
 - [ ] Read from a config file.
 - [ ] Manpage for config file
-- [ ] Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
 - [ ] Shell completion
+- [ ] Set up signed releases
 
 ### Roadmap for 1.0.0
 
-- Set up signed releases
 - Get `moac`'s code reviewed by some people with more experience in software security.
 - Link to it in my old blog post on brute-force immunity
 
