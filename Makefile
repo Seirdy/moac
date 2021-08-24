@@ -19,8 +19,8 @@ LDFLAGS += -Wl,-z,relro -Wl,--as-needed -Wl,-z,now -Wl,-E -Wl,-z,noexecstack -Wl
 GO_LDFLAGS += "-w -s -linkmode=external -extldflags '$(LDFLAGS)'"
 
 # for testing with clang+msan+CFI+safe-stack/shadow-stack and release builds
-CFLAGS_CFI += $(CFLAGS) -flto=thin -fvisibility=hidden -fsanitize=cfi,safe-stack -fpic -fpie
-LDFLAGS_CFI += $(LDFLAGS) -flto=thin -fsanitize=cfi,safe-stack -pie
+CFLAGS_CFI += $(CFLAGS) -flto=thin -fvisibility=hidden -fsanitize=cfi -fpic -fpie
+LDFLAGS_CFI += $(LDFLAGS) -flto=thin -fsanitize=cfi -pie
 GO_LDFLAGS_CFI += "-w -s -linkmode=external -extldflags '$(LDFLAGS_CFI)'"
 
 # for release builds, with Clang+CFI sanitization, static-pie linked
