@@ -1,0 +1,24 @@
+image: alpine/edge
+packages:
+  - clang
+  - compiler-rt
+  - go
+  - lld
+  - make
+  - musl-dev
+  - tar
+sources:
+  - https://git.sr.ht/~seirdy/moac
+tasks:
+  - setup_env: |
+      sudo sh moac/.builds/setup-alpine.sh
+  - build: |
+      cd moac
+      make RELEASE_SANITIZERS=cfi build-release
+      tar czf ~/moac-linux-amd64-musl-static-pie.tar.gz ./moac
+  - test: |
+      cd moac
+      make test-race
+
+artifacts:
+  - moac-linux-amd64-musl-static-pie.tar.gz

@@ -1,0 +1,30 @@
+image: fedora/34
+packages:
+  - alternatives
+  - clang
+  - curl
+  - compiler-rt
+  - git # for go
+  - lld
+  - make
+  - tar
+environment:
+  PATH: /home/build/sdk/go/bin:/home/build/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+sources:
+  - https://git.sr.ht/~seirdy/moac
+tasks:
+  - install_go: |
+      mkdir -p /home/build/sdk
+      curl -s https://dl.google.com/go/go1.17.linux-amd64.tar.gz | tar -C /home/build/sdk -xzf -
+  - setup_env: |
+      sudo sh moac/.builds/setup-fedora.sh
+  - build: |
+      cd moac
+      make EXTRA_SANITIZERS=cfi,safe-stack build-pie
+      tar czf ~/moac-linux-amd64-glibc-pie.tar.gz ./moac
+  - test: |
+      cd moac
+      make test-race
+
+artifacts:
+  - moac-linux-amd64-glibc-pie.tar.gz
