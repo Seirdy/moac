@@ -186,12 +186,12 @@ func TestGenPw(t *testing.T) {
 					break
 				}
 				if err != nil {
-					t.Errorf("Error calculating entropy: %w", err)
+					t.Errorf("Error calculating entropy: %v", err)
 
 					break
 				}
 				if err := pwHasGoodLength(password, minLen, maxLen, entropyWanted); err != nil {
-					t.Errorf("bad password length in test %v: %w", caseName, err)
+					t.Errorf("bad password length in test %v: %v", caseName, err)
 
 					break
 				}
