@@ -8,6 +8,7 @@ import (
 
 	"git.sr.ht/~seirdy/moac"
 	"git.sr.ht/~seirdy/moac/entropy"
+	"git.sr.ht/~seirdy/moac/pwgen"
 	"git.sr.ht/~sircmpwn/getopt"
 	"golang.org/x/term"
 )
@@ -173,7 +174,7 @@ func main() {
 			charsets = []string{"lowercase", "uppercase", "numbers", "symbols", "latin", " "}
 		}
 
-		pw, err := moac.GenPW(charsets, entropyLimit, minLen, maxLen)
+		pw, err := pwgen.GenPW(charsets, entropyLimit, minLen, maxLen)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
 			os.Exit(1)

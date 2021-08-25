@@ -1,4 +1,5 @@
-package moac
+// Package pwgen allows generating random passwords given charsets, length limits, and target entropy.
+package pwgen
 
 import (
 	cryptoRand "crypto/rand"
@@ -11,6 +12,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"git.sr.ht/~seirdy/moac"
 	"git.sr.ht/~seirdy/moac/entropy"
 )
 
@@ -133,7 +135,7 @@ func buildCharsets(charsetsEnumerated []string) [][]rune {
 func GenPW(charsetsEnumerated []string, entropyWanted float64, minLen, maxLen int) (string, error) {
 	charsetsGiven := buildCharsets(charsetsEnumerated)
 	if entropyWanted == 0 {
-		return genpwFromGivenCharsets(charsetsGiven, defaultEntropy, minLen, maxLen)
+		return genpwFromGivenCharsets(charsetsGiven, moac.DefaultEntropy, minLen, maxLen)
 	}
 
 	return genpwFromGivenCharsets(charsetsGiven, entropyWanted, minLen, maxLen)

@@ -4,7 +4,8 @@ BIN = moac
 CGO_ENABLED ?= 0
 GOPATH ?= $(shell $(GO) env GOPATH)
 GOBIN ?= $(GOPATH)/bin
-SRC = *.go entropy/*.go cmd/moac/*.go
+SRC = *.go entropy/*.go pwgen/*.go cmd/moac/*.go
+COVERPKG = .,./entropy,./pwgen
 
 GO ?= go
 GOLANGCI_LINT ?= $(GOBIN)/golangci-lint
@@ -23,6 +24,7 @@ golangci-lint: $(SRC)
 gokart-lint: $(SRC)
 	$(GOKART) scan $(GOKART_FLAGS) .
 	$(GOKART) scan $(GOKART_FLAGS) ./entropy
+	$(GOKART) scan $(GOKART_FLAGS) ./pwgen
 	$(GOKART) scan $(GOKART_FLAGS) ./cmd/moac
 
 lint: golangci-lint gokart-lint
@@ -40,7 +42,8 @@ test: $(SRC)
 	CGO_ENABLED=0 $(GO) test $(GO_BUILDFLAGS) ./...
 
 test-cov: $(SRC)
-	CGO_ENABLED=0 $(GO) test $(GO_BUILDFLAGS) -coverpkg=.,./entropy -coverprofile=coverage.out ./...
+	CGO_ENABLED=0 $(GO) test $(GO_BUILDFLAGS) -coverpkg=$(COVERPKG) -coverprofile=coverage.out ./...
+	$(GO) tool cover -func=coverage.out
 
 # =================================================================================
 
@@ -75,7 +78,7 @@ GO_LDFLAGS_RELEASE += "-w -s -linkmode=external -extldflags '$(LDFLAGS_RELEASE)'
 
 # Test with thread and memory sanitizers; needs associated libclang_rt libs.
 test-race: $(SRC)
-	CC=$(CC) CCLD=$(CCLD) CGO_CFLAGS="$(CFLAGS)" $(GO) test $(GO_BUILDFLAGS) -race -ldflags=$(GO_LDFLAGS_CGO) -coverpkg=.,./entropy .
+	CC=$(CC) CCLD=$(CCLD) CGO_CFLAGS="$(CFLAGS)" $(GO) test $(GO_BUILDFLAGS) -race -ldflags=$(GO_LDFLAGS_CGO)
 
 # test-msan does not work on alpine (its compiler-rt lacks msan)
 # but it works on fedora and void-musl.

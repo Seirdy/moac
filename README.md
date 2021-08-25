@@ -101,7 +101,7 @@ Roadmap
 ### Roadmap for 0.3.0
 
 - [X] More comprehensive tests: cover everything that should be reachable
-- [ ] Move password generation to its own sub-package
+- [X] Move password generation to its own sub-package
 - [ ] CLI: Separate global and command-specific options
 - [ ] Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
 

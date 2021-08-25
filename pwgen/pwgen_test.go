@@ -1,4 +1,4 @@
-package moac // nolint:testpackage // use some private funcs cuz it's easier
+package pwgen // nolint:testpackage // use some private funcs cuz it's easier
 
 import (
 	"errors"

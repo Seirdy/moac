@@ -43,7 +43,8 @@ const (
 	// Landauer limit.
 	Landauer = Boltzmann * Temp * math.Ln2
 
-	defaultEntropy = 256
+	// DefaultEntropy is the number of bits of entropy to target if no target entropy is provided.
+	DefaultEntropy = 256
 )
 
 // populateDefaults fills in default values for entropy calculation if not provided.
@@ -55,7 +56,7 @@ func populateDefaults(givens *Givens) {
 
 	if givens.Entropy == 0 {
 		if givens.Mass+givens.EnergyPerGuess == 0 {
-			givens.Entropy = defaultEntropy
+			givens.Entropy = DefaultEntropy
 		}
 	}
 
