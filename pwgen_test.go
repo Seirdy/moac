@@ -162,7 +162,7 @@ func pwHasGoodLength(password string, minLen, maxLen int, entropyWanted float64)
 
 func TestGenPw(t *testing.T) {
 	for _, test := range buildTestCases() {
-		charsetsWanted := &test.charsetsWanted
+		charsetsWanted := test.charsetsWanted
 		entropyWanted := test.entropyWanted
 		minLen := test.minLen
 		maxLen := test.maxLen
@@ -170,7 +170,7 @@ func TestGenPw(t *testing.T) {
 		t.Run(caseName, func(t *testing.T) {
 			charsets := buildCharsets(charsetsWanted)
 			for i := 0; i < loops; i++ {
-				password, err := GenPW(*charsetsWanted, entropyWanted, minLen, maxLen)
+				password, err := GenPW(charsetsWanted, entropyWanted, minLen, maxLen)
 				if err != nil {
 					t.Fatalf("GenPW() = %v", err)
 				}
