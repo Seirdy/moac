@@ -116,16 +116,6 @@ func getEntropy(givens *moac.Givens) float64 {
 	return computedEntropy
 }
 
-func getMinEntropy(givens *moac.Givens, quantum bool) float64 {
-	entropyLimit, err := moac.MinEntropy(givens, quantum)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-		os.Exit(1)
-	}
-
-	return entropyLimit
-}
-
 func fetchPassword(password *string) {
 	fmt.Print("Enter password: ")
 
@@ -165,14 +155,14 @@ func main() {
 	case "entropy":
 		fmt.Printf("%.3g\n", getEntropy(givens))
 	case "entropy-limit":
-		fmt.Printf("%.3g\n", getMinEntropy(givens, quantum))
+		fmt.Printf("%.3g\n", moac.MinEntropy(givens, quantum))
 	case "pwgen":
 		// If the only user-supplied given is entropy, then just use that
 		// entropy level and skip calculating the strength of a brute-force attack.
 		entropyLimit := givens.Entropy
 
 		if givens.Energy+givens.Mass+givens.Power+givens.Time != 0 {
-			entropyLimit = getMinEntropy(givens, quantum)
+			entropyLimit = moac.MinEntropy(givens, quantum)
 		}
 
 		var charsets []string

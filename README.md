@@ -3,6 +3,8 @@ MOAC
 
 [![godocs.io](https://godocs.io/git.sr.ht/~seirdy/moac?status.svg)](https://godocs.io/git.sr.ht/~seirdy/moac) [![sourcehut](https://img.shields.io/badge/repository-sourcehut-lightgrey.svg?logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==)](https://sr.ht/~seirdy/MOAC) [![GitLab mirror](https://img.shields.io/badge/mirror-GitLab-orange.svg?logo=gitlab)](https://gitlab.com/Seirdy/moac) [![GitHub mirror](https://img.shields.io/badge/mirror-GitHub-black.svg?logo=github)](https://github.com/Seirdy/moac)
 
+[![builds.sr.ht status](https://builds.sr.ht/~seirdy/moac.svg)](https://builds.sr.ht/~seirdy/moac)
+
 `moac` is a tool that takes a unique approach to generating passwords and analyzing their strength. It's concerned only with password strength, and knows nothing about the context in which passwords will be used; as such, it makes the assumption that password guessability is the only metric that matters, and a brute-force attack is constrained only by the laws of physics. It's inspired by a blog post I wrote: [Becoming physically immune to brute-force attacks](https://seirdy.one/2021/01/12/password-strength.html).
 
 Users provide given values like the mass available to attackers, a time limit for the brute-force attack, and the energy available. `moac` outputs the likelihood of a successful attack or the minimum password entropy for a possible brute-force failure. Entropy is calculated with the assumption that passwords are randomly generated.
@@ -96,17 +98,9 @@ _Note: given that the Earth wasn't hollow during the book's opening, it's unlike
 Roadmap
 -------
 
-### Roadmap for 0.2.0
-
-- [X] Securely enter passwords (rather than using a cmdline arg)
-- [X] zxcvbn-go has a lot of functionality that `moac` doesn't need; write an entropy estimator that's a bit simpler but gives similar results, optimized for pseudorandom passwords (no dictionary words, focus on estimating charset size and repetitions/patterns).
-- [X] Makefile
-- [X] Output computed entropy
-- [X] Support min/max length for dealing with bad password validators
-
 ### Roadmap for 0.3.0
 
-- [ ] More comprehensive tests
+- [X] More comprehensive tests: cover everything that should be reachable
 - [ ] Move password generation to its own sub-package
 - [ ] CLI: Separate global and command-specific options
 - [ ] Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
@@ -115,7 +109,7 @@ Roadmap
 
 0.4.0 should have full functionality.
 
-- [ ] CI/CD
+- [X] CI/CD
 - [ ] Manpage for CLI
 - [ ] Read from a config file.
 - [ ] Manpage for config file
@@ -124,8 +118,13 @@ Roadmap
 
 ### Roadmap for 1.0.0
 
-- Get `moac`'s code reviewed by some people with more experience in software security.
-- Link to it in my old blog post on brute-force immunity
+- [ ] Get `moac`'s code reviewed by some people with more experience in software security.
+- [ ] Link to it in my old blog post on brute-force immunity
+
+### Future
+
+- [ ] Account for quantum memory changing the constraints on energy-bound computation speed
+- [ ] Estimate computations per guess, possibly using additional context like KDFs used
 
 ### Ideas for other programs that can use `moac`
 

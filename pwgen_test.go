@@ -1,6 +1,7 @@
 package moac // nolint:testpackage // use some private funcs cuz it's easier
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"testing"
@@ -15,6 +16,7 @@ type pwgenTestCase struct {
 	entropyWanted  float64
 	minLen         int
 	maxLen         int
+	expectedErr    error
 }
 
 type minMaxLen struct {
@@ -27,6 +29,28 @@ type minMaxLen struct {
 const loops int = 16
 
 func buildTestCases() []pwgenTestCase {
+	return append(buildGoodTestCases(), buildBadTestCases()...)
+}
+
+func buildBadTestCases() []pwgenTestCase {
+	return []pwgenTestCase{
+		{
+			name:           "too short for all charsets",
+			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "🦖؆ص😈"},
+			maxLen:         5,
+			expectedErr:    entropy.ErrPasswordInvalid,
+		},
+		{
+			name:           "bad lengths",
+			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "🦖؆ص😈"},
+			maxLen:         12,
+			minLen:         18,
+			expectedErr:    ErrInvalidLenBounds,
+		},
+	}
+}
+
+func buildGoodTestCases() []pwgenTestCase {
 	pwgenCharsets := []struct {
 		name           string
 		charsetsWanted []string
@@ -78,6 +102,7 @@ func buildTestCases() []pwgenTestCase {
 					pwgenTestCase{
 						pwgenCharset.name, pwgenCharset.charsetsWanted,
 						entropyWanted, minMaxLengths.minLen, minMaxLengths.maxLen,
+						nil,
 					},
 				)
 				caseIndex++
@@ -160,38 +185,43 @@ func pwHasGoodLength(password string, minLen, maxLen int, entropyWanted float64)
 	return nil
 }
 
+func validateTestCase(test pwgenTestCase, charsets [][]rune) error {
+	password, err := GenPW(test.charsetsWanted, test.entropyWanted, test.minLen, test.maxLen)
+	if err != nil && !errors.Is(err, test.expectedErr) {
+		return fmt.Errorf("GenPW() = %w", err)
+	}
+
+	pwRunes := []rune(password)
+	if unusedCharset, validPW := pwUsesEachCharset(&charsets, &pwRunes); !validPW {
+		return fmt.Errorf("GenPW() = %s; didn't use each charset\nunused charset: %s", password, unusedCharset)
+	}
+
+	if invalidRune, validPW := pwOnlyUsesAllowedRunes(&charsets, &pwRunes); !validPW {
+		return fmt.Errorf("GenPW() = %s; used invalid character \"%v\"", password, string(invalidRune))
+	}
+
+	if err != nil && !errors.Is(err, test.expectedErr) {
+		return fmt.Errorf("Error calculating entropy: %w", err)
+	}
+
+	// skip this test if we expected the password to be generated successfully
+	if err := pwHasGoodLength(
+		password, test.minLen, test.maxLen, test.entropyWanted,
+	); test.expectedErr == nil && err != nil {
+		return fmt.Errorf("bad password length in test %v: %w", test.name, err)
+	}
+
+	return nil
+}
+
 func TestGenPw(t *testing.T) {
 	for _, test := range buildTestCases() {
-		charsetsWanted := test.charsetsWanted
-		entropyWanted := test.entropyWanted
-		minLen := test.minLen
-		maxLen := test.maxLen
-		caseName := test.name
-		t.Run(caseName, func(t *testing.T) {
-			charsets := buildCharsets(charsetsWanted)
+		t.Run(test.name, func(t *testing.T) {
+			charsets := buildCharsets(test.charsetsWanted)
 			for i := 0; i < loops; i++ {
-				password, err := GenPW(charsetsWanted, entropyWanted, minLen, maxLen)
+				err := validateTestCase(test, charsets)
 				if err != nil {
-					t.Fatalf("GenPW() = %v", err)
-				}
-				pwRunes := []rune(password)
-				if unusedCharset, validPW := pwUsesEachCharset(&charsets, &pwRunes); !validPW {
-					t.Errorf("GenPW() = %s; didn't use each charset\nunused charset: %s", password, unusedCharset)
-
-					break
-				}
-				if invalidRune, validPW := pwOnlyUsesAllowedRunes(&charsets, &pwRunes); !validPW {
-					t.Errorf("GenPW() = %s; used invalid character \"%v\"", password, string(invalidRune))
-
-					break
-				}
-				if err != nil {
-					t.Errorf("Error calculating entropy: %v", err)
-
-					break
-				}
-				if err := pwHasGoodLength(password, minLen, maxLen, entropyWanted); err != nil {
-					t.Errorf("bad password length in test %v: %v", caseName, err)
+					t.Error(err.Error())
 
 					break
 				}

@@ -3,6 +3,7 @@ package moac
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math"
 
 	"git.sr.ht/~seirdy/moac/entropy"
@@ -81,9 +82,9 @@ func calculatePower(givens *Givens) {
 
 func calculateEnergy(givens *Givens) {
 	var (
-		massEnergy       = givens.Mass * C * C
+		energyFromMass   = givens.Mass * C * C
 		energyFromPower  = givens.Power * givens.Time
-		computedEnergies = [2]float64{massEnergy, energyFromPower}
+		computedEnergies = [2]float64{energyFromMass, energyFromPower}
 	)
 
 	for _, energy := range computedEnergies {
@@ -93,20 +94,22 @@ func calculateEnergy(givens *Givens) {
 	}
 }
 
+// Errors for missing physical values that are required to compute desired values.
 var (
-	errMissingEMT = errors.New("missing energy, mass, and/or time")
-	errMissingPE  = errors.New("missing password and/or entropy")
+	ErrMissingValue = errors.New("not enough given values")
+	ErrMissingEMT   = fmt.Errorf("%w: missing energy, mass, and/or time", ErrMissingValue)
+	ErrMissingPE    = fmt.Errorf("%w: missing password and/or entropy", ErrMissingValue)
 )
 
 // populate will solve for entropy, guesses per second, and energy if they aren't given.
 // If they are given, it updates them if the computed value is a greater bottleneck than the given value.
-func (givens *Givens) populate() error {
+func (givens *Givens) populate() {
 	populateDefaults(givens)
 
 	if givens.Password != "" {
 		computedEntropy, err := entropy.Entropy(givens.Password)
 		if err != nil {
-			return fmt.Errorf("error measuring generated password: %w", err)
+			log.Panicf("error measuring generated password entropy: %v", err)
 		}
 
 		if givens.Entropy == 0 || givens.Entropy > computedEntropy {
@@ -132,10 +135,8 @@ func (givens *Givens) populate() error {
 	calculateEnergy(givens)
 
 	if givens.Energy == 0 && givens.Time == 0 {
-		return fmt.Errorf("populating givens: %w", errMissingEMT)
+		log.Panic("populating givens: failed to populate energy and time")
 	}
-
-	return nil
 }
 
 // BruteForceability computes the liklihood that a password will be
@@ -145,27 +146,20 @@ func (givens *Givens) populate() error {
 // if BruteForceability > 1, it represents the number of times a password
 // can be brute-forced with certainty.
 func BruteForceability(givens *Givens, quantum bool) (float64, error) {
-	if err := givens.populate(); err != nil {
-		return 0, err
-	}
+	givens.populate()
 
 	if givens.Entropy+givens.Time == 0 {
-		return 0, fmt.Errorf("BruteForceability: cannot compute entropy: %w", errMissingPE)
+		return 0, fmt.Errorf("BruteForceability: cannot compute entropy: %w", ErrMissingPE)
 	}
 
-	var (
-		computedBruteForceability = bruteForceability(givens, quantum)
-		err                       error
-	)
+	computedBruteForceability := bruteForceability(givens, quantum)
 
-	switch {
-	case computedBruteForceability == 0:
-		err = fmt.Errorf("BruteForceability: %w", errMissingPE)
-	case math.IsNaN(computedBruteForceability):
-		err = fmt.Errorf("BruteForceability: %w", errMissingPE)
+	// if bruteforceability isn't valid, we have a bug.
+	if computedBruteForceability == 0 || math.IsNaN(computedBruteForceability) {
+		log.Panicf("failed to compute BruteForceability: got %v", computedBruteForceability)
 	}
 
-	return computedBruteForceability, err
+	return computedBruteForceability, nil
 }
 
 func bruteForceability(givens *Givens, quantum bool) float64 {
@@ -194,10 +188,8 @@ func bruteForceability(givens *Givens, quantum bool) float64 {
 
 // MinEntropy calculates the maximum password entropy that the MOAC can certainly brute-force.
 // Passwords need an entropy greater than this to have a chance of not being guessed.
-func MinEntropy(givens *Givens, quantum bool) (entropy float64, err error) {
-	if err := givens.populate(); err != nil {
-		return 0, err
-	}
+func MinEntropy(givens *Givens, quantum bool) (entropy float64) {
+	givens.populate()
 
 	energyBound := math.Log2(givens.Energy / givens.EnergyPerGuess)
 
@@ -209,8 +201,8 @@ func MinEntropy(givens *Givens, quantum bool) (entropy float64, err error) {
 	}
 
 	if quantum {
-		return entropy * 2, nil
+		return entropy * 2
 	}
 
-	return entropy, nil
+	return entropy
 }

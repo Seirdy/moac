@@ -76,14 +76,17 @@ func filterFromString(str *string, banned []rune) {
 	)
 }
 
-var errPasswordInvalid = errors.New("invalid password")
+// A valid password is impossible with the given constraints.
+var (
+	ErrPasswordInvalid = errors.New("invalid password")
+)
 
 // FromCharsets computes the number of entropy bits in a string
 // with the given length that utilizes at least one character from each
 // of the given charsets.
 func FromCharsets(charsetsUsed *[][]rune, length int) (float64, error) {
 	if len(*charsetsUsed) > length {
-		return 0.0, fmt.Errorf("password too short to use all available charsets: %w", errPasswordInvalid)
+		return 0.0, fmt.Errorf("password too short to use all available charsets: %w", ErrPasswordInvalid)
 	}
 
 	charSizeSum := 0

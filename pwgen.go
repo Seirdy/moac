@@ -4,6 +4,7 @@ import (
 	cryptoRand "crypto/rand"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"math/big"
 	"math/rand"
@@ -13,24 +14,18 @@ import (
 	"git.sr.ht/~seirdy/moac/entropy"
 )
 
-func randRune(runes []rune) (rune, error) {
+func randRune(runes []rune) rune {
 	i, err := cryptoRand.Int(cryptoRand.Reader, big.NewInt(int64(len(runes))))
 	if err != nil {
-		return ' ', fmt.Errorf("randRune: %w", err)
+		log.Panicf("crypto/rand errored when generating a random number: %v", err)
 	}
 
-	return runes[i.Int64()], nil
+	return runes[i.Int64()]
 }
 
-func addRuneToPw(password *strings.Builder, runes []rune) error {
-	newChar, err := randRune(runes)
-	if err != nil {
-		return fmt.Errorf("can't add rune to pw: %w", err)
-	}
-
+func addRuneToPw(password *strings.Builder, runes []rune) {
+	newChar := randRune(runes)
 	password.WriteRune(newChar)
-
-	return nil
 }
 
 func shuffle(password string) string {
@@ -42,11 +37,12 @@ func shuffle(password string) string {
 	return string(runified)
 }
 
-var errInvalidLenBounds = errors.New("bad length bounds")
+// ErrInvalidLenBounds represents bad minLen/maxLen values.
+var ErrInvalidLenBounds = errors.New("bad length bounds")
 
 func computePasswordLength(charsetSize int, pwEntropy float64, minLen, maxLen int) (int, error) {
 	if maxLen > 0 && minLen > maxLen {
-		return 0, fmt.Errorf("%w: maxLen can't be less than minLen", errInvalidLenBounds)
+		return 0, fmt.Errorf("%w: maxLen can't be less than minLen", ErrInvalidLenBounds)
 	}
 	// combinations is 2^entropy, or 2^s
 	// password length estimate is the logarithm of that with base charsetSize
@@ -70,9 +66,7 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64, minLe
 	for _, charset := range charsetsGiven {
 		charsToPickFrom.WriteString(string(charset))
 
-		if err := addRuneToPw(&pwBuilder, charset); err != nil {
-			return pwBuilder.String(), fmt.Errorf("genpw: %w", err)
-		}
+		addRuneToPw(&pwBuilder, charset)
 	}
 
 	runesToPickFrom := []rune(charsToPickFrom.String())
@@ -86,17 +80,11 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64, minLe
 	currentLength := utf8.RuneCountInString(pwBuilder.String())
 
 	for ; currentLength < pwLength; currentLength++ {
-		err := addRuneToPw(&pwBuilder, runesToPickFrom)
-		if err != nil {
-			return pwBuilder.String(), fmt.Errorf("genpw: %w", err)
-		}
+		addRuneToPw(&pwBuilder, runesToPickFrom)
 	}
 
 	for ; maxLen == 0 || currentLength < maxLen; currentLength++ {
-		err := addRuneToPw(&pwBuilder, runesToPickFrom)
-		if err != nil {
-			return pwBuilder.String(), fmt.Errorf("genpw: %w", err)
-		}
+		addRuneToPw(&pwBuilder, runesToPickFrom)
 
 		pw := pwBuilder.String()
 		computedEntropy, err := entropy.Entropy(pw)
