@@ -1,0 +1,20 @@
+image: openbsd/latest
+packages:
+  - devel/llvm
+  - devel/gmake
+  - go
+sources:
+  - https://git.sr.ht/~seirdy/moac
+tasks:
+  - build: |
+      cd moac
+      go version
+      # go on openbsd must use libc for syscalls as of 1.16 due to api instability
+      make EXTRA_SANITIZERS='' build-cgo
+      tar czf ~/moac-openbsd-amd64-pie.tar.gz ./moac
+  - test: |
+      cd moac
+      make test-cov
+
+artifacts:
+  - moac-openbsd-amd64-pie.tar.gz

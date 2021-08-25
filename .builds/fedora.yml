@@ -22,7 +22,7 @@ tasks:
   - build: |
       cd moac
       make build
-      make BIN=moac-cgo EXTRA_SANITIZERS=cfi,safe-stack build-pie
+      make BIN=moac-cgo EXTRA_SANITIZERS=cfi,safe-stack build-cgo
       tar czf ~/moac-linux-amd64-glibc-pie.tar.gz ./moac ./moac-cgo
   - test: |
       cd moac

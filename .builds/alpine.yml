@@ -16,7 +16,7 @@ tasks:
   - build: |
       cd moac
       make build
-      make BIN=moac-cgo RELEASE_SANITIZERS=cfi build-release
+      make BIN=moac-cgo RELEASE_SANITIZERS=cfi build-cgo-static
       tar czf ~/moac-linux-amd64-musl-static-pie.tar.gz ./moac ./moac-cgo
   - test: |
       cd moac
