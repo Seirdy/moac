@@ -10,7 +10,7 @@ tasks:
       cd moac
       go version
       # go on openbsd must use libc for syscalls as of 1.16 due to api instability
-      make EXTRA_SANITIZERS='' build-cgo
+      make BUILDMODE_CGO=exe EXTRA_SANITIZERS='' build-cgo
       tar czf ~/moac-openbsd-amd64-pie.tar.gz ./moac
   - test: |
       cd moac
