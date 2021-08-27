@@ -2,7 +2,7 @@
 
 BIN = moac
 CGO_ENABLED ?= 0
-GOPATH ?= $(shell $(GO) env GOPATH)
+GOPATH ?= `$(GO) env GOPATH`
 GOBIN ?= $(GOPATH)/bin
 SRC = *.go entropy/*.go pwgen/*.go cmd/moac/*.go
 COVERPKG = .,./entropy,./pwgen

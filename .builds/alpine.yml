@@ -9,11 +9,16 @@ packages:
   - musl-dev
 sources:
   - https://git.sr.ht/~seirdy/moac
+environment:
+  PATH: /home/build/sdk/gotip/bin:/home/build/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 tasks:
   - setup_env: |
+      # install go, make clang the default compiler, set up cfi blacklists
       sudo sh moac/.builds/setup-alpine.sh
-      go version
+      go install golang.org/dl/gotip@latest
+      "$(go env GOPATH)/bin/gotip" download
   - build: |
+      go version
       cd moac
       bmake build
       # alpine doesn't support safe-stack
@@ -21,7 +26,12 @@ tasks:
       tar czf ~/moac-linux-amd64-musl-static-pie.tar.gz ./moac ./moac-cgo-static
   - test: |
       cd moac
-      make test-race
+      bmake test-race
+  - lint: |
+      go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      go install github.com/praetorian-inc/gokart@latest
+      cd moac
+      bmake lint
 
 artifacts:
   - moac-linux-amd64-musl-static-pie.tar.gz

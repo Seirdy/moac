@@ -76,7 +76,7 @@ enable = [
 	"whitespace",
 	"wrapcheck",
 	"wsl",
-	# "goerr113",
+	"goerr113",
 	# "golint",       # deprecated
 	# "interfacer",   # deprecated
 	# "maligned",     # deprecated
@@ -101,3 +101,8 @@ enable = [
 		path = "givens_test.go"
 		# we're testing what happens when we leave vals uninitialized
 		linters = ["exhaustivestruct"]
+	[[issues.exclude-rules]]
+		path = "pwgen/pwgen_test.go"
+		# for now, use errors for specific wrapped tests to describe failures.
+		# might change this in the future
+		linters = ["goerr113"]
