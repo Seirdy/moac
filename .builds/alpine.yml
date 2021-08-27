@@ -4,9 +4,9 @@ packages:
   - compiler-rt
   - go
   - lld
-  - make
+  # we use gmake in fedora and openbsd make in openbsd, so freebsd make is the last major make impl. to test.
+  - bmake
   - musl-dev
-  - tar
 sources:
   - https://git.sr.ht/~seirdy/moac
 tasks:
@@ -15,9 +15,10 @@ tasks:
       go version
   - build: |
       cd moac
-      make build
-      make BIN=moac-cgo RELEASE_SANITIZERS=cfi build-cgo-static
-      tar czf ~/moac-linux-amd64-musl-static-pie.tar.gz ./moac ./moac-cgo
+      bmake build
+      # alpine doesn't support safe-stack
+      bmake BIN=moac-cgo-static build-cgo-static
+      tar czf ~/moac-linux-amd64-musl-static-pie.tar.gz ./moac ./moac-cgo-static
   - test: |
       cd moac
       make test-race

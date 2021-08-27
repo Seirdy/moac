@@ -26,7 +26,7 @@ tasks:
       tar czf ~/moac-linux-amd64-glibc-pie.tar.gz ./moac ./moac-cgo
   - test: |
       cd moac
-      make test-race
+      make test-san
 
 artifacts:
   - moac-linux-amd64-glibc-pie.tar.gz

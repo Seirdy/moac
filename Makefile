@@ -12,12 +12,19 @@ GOLANGCI_LINT ?= $(GOBIN)/golangci-lint
 GOKART ?= $(GOBIN)/gokart
 GOKART_FLAGS ?= -g
 
+CMD = build
+ARGS = ./cmd/moac
+
 # general build flags
-GO_LDFLAGS += "-w -s"
+LINKMODE = internal
+# extldflags is ignored unless you use one of the cgo options at the bottom
+GO_LDFLAGS += -w -s -linkmode=$(LINKMODE) -extldflags '$(LDFLAGS)'
 GO_BUILDFLAGS += -trimpath -mod=readonly -gcflags="-trimpath=$(GOPATH)" -asmflags="-trimpath=$(GOPATH)"
+BUILDMODE ?= exe
+TESTFLAGS ?= # -msan, -race, coverage, etc.
 
 default:
-	$(MAKE) clean build
+	@$(MAKE) clean build
 
 golangci-lint: $(SRC)
 	$(GOLANGCI_LINT) run
@@ -29,72 +36,80 @@ gokart-lint: $(SRC)
 
 lint: golangci-lint gokart-lint
 
-$(BIN): $(SRC)
-	CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(GO_BUILDFLAGS) -buildmode=exe -ldflags $(GO_LDFLAGS) -o $(BIN) ./cmd/moac
+.base: $(SRC)
+	CC=$(CC) CCLD=$(CCLD) CGO_CFLAGS="$(CFLAGS)" CGO_ENABLED=$(CGO_ENABLED) $(GO) $(CMD) $(GO_BUILDFLAGS) -buildmode=$(BUILDMODE) -ldflags "$(GO_LDFLAGS)" $(ARGS)
+
+$(BIN):
+	@$(MAKE) GO_BUILDFLAGS="$(GO_BUILDFLAGS) -o $(BIN)" CMD=build .base
 
 build: $(BIN)
 
 clean:
-	$(GO) clean
+	$(GO) clean -testcache
 	rm -f ./$(BIN) ./coverage.out
 
-test: $(SRC)
-	CGO_ENABLED=0 $(GO) test $(GO_BUILDFLAGS) ./...
+test:
+	@$(MAKE) CMD="test" ARGS="$(TESTFLAGS) ./..." .base
 
 test-cov: $(SRC)
-	CGO_ENABLED=0 $(GO) test $(GO_BUILDFLAGS) -coverpkg=$(COVERPKG) -coverprofile=coverage.out ./...
+	@$(MAKE) TESTFLAGS="-coverpkg=$(COVERPKG) -coverprofile=coverage.out" test
 	$(GO) tool cover -func=coverage.out
 
 # =================================================================================
 
 # everything below this line requires CGO + Clang. Building with CGO allows a few
 # extra goodies:
-# 	- PIE and static-pie binaries
-# 	- msan and race detection
+# 	- static-pie binaries (note that go puts the heap at a fixed address
+# 	  anyway and this isn't useful without CGO)
+# 	- msan and race detection (msan requires clang)
+# 	- support for platforms that require CGO like OpenBSD
+
+# moac doesn't really need CGO outside platforms like FreeBSD but this Makefile is
+# just a template that I use for all my Go projects. Besides, it should be safe to build it with CGO
 
 # if building with CGO, turn on some hardening
 CC = clang
 CCLD = lld
-CFLAGS += -O2 -fno-semantic-interposition -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -fexceptions -fstack-protector-all -m64 -fasynchronous-unwind-tables -fstack-clash-protection -fcf-protection=full -ffunction-sections -fdata-sections -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
-LDFLAGS += -Wl,-z,relro,-z,now,-z,noexecstack -Wl,--as-needed -Wl,-E -Wl,--gc-sections
-GO_LDFLAGS_CGO += "-w -s -linkmode=external -extldflags '$(LDFLAGS)'"
+CFLAGS = -O2 -fno-semantic-interposition -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -fexceptions -fstack-protector-all -m64 -fasynchronous-unwind-tables -fstack-clash-protection -fcf-protection=full -ffunction-sections -fdata-sections -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
+LDFLAGS = -Wl,-z,relro,-z,now,-z,noexecstack -Wl,--as-needed -Wl,-E -Wl,--gc-sections
 # on openbsd, set this to "exe" or nothing
-BUILDMODE_CGO ?= pie
+BUILDMODE_CGO = pie
 
-# for testing with clang+msan+CFI+safe-stack/shadow-stack and release builds
-CFLAGS_LTO_PIE += $(CFLAGS) -flto=thin -fvisibility=hidden -fpic -fpie
-EXTRA_SANITIZERS ?= cfi
-CFLAGS_CFI += $(CFLAGS_LTO_PIE) -fsanitize=$(EXTRA_SANITIZERS)
-LDFLAGS_CFI += $(LDFLAGS) -flto=thin -fsanitize=$(EXTRA_SANITIZERS) -pie
-GO_LDFLAGS_CFI += "-w -s -linkmode=external -extldflags '$(LDFLAGS_CFI)'"
-
-# for release builds, with Clang+CFI sanitization, static-pie linked
 # on ARMv8, you can switch safe-stack to shadow-call-stack
 # on Alpine, set this to cfi since compiler-rt isn't built properly.
-RELEASE_SANITIZERS ?= cfi,safe-stack
-LDFLAGS_RELEASE += $(LDFLAGS) -flto=thin -fsanitize=$(RELEASE_SANITIZERS) -static-pie
-CFLAGS_RELEASE += $(CFLAGS_LTO_PIE) -fsanitize=$(RELEASE_SANITIZERS)
-GO_LDFLAGS_RELEASE += "-w -s -linkmode=external -extldflags '$(LDFLAGS_RELEASE)'"
+# openbsd doesn't support either
+EXTRA_SANITIZERS ?= cfi
+CFI = -flto=thin -fsanitize=$(EXTRA_SANITIZERS)
+CFLAGS_CFI = $(CFLAGS) $(CFI) -fvisibility=hidden -fpic -fpie
+LDFLAGS_CFI = $(LDFLAGS) $(CFI) -pie
+EXTRA_LDFLAGS =
 
 # Test with thread and memory sanitizers; needs associated libclang_rt libs.
-test-race: $(SRC)
-	CC=$(CC) CCLD=$(CCLD) CGO_CFLAGS="$(CFLAGS)" $(GO) test $(GO_BUILDFLAGS) -race -ldflags=$(GO_LDFLAGS_CGO)
+.test-cgo:
+	@$(MAKE) CGO_ENABLED=1 CFLAGS="$(CFLAGS_CFI)" LINKMODE=external test
+
+test-race:
+	@$(MAKE) TESTFLAGS='-race' .test-cgo
 
 # test-msan does not work on alpine (its compiler-rt lacks msan)
 # but it works on fedora and void-musl.
-test-msan: $(SRC)
-	CC=clang CCLD=lld CGO_CFLAGS="$(CFLAGS_CFI)" $(GO) test $(GO_BUILDFLAGS) -buildmode=$(BUILDMODE_CGO) -msan -ldflags=$(GO_LDFLAGS_CFI) .
+test-msan:
+	@$(MAKE) TESTFLAGS='-msan' BUILDMODE=$(BUILDMODE_CGO) .test-cgo
 
 test-san: test-race test-msan
 
-build-cgo: $(SRC)
-	CC=$(CC) CCLD=$(CCLD) CGO_CFLAGS="$(CFLAGS_CFI)" $(GO) build $(GO_BUILDFLAGS) -buildmode=$(BUILDMODE_CGO) -ldflags=$(GO_LDFLAGS_CFI) -o $(BIN) ./cmd/moac
+.build-cgo-base:
+	@$(MAKE) CFLAGS="$(CFLAGS_CFI)" CGO_ENABLED=1 LINKMODE=external BUILDMODE=$(BUILDMODE_CGO) LDFLAGS="$(LDFLAGS_CFI) $(EXTRA_LDFLAGS)" build
+
+build-cgo:
+	@$(MAKE) .build-cgo-base
 
 # build a static-pie binary with sanitizers for CFI and either
 # safe-stack (x86_64) or shadow-call-stack (ARMv8)
 # the below should be run on a musl-based toolchain; works on Alpine or Void-musl
 # Tends to cause crashes when linking with glibc
-build-cgo-static: $(SRC)
-	CC=$(CC) CCLD=$(CCLD) CGO_CFLAGS="$(CFLAGS_RELEASE)" $(GO) build $(GO_BUILDFLAGS) -buildmode=$(BUILDMODE_CGO) -ldflags=$(GO_LDFLAGS_RELEASE) -o $(BIN) ./cmd/moac
+# alpine users should disable safe-stack since the alpine compiler-rt package is incomplete
+build-cgo-static:
+	@$(MAKE) EXTRA_LDFLAGS=-static-pie build-cgo
 
-.PHONY: all lint test test-race test-msan test-san test-cov build build-cgo build-cgo-static
+.PHONY: all clean lint test test-race test-msan test-san test-cov build build-cgo build-cgo-static
