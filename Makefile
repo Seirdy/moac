@@ -1,10 +1,12 @@
 .POSIX:
 
-BIN = moac
+MOAC_BIN = moac
+MOAC_SRC = *.go entropy/*.go cmd/moac/*.go
+MOAC_PWGEN_BIN = moac-pwgen
+MOAC_PWGEN_SRC = *.go entropy/*.go pwgen/*.go cmd/moac-pwgen/*.go
 CGO_ENABLED ?= 0
 GOPATH ?= `$(GO) env GOPATH`
 GOBIN ?= $(GOPATH)/bin
-SRC = *.go entropy/*.go pwgen/*.go cmd/moac/*.go
 COVERPKG = .,./entropy,./pwgen
 
 GO ?= go
@@ -13,14 +15,14 @@ GOKART ?= $(GOBIN)/gokart
 GOKART_FLAGS ?= -g
 
 CMD = build
-ARGS = ./cmd/moac
+ARGS =
 
 # general build flags
 LINKMODE = internal
 # extldflags is ignored unless you use one of the cgo options at the bottom
-GO_LDFLAGS += -w -s -linkmode=$(LINKMODE) -extldflags '$(LDFLAGS)'
-GO_BUILDFLAGS += -trimpath -mod=readonly -gcflags="-trimpath=$(GOPATH)" -asmflags="-trimpath=$(GOPATH)"
-BUILDMODE ?= exe
+GO_LDFLAGS += -w -s -linkmode='$(LINKMODE)' -extldflags \"$(LDFLAGS)\"
+BUILDMODE ?= default
+GO_BUILDFLAGS += -trimpath -mod=readonly -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -buildmode=$(BUILDMODE) -ldflags='$(GO_LDFLAGS)'
 TESTFLAGS ?= # -msan, -race, coverage, etc.
 
 default:
@@ -33,25 +35,28 @@ gokart-lint: $(SRC)
 	$(GOKART) scan $(GOKART_FLAGS) ./entropy
 	$(GOKART) scan $(GOKART_FLAGS) ./pwgen
 	$(GOKART) scan $(GOKART_FLAGS) ./cmd/moac
+	$(GOKART) scan $(GOKART_FLAGS) ./cmd/moac-pwgen
 
 lint: golangci-lint gokart-lint
 
 .base: $(SRC)
-	CC=$(CC) CCLD=$(CCLD) CGO_CFLAGS="$(CFLAGS)" CGO_ENABLED=$(CGO_ENABLED) $(GO) $(CMD) $(GO_BUILDFLAGS) -buildmode=$(BUILDMODE) -ldflags "$(GO_LDFLAGS)" $(ARGS)
+	CC=$(CC) CCLD=$(CCLD) CGO_CFLAGS="$(CFLAGS)" CGO_ENABLED=$(CGO_ENABLED) $(GO) $(CMD) $(GO_BUILDFLAGS) $(ARGS)
 
-$(BIN):
-	@$(MAKE) GO_BUILDFLAGS="$(GO_BUILDFLAGS) -o $(BIN)" CMD=build .base
+$(MOAC_BIN): $(MOAC_SRC)
+	@$(MAKE) GO_BUILDFLAGS="$(GO_BUILDFLAGS) -o $(MOAC_BIN)" CMD=build ARGS=./cmd/moac .base
+$(MOAC_PWGEN_BIN): $(MOAC_PWGEN_SRC)
+	@$(MAKE) GO_BUILDFLAGS="$(GO_BUILDFLAGS) -o $(MOAC_PWGEN_BIN)" CMD=build ARGS=./cmd/moac-pwgen .base
 
-build: $(BIN)
+build: $(MOAC_BIN) $(MOAC_PWGEN_BIN)
 
 clean:
 	$(GO) clean -testcache
-	rm -f ./$(BIN) ./coverage.out
+	rm -f $(MOAC_BIN) $(MOAC_PWGEN_BIN) ./coverage.out
 
 test:
-	@$(MAKE) CMD="test" ARGS="$(TESTFLAGS) ./..." .base
+	@$(MAKE) CMD="test" GO_BUILDFLAGS="$(GO_BUILDFLAGS)" ARGS="$(TESTFLAGS) ./..." .base
 
-test-cov: $(SRC)
+test-cov:
 	@$(MAKE) TESTFLAGS="-coverpkg=$(COVERPKG) -coverprofile=coverage.out" test
 	$(GO) tool cover -func=coverage.out
 

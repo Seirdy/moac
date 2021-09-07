@@ -10,7 +10,7 @@ tasks:
       go version
       # go on openbsd must use libc for syscalls as of 1.16 due to api instability
       make BUILDMODE_CGO=exe EXTRA_SANITIZERS='' build-cgo
-      tar czf ~/moac-openbsd-amd64.tar.gz ./moac
+      tar czf ~/moac-openbsd-amd64.tar.gz ./moac ./moac-pwgen
   - test: |
       cd moac
       make test-cov

@@ -98,6 +98,10 @@ enable = [
 		linters = ["forbidigo"]
 		text = "use of `fmt.Print(ln|f)?` forbidden by pattern"
 	[[issues.exclude-rules]]
+		path = "cmd/moac-pwgen/main.go"
+		linters = ["forbidigo"]
+		text = "use of `fmt.Print(ln|f)?` forbidden by pattern"
+	[[issues.exclude-rules]]
 		path = "givens_test.go"
 		# we're testing what happens when we leave vals uninitialized
 		linters = ["exhaustivestruct"]

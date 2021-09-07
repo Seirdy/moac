@@ -101,16 +101,17 @@ _Note: given that the Earth wasn't hollow during the book's opening, it's unlike
 Roadmap
 -------
 
-### Roadmap for 0.3.0
+### Roadmap for 1.0.0
+
+The actual code:
 
 - [X] More comprehensive tests: cover everything that should be reachable
 - [X] Move password generation to its own sub-package
-- [ ] CLI: Separate global and command-specific options
-- [ ] Add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
+- [X] CLI: ~~Separate global and command-specific options~~ split pwgen into own executable
+- [ ] CLI: add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
+- [ ] Library: API seems finalized for 1.0
 
-### Roadmap for 0.4.0
-
-0.4.0 should have full functionality.
+Other stuff:
 
 - [X] CI/CD
 - [ ] Manpage for CLI
@@ -119,7 +120,7 @@ Roadmap
 - [ ] Shell completion
 - [ ] Set up signed releases
 
-### Roadmap for 1.0.0
+Last steps before releasing v1.0.0:
 
 - [ ] Get `moac`'s code reviewed by some people with more experience in software security.
 - [ ] Link to it in my old blog post on brute-force immunity

@@ -21,9 +21,8 @@ tasks:
       go version
       cd moac
       bmake build
-      # alpine doesn't support safe-stack
-      bmake BIN=moac-cgo-static build-cgo-static
-      tar czf ~/moac-linux-amd64-musl-static-pie.tar.gz ./moac ./moac-cgo-static
+      bmake MOAC_BIN=moac-cgo MOAC_PWGEN_BIN=moac-pwgen-cgo build-cgo
+      tar czf ~/moac-linux-amd64-musl-static.tar.gz ./moac ./moac-cgo ./moac-pwgen ./moac-pwgen-cgo
   - test: |
       cd moac
       bmake test-race
@@ -34,4 +33,4 @@ tasks:
       bmake lint
 
 artifacts:
-  - moac-linux-amd64-musl-static-pie.tar.gz
+  - moac-linux-amd64-musl-static.tar.gz

@@ -8,7 +8,6 @@ import (
 
 	"git.sr.ht/~seirdy/moac"
 	"git.sr.ht/~seirdy/moac/entropy"
-	"git.sr.ht/~seirdy/moac/pwgen"
 	"git.sr.ht/~sircmpwn/getopt"
 	"golang.org/x/term"
 )
@@ -16,7 +15,7 @@ import (
 const (
 	usage = `
 USAGE:
-  moac [OPTIONS] [COMMAND] [ARGS]
+  moac [OPTIONS] [COMMAND]
 
 OPTIONS:
   -h	Display this help message.
@@ -29,28 +28,22 @@ OPTIONS:
   -P <power>	Power available to the computer (W)
   -t <time>	Time limit for brute-force attack (s).
   -p <password>	Password to analyze (do not use a real password).
-  -l <length>	minimum generated password length; can override (increase) -s
-  -L <length>	maximum generated password length; can override (decrease) -s
 
 COMMANDS:
   strength	Calculate the liklihood of a successful guess 
   entropy	Calculate the entropy of the given password
   entropy-limit	Calculate the minimum entropy for a brute-force attack failure.
-  pwgen	Generate a password resistant to the described brute-force attack,
-       	using charsets specified by [ARGS] (defaults to all provided charsets)
 `
 	helpText = "moac - analyze password strength with physical limits" + usage
 )
 
-func parseOpts( //nolint:cyclop // complexity solely determined by global opts
+func parseOpts(
 	opts *[]getopt.Option,
-) (*moac.Givens, bool, bool, int, int) {
+) (*moac.Givens, bool, bool) {
 	var (
 		givens       moac.Givens
 		quantum      bool
 		readPassword bool
-		minLen       int64
-		maxLen       int64
 		err          error
 	)
 
@@ -77,10 +70,6 @@ func parseOpts( //nolint:cyclop // complexity solely determined by global opts
 			givens.Time, err = strconv.ParseFloat(opt.Value, 64)
 		case 'p':
 			givens.Password = opt.Value
-		case 'l':
-			minLen, err = strconv.ParseInt(opt.Value, 10, 32)
-		case 'L':
-			maxLen, err = strconv.ParseInt(opt.Value, 10, 32)
 		}
 
 		if err != nil {
@@ -89,7 +78,7 @@ func parseOpts( //nolint:cyclop // complexity solely determined by global opts
 		}
 	}
 
-	return &givens, quantum, readPassword, int(minLen), int(maxLen)
+	return &givens, quantum, readPassword
 }
 
 func getBruteForceability(givens *moac.Givens, quantum bool) float64 {
@@ -132,13 +121,13 @@ func fetchPassword(password *string) {
 }
 
 func main() {
-	opts, optind, err := getopt.Getopts(os.Args, "hqre:s:m:g:P:t:p:l:L:")
+	opts, optind, err := getopt.Getopts(os.Args, "hqre:s:m:g:P:t:p:")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, usage)
 		os.Exit(1)
 	}
 
-	givens, quantum, readPassword, minLen, maxLen := parseOpts(&opts)
+	givens, quantum, readPassword := parseOpts(&opts)
 	if readPassword {
 		fetchPassword(&givens.Password)
 	}
@@ -157,30 +146,6 @@ func main() {
 		fmt.Printf("%.3g\n", getEntropy(givens))
 	case "entropy-limit":
 		fmt.Printf("%.3g\n", moac.MinEntropy(givens, quantum))
-	case "pwgen":
-		// If the only user-supplied given is entropy, then just use that
-		// entropy level and skip calculating the strength of a brute-force attack.
-		entropyLimit := givens.Entropy
-
-		if givens.Energy+givens.Mass+givens.Power+givens.Time != 0 {
-			entropyLimit = moac.MinEntropy(givens, quantum)
-		}
-
-		var charsets []string
-
-		if len(args) > 1 {
-			charsets = args[1:]
-		} else {
-			charsets = []string{"lowercase", "uppercase", "numbers", "symbols", "latin", " "}
-		}
-
-		pw, err := pwgen.GenPW(charsets, entropyLimit, minLen, maxLen)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Println(pw)
 	default:
 		fmt.Fprintf(os.Stderr, "moac: unknown command %v\n%s", cmd, usage)
 		os.Exit(1)
