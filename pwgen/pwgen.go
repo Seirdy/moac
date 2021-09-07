@@ -111,7 +111,7 @@ func buildCharsets(charsetsEnumerated []string) [][]rune {
 		case charset == "latin":
 			charsetsGiven = append(
 				charsetsGiven,
-				entropy.Charsets["latinExtendedA"], entropy.Charsets["latinExtendedB"], entropy.Charsets["ipaExtensions"],
+				entropy.Charsets["latin1"], entropy.Charsets["latinExtendedA"], entropy.Charsets["latinExtendedB"], entropy.Charsets["ipaExtensions"],
 			)
 		default:
 			charsetsGiven = append(charsetsGiven, []rune(charset))
@@ -123,9 +123,9 @@ func buildCharsets(charsetsEnumerated []string) [][]rune {
 
 // GenPW generates a random password using characters from the charsets enumerated by charsetsEnumerated.
 // At least one element of each charset is used.
-// Available charsets include "lowercase", "uppercase", "numbers", "symbols",
-// "latinExtendedA", "latinExtendedB", and "ipaExtensions". "latin" is also available
-// and is equivalent to specifying "latinExtendedA latinExtendedB ipaExtensions".
+// Available charsets are "lowercase", "uppercase", "numbers", "symbols", "latin1",
+// latinExtendedA", "latinExtendedB", and "ipaExtensions". "latin" is also available:
+// it's equivalent to specifying "latin1 latinExtendedA latinExtendedB ipaExtensions".
 // Anything else will be treated as a string containing runes of a new custom charset
 // to use.
 // If entropyWanted is 0, the generated password has at least 256 bits of entropy;
