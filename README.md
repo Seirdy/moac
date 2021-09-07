@@ -20,46 +20,14 @@ My original intent when making this tool was to illustrate how easy it is to mak
 Installation
 ------------
 
-Latest stable version:
-
 ```sh
-GO111MODULE=on go install git.sr.ht/~seirdy/moac/cmd/moac@latest
-```
-
-Bleeding edge version:
-
-```sh
-GO111MODULE=on go install git.sr.ht/~seirdy/moac/cmd/moac@master
+make install
 ```
 
 Usage
 -----
 
-```text
-moac - analyze password strength with physical limits
-USAGE:
-  moac [OPTIONS] [COMMAND] [ARGS]
-
-OPTIONS:
-  -h	Display this help message.
-  -q	Account for quantum computers using Grover's algorithm
-  -r	Interactively enter a password in the terminal; overrides -p
-  -e <energy>	Maximum energy used by attacker (J).
-  -s <entropy>	Password entropy.
-  -m <mass>	Mass at attacker's disposal (kg).
-  -g <energy>	Energy used per guess (J).
-  -P <power>	Power available to the computer (W)
-  -t <time>	Time limit for brute-force attack (s).
-  -p <password>	Password to analyze (do not use a real password).
-  -l <length>	minimum generated password length; can override (increase) -s
-  -L <length>	maximum generated password length; can override (decrease) -s
-
-COMMANDS:
-  strength	Calculate the liklihood of a successful guess 
-  entropy-limit	Calculate the minimum entropy for a brute-force attack failure.
-  pwgen	generate a password resistant to the described brute-force attack,
-       	using charsets specified by [ARGS] (defaults to all provided charsets)
-```
+For full usage of the command-line executables, see `moac(1)` and `moac-pwgen(1)`. Manpages are in `doc/`.
 
 ### Bottlenecks and redundancy
 
@@ -90,8 +58,8 @@ $ moac -qm 5.97e24 -t 1.45e17 entropy-limit
 Understanding the answer to Life, the Universe, and Everything requires less than `2^427` computations. If the same computer instead tried to brute-force a password, what kind of password might be out of its reach?
 
 ```console
-$ moac -qm 5.97e24 -t 1.45e17 pwgen lowercase uppercase numbers symbols latin
-,ȿĢıqɽȂīĲďɖȟMǧiœcɪʊȦĻțșŌƺȰ&ǡśŗȁĵɍɞƋIŀƷ?}ʯ4ůʑʅęȳŞ
+$ moac-pwgen -qm 5.97e24 -t 1.45e17 lowercase uppercase numbers symbols latin
+ɥìƄ¦sČÍM²ȬïľA\ɻ¨zŴǓĤúǓ¤ʬƗ;ɮĢƃƅǞɃƜʌȴɖǃƨǥ_Ǝ3ſǹǅɃ8ɟ
 ```
 
 If the same computer instead tried to guess the password `,ȿĢıqɽȂīĲďɖȟMǧiœcɪʊȦĻțșŌƺȰ&ǡśŗȁĵɍɞƋIŀƷ?}ʯ4ůʑʅęȳŞ`, there's a chance that it wouldn't have succeeded in time.
@@ -108,17 +76,14 @@ The actual code:
 - [X] More comprehensive tests: cover everything that should be reachable
 - [X] Move password generation to its own sub-package
 - [X] CLI: ~~Separate global and command-specific options~~ split pwgen into own executable
-- [ ] CLI: add a command to output requirements for a brute-force attack (time/energy/mass required) with the given constraints.
-- [ ] Library: API seems finalized for 1.0
+- [X] Library: API seems finalized for 1.0
 
 Other stuff:
 
 - [X] CI/CD
-- [ ] Manpage for CLI
-- [ ] Read from a config file.
-- [ ] Manpage for config file
+- [X] Manpage for CLI
 - [ ] Shell completion
-- [ ] Set up signed releases
+- [ ] Set up signed releases or distro packages
 
 Last steps before releasing v1.0.0:
 

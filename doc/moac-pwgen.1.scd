@@ -1,0 +1,73 @@
+moac-pwgen(1)
+
+# NAME
+
+moac-pwgen - generate passwords with the described strength
+
+# SYNOPSIS
+
+moac-pwgen [OPTIONS...] [CHARSETS...]
+
+# OPTIONS
+
+*-h*
+	Display a brief help message.
+
+*-q*
+	Account for quantum computers using Grover's algorithm
+
+*-e* <energy>
+	Maximum energy used by attacker (J).
+
+*-s* <entropy>
+	Desired assword entropy.
+
+*-m* <mass>
+	Mass at attacker's disposal (kg). Used to compute mass-energy. Overrides the
+	value of *-e* if the computed mass-energy is lower.
+
+*-g* <energy>
+	Energy used per guess (J).
+
+*-P* <power>
+	Power available to the computer (W)
+
+*-t* <time>
+	Time limit for brute-force attack (s).
+
+*-l* <length>
+	Minimum number of characters in generated password. Overrides value of *-s* if
+	doing so would increase password length.
+
+*-L* <length>
+	Maximum number of characters in generated password. Overrides value of *-s* if
+	doing so would decrease password length.
+
+# DEFAULT VALUES
+
+See the *DEFAULT VALUES* section in *moac*(1) for physical values.
+
+The default charsets are *lowercase*, *uppercase*, *numbers*, *symbols*,
+*latin*, and *' '* (a space).
+
+# CHARSETS
+
+Generated passwords contain at least one character from each charset specified.
+Choose from the following charsets:
+
+*lowercase*	[a-z]
+*uppercase*	[A-Z]
+*numbers*	[0-9]
+*symbols*	!"#%&'()\*+,-./:;<=>?@[\\]^\_`{|}~$-
+
+Any argument after *[OPTIONS]* that is not listed above is assumed to be a
+string containing characters of a charset. 
+
+# SEE ALSO
+
+*moac*(1)
+
+# AUTHOR
+
+Maintained by Rohan Kumar <seirdy@seirdy.one>. For more information about moac
+development, see https://sr.ht/~seirdy/MOAC

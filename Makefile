@@ -9,6 +9,8 @@ GOPATH ?= `$(GO) env GOPATH`
 GOBIN ?= $(GOPATH)/bin
 COVERPKG = .,./entropy,./pwgen
 
+BINS= $(MOAC_BIN) $(MOAC_PWGEN_BIN)
+
 GO ?= go
 GOLANGCI_LINT ?= $(GOBIN)/golangci-lint
 GOKART ?= $(GOBIN)/gokart
@@ -16,6 +18,10 @@ GOKART_FLAGS ?= -g
 
 CMD = build
 ARGS =
+
+PREFIX ?= /usr/local
+BINDIR ?= $(PREFIX)/bin
+MANDIR ?= $(PREFIX)/share/man
 
 # general build flags
 LINKMODE = internal
@@ -25,8 +31,7 @@ BUILDMODE ?= default
 GO_BUILDFLAGS += -trimpath -mod=readonly -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -buildmode=$(BUILDMODE) -ldflags='$(GO_LDFLAGS)'
 TESTFLAGS ?= # -msan, -race, coverage, etc.
 
-default:
-	@$(MAKE) clean build
+all: build doc
 
 golangci-lint: $(SRC)
 	$(GOLANGCI_LINT) run
@@ -47,11 +52,11 @@ $(MOAC_BIN): $(MOAC_SRC)
 $(MOAC_PWGEN_BIN): $(MOAC_PWGEN_SRC)
 	@$(MAKE) GO_BUILDFLAGS="$(GO_BUILDFLAGS) -o $(MOAC_PWGEN_BIN)" CMD=build ARGS=./cmd/moac-pwgen .base
 
-build: $(MOAC_BIN) $(MOAC_PWGEN_BIN)
+build: $(BINS)
 
 clean:
 	$(GO) clean -testcache
-	rm -f $(MOAC_BIN) $(MOAC_PWGEN_BIN) ./coverage.out
+	rm -f $(BINS) doc/*.1 ./coverage.out
 
 test:
 	@$(MAKE) CMD="test" GO_BUILDFLAGS="$(GO_BUILDFLAGS)" ARGS="$(TESTFLAGS) ./..." .base
@@ -59,6 +64,24 @@ test:
 test-cov:
 	@$(MAKE) TESTFLAGS="-coverpkg=$(COVERPKG) -coverprofile=coverage.out" test
 	$(GO) tool cover -func=coverage.out
+
+doc/moac.1: doc/moac.1.scd
+	scdoc < $< > $@
+doc/moac-pwgen.1: doc/moac-pwgen.1.scd
+	scdoc < $< > $@
+
+doc: doc/moac.1 doc/moac-pwgen.1
+
+install: all
+	mkdir -p \
+		$(DESTDIR)$(BINDIR) \
+		$(DESTDIR)$(MANDIR)/man1
+	cp -f $(BINS) $(DESTDIR)$(BINDIR)
+	chmod 755 $(DESTDIR)$(BINDIR)/$(MOAC_BIN)
+	chmod 755 $(DESTDIR)$(BINDIR)/$(MOAC_PWGEN_BIN)
+	cp -f doc/*.1 $(DESTDIR)$(MANDIR)/man1
+	chmod 644 $(DESTDIR)$(MANDIR)/man1/moac.1
+	chmod 644 $(DESTDIR)$(MANDIR)/man1/moac-pwgen.1
 
 # =================================================================================
 
@@ -117,4 +140,4 @@ build-cgo:
 build-cgo-static:
 	@$(MAKE) EXTRA_LDFLAGS=-static-pie build-cgo
 
-.PHONY: all clean lint test test-race test-msan test-san test-cov build build-cgo build-cgo-static
+.PHONY: all clean doc lint test test-race test-msan test-san test-cov build build-cgo build-cgo-static install
