@@ -111,7 +111,10 @@ func buildCharsets(charsetsEnumerated []string) [][]rune {
 		case charset == "latin":
 			charsetsGiven = append(
 				charsetsGiven,
-				entropy.Charsets["latin1"], entropy.Charsets["latinExtendedA"], entropy.Charsets["latinExtendedB"], entropy.Charsets["ipaExtensions"],
+				entropy.Charsets["latin1"],
+				entropy.Charsets["latinExtendedA"],
+				entropy.Charsets["latinExtendedB"],
+				entropy.Charsets["ipaExtensions"],
 			)
 		default:
 			charsetsGiven = append(charsetsGiven, []rune(charset))
