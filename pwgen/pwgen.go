@@ -2,41 +2,30 @@
 package pwgen
 
 import (
-	cryptoRand "crypto/rand"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"log"
 	"math"
 	"math/big"
-	"math/rand"
 	"strings"
-	"unicode/utf8"
 
 	"git.sr.ht/~seirdy/moac"
 	"git.sr.ht/~seirdy/moac/entropy"
 )
 
-func randRune(runes []rune) rune {
-	i, err := cryptoRand.Int(cryptoRand.Reader, big.NewInt(int64(len(runes))))
+func randInt(max int) int {
+	newInt, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
 	if err != nil {
-		log.Panicf("crypto/rand errored when generating a random number: %v", err)
+		log.Panicf("specialIndexes: %v", err)
 	}
 
-	return runes[i.Int64()]
+	return int(newInt.Int64())
 }
 
 func addRuneToPw(password *strings.Builder, runes []rune) {
-	newChar := randRune(runes)
+	newChar := runes[randInt(len(runes))]
 	password.WriteRune(newChar)
-}
-
-func shuffle(password string) string {
-	runified := []rune(password)
-	rand.Shuffle(len(runified), func(i, j int) {
-		runified[i], runified[j] = runified[j], runified[i]
-	})
-
-	return string(runified)
 }
 
 // ErrInvalidLenBounds represents bad minLen/maxLen values.
@@ -46,6 +35,7 @@ func computePasswordLength(charsetSize int, pwEntropy float64, minLen, maxLen in
 	if maxLen > 0 && minLen > maxLen {
 		return 0, fmt.Errorf("%w: maxLen can't be less than minLen", ErrInvalidLenBounds)
 	}
+
 	// combinations is 2^entropy, or 2^s
 	// password length estimate is the logarithm of that with base charsetSize
 	// logn(2^s) = s*logn(2) = s/log2(n)
@@ -61,42 +51,98 @@ func computePasswordLength(charsetSize int, pwEntropy float64, minLen, maxLen in
 	return length, nil
 }
 
+// computeSpecialIndexes determines the random locations at which to insert additional preselected chars.
+// Generated passwords don't have truly uniform randomness; they also must have at
+// least one of each charset, no matter how big/small that charset is. When we select
+// one member of each charset, we need to insert those characters at random locations.
+// specialIndexes determines those locations.
+func computeSpecialIndexes(pwLength, charsetCount int) []int {
+	res := make([]int, charsetCount)
+
+	for i := 0; i < charsetCount; i++ {
+		newInt := randInt(pwLength)
+
+		for indexOf(res[0:i], newInt) >= 0 {
+			newInt = randInt(pwLength)
+		}
+
+		res[i] = newInt
+	}
+
+	return res
+}
+
+func indexOf(src []int, e int) int {
+	for i, a := range src {
+		if a == e {
+			return i
+		}
+	}
+
+	return -1
+}
+
 func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64, minLen, maxLen int) (string, error) {
 	var charsToPickFrom, pwBuilder strings.Builder
 
-	// at least one element from each charset
+	if maxLen > 0 && maxLen < len(charsetsGiven) {
+		return pwBuilder.String(), fmt.Errorf(
+			"%w: maxLen too short to use all available charsets", ErrInvalidLenBounds,
+		)
+	}
+
 	for _, charset := range charsetsGiven {
 		charsToPickFrom.WriteString(string(charset))
-
-		addRuneToPw(&pwBuilder, charset)
 	}
 
 	runesToPickFrom := []rune(charsToPickFrom.String())
-	// figure out the minimum acceptable length of the password and fill that up before measuring entropy.
+	// figure out the minimum acceptable length of the password
+	// and fill that up before measuring entropy.
 	pwLength, err := computePasswordLength(len(runesToPickFrom), entropyWanted, minLen, maxLen)
 	if err != nil {
 		return pwBuilder.String(), fmt.Errorf("can't generate password: %w", err)
 	}
 
-	pwBuilder.Grow(pwLength + 1)
-	currentLength := utf8.RuneCountInString(pwBuilder.String())
-
-	for ; currentLength < pwLength; currentLength++ {
-		addRuneToPw(&pwBuilder, runesToPickFrom)
+	if pwLength < len(charsetsGiven) {
+		pwLength = len(charsetsGiven) // we know this is below maxLen
 	}
 
-	for ; maxLen == 0 || currentLength < maxLen; currentLength++ {
-		addRuneToPw(&pwBuilder, runesToPickFrom)
+	pwBuilder.Grow(pwLength + 1)
 
-		pw := pwBuilder.String()
-		computedEntropy, err := entropy.Entropy(pw)
+	specialIndexes := computeSpecialIndexes(pwLength, len(charsetsGiven))
+	currentLength := 0
 
-		if err != nil || entropyWanted < computedEntropy {
-			return shuffle(pw), err
+	for specialI := 0; currentLength < pwLength; currentLength++ {
+		if i := indexOf(specialIndexes, currentLength); i >= 0 {
+			addRuneToPw(&pwBuilder, charsetsGiven[i]) // one of each charset @ a special index
+			specialI++
+		} else {
+			addRuneToPw(&pwBuilder, runesToPickFrom)
 		}
 	}
 
-	return shuffle(pwBuilder.String()), nil
+	pw := pwBuilder.String()
+	pwRunes := []rune(pw)
+
+	// keep inserting chars at random locations until the pw is long enough
+	for ; maxLen == 0 || currentLength < maxLen; currentLength++ {
+		newChar := runesToPickFrom[randInt(len(runesToPickFrom))]
+		index := randInt(len(pwRunes))
+		pwRunes = append(pwRunes[:index+1], pwRunes[index:]...)
+		pwRunes[index] = newChar
+		pw = string(pwRunes)
+
+		computedEntropy, err := entropy.Entropy(pw)
+		if err != nil {
+			log.Panicf("failed to determine if password is long enough: %v", err)
+		}
+
+		if entropyWanted < computedEntropy {
+			break
+		}
+	}
+
+	return pw, nil
 }
 
 func buildCharsets(charsetsEnumerated []string) [][]rune {
