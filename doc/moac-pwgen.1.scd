@@ -56,12 +56,25 @@ Generated passwords contain at least one character from each charset specified.
 Choose from the following charsets:
 
 *lowercase*	[a-z]
+
 *uppercase*	[A-Z]
+
 *numbers*	[0-9]
+
 *symbols*	!"#%&'()\*+,-./:;<=>?@[\\]^\_`{|}~$-
 
+*latin1*	the "Latin-1" Unicode block
+
+*latinExtendedA*	the "Latin Extended A" Unicode block
+
+*latinExtendedB*	the "Latin Extended B" Unicode block
+
+*ipaExtensions*	the "IPA Extensions" Unicode block
+
+*latin*	alias for "latin1 latinExtendedA latinExtendedB ipaExtensions"
+
 Any argument after *[OPTIONS]* that is not listed above is assumed to be a
-string containing characters of a charset. 
+string containing characters of a charset.
 
 # SEE ALSO
 
