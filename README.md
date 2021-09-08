@@ -82,13 +82,13 @@ Other stuff:
 
 - [X] CI/CD
 - [X] Manpage for CLI
-- [ ] Shell completion
-- [ ] Set up signed releases or distro packages
+- [X] Shell completion
 
 Last steps before releasing v1.0.0:
 
-- [ ] Get `moac`'s code reviewed by some people with more experience in software security.
-- [ ] Link to it in my old blog post on brute-force immunity
+- Set up signed releases or distro packages
+- Get `moac`'s code reviewed by some people with more experience in software security.
+- Link to it in my old blog post on brute-force immunity
 
 ### Future
 

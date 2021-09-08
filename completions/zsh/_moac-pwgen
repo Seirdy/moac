@@ -1,0 +1,30 @@
+#compdef moac-pwgen
+
+_arguments \
+	"-h[display this help message]" \
+	"-q[account for quantum computers using Grover's algorithm]" \
+	"-e[maximum energy used by attacker (J)]" \
+	"-s[password entropy]" \
+	"-m[mass at attacker's disposal (kg)]" \
+	"-g[energy used per guess (J)]" \
+	"-P[power available to the computer (W)]" \
+	"-t[time limit for brute-force attack (s)]" \
+	"-l[min length]" \
+	"-L[max length]" \
+
+local -a args
+args=(
+	"lowercase:[a-z]"
+	"uppercase:[A-Z]"
+	"numbers:[0-9]"
+	"symbols:standard set of QWERTY symbols/punctuation"
+	"latin1:the Latin-1 Unicode block"
+	"latinExtendedA:the Latin Extended A Unicode block"
+	"latinExtendedB:the Latin Extended B Unicode block"
+	"ipaExtensions:the IPA Extensions Unicode block"
+	"latin:alias for \"latin1 latinExtendedA latinExtendedB ipaExtensions\""
+)
+
+_describe -t commands 'moac-pwgen' args
+
+#vi:ft=zsh

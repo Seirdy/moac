@@ -1,0 +1,25 @@
+#compdef moac
+
+# compdef _gnu_generic moac
+
+_arguments \
+	"-h[display this help message]" \
+	"-q[account for quantum computers using Grover's algorithm]" \
+	"-r[interactively enter a password in the terminal; overrides -p]" \
+	"-e[maximum energy used by attacker (J)]" \
+	"-s[password entropy]" \
+	"-m[mass at attacker's disposal (kg)]" \
+	"-g[energy used per guess (J)]" \
+	"-P[power available to the computer (W)]" \
+	"-t[time limit for brute-force attack (s)]" \
+	"-p[password to analyze (do not use a real password)]" \
+
+local -a subcommands
+subcommands=(
+	"strength:alculate the liklihood of a successful guess"
+	"entropy:calculate the entropy of the given password"
+	"entropy-limit:calculate the minimum entropy for a brute-force attack failure."
+)
+_describe -t commands 'moac' subcommands
+
+#vi:ft=zsh

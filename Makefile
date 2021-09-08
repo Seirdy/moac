@@ -21,7 +21,9 @@ ARGS =
 
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
-MANDIR ?= $(PREFIX)/share/man
+DATAROOTDIR ?= $(PREFIX)/share
+MANDIR ?= $(DATAROOTDIR)/man
+ZSHCOMPDIR ?= $(DATAROOTDIR)/zsh/site-functions
 
 # general build flags
 LINKMODE = internal
@@ -82,6 +84,8 @@ install: all
 	cp -f doc/*.1 $(DESTDIR)$(MANDIR)/man1
 	chmod 644 $(DESTDIR)$(MANDIR)/man1/moac.1
 	chmod 644 $(DESTDIR)$(MANDIR)/man1/moac-pwgen.1
+	cp -f completions/zsh/_* $(DESTDIR)$(ZSHCOMPDIR)
+	chmod 644 $(DESTDIR)$(ZSHCOMPDIR)/_moac $(DESTDIR)$(ZSHCOMPDIR)/_moac-pwgen
 
 # =================================================================================
 
