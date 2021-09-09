@@ -92,6 +92,18 @@ Two reasons: the blog post I wrote (linked at the top) got me itching to impleme
 
 It takes a very naive approach, assuming that any attacker is optimizing for randomly-generated passwords. More specifically, it measures password entropy as if `moac-pwgen` generated the password. All it does it guess which charsets are used and measure permutations of available characters for the given password length.
 
+### Why do these passwords look impossible to memorize or type?
+
+MOAC is not meant to be used to generate passwords to type by hand. It's intended to be used with a password manager that auto-types or copies passwords for you.
+
+For contexts in which you can't paste a password (e.g. a full-disk encryption password entered during boot), use something else.
+
+### Why are there so many weird characters in the generated passwords?
+
+Those "weird characters" are configurable; check the manpages or GoDoc for more info. I admit that charsets like `ipaExtensions` were mostly added for fun, but they can be quite useful for detecting bugs in other software that accepts text input.
+
+Starting with v0.3.2, password generation defaults to alphanumerics and basic QWERTY symbols. I figured that this is probably for the best, as long as most of us have to work with software that breaks when encountering non-QWERTY symbols. After all, everyone knows that password entry existed long before [languages besides English](https://blog.tdwright.co.uk/2018/11/06/anglocentrism-broke-my-tests-ignore-localisation-at-your-peril/) were invented.
+
 Alternatives
 ------------
 
@@ -100,3 +112,4 @@ Alternatives
 - [pwgen](http://sf.net/projects/pwgen)
 - [cracklib](https://github.com/cracklib/cracklib)
 - The password generator/evaluator in [KeePassXC](https://keepassxc.org/)
+
