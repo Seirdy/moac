@@ -1,15 +1,19 @@
 .POSIX:
 
 MOAC_BIN = moac
-MOAC_SRC = *.go entropy/*.go cmd/moac/*.go
 MOAC_PWGEN_BIN = moac-pwgen
-MOAC_PWGEN_SRC = *.go entropy/*.go pwgen/*.go cmd/moac-pwgen/*.go
+BINS= $(MOAC_BIN) $(MOAC_PWGEN_BIN)
+
+SHARED_SRC = Makefile *.go entropy/*.go
+MOAC_SRC = cmd/moac/*.go
+MOAC_PWGEN_SRC = pwgen/*.go cmd/moac-pwgen/*.go
+SRC = $(SHARED_SRC) $(MOAC_EXCLUSIVE_SRC) $(MOAC_PWGEN_EXCLUSIVE_SRC)
+
 CGO_ENABLED ?= 0
 GOPATH ?= `$(GO) env GOPATH`
 GOBIN ?= $(GOPATH)/bin
 COVERPKG = .,./entropy,./pwgen
 
-BINS= $(MOAC_BIN) $(MOAC_PWGEN_BIN)
 
 GO ?= go
 GOLANGCI_LINT ?= $(GOBIN)/golangci-lint
@@ -18,6 +22,9 @@ GOKART_FLAGS ?= -g
 
 CMD = build
 ARGS =
+TAG = `git describe --abbrev=0 --tags`
+REVISION = `git rev-parse --short HEAD`
+VERSION = $(TAG)-$(REVISION)
 
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
@@ -28,7 +35,7 @@ ZSHCOMPDIR ?= $(DATAROOTDIR)/zsh/site-functions
 # general build flags
 LINKMODE = internal
 # extldflags is ignored unless you use one of the cgo options at the bottom
-GO_LDFLAGS += -w -s -linkmode='$(LINKMODE)' -extldflags \"$(LDFLAGS)\"
+GO_LDFLAGS += -w -s -X main.Version='$(VERSION)' -linkmode='$(LINKMODE)' -extldflags \"$(LDFLAGS)\"
 BUILDMODE ?= default
 GO_BUILDFLAGS += -trimpath -mod=readonly -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -buildmode=$(BUILDMODE) -ldflags='$(GO_LDFLAGS)'
 TESTFLAGS ?= # -msan, -race, coverage, etc.
@@ -49,9 +56,9 @@ lint: golangci-lint gokart-lint
 .base: $(SRC)
 	CC=$(CC) CCLD=$(CCLD) CGO_CFLAGS="$(CFLAGS)" CGO_ENABLED=$(CGO_ENABLED) $(GO) $(CMD) $(GO_BUILDFLAGS) $(ARGS)
 
-$(MOAC_BIN): $(MOAC_SRC)
+$(MOAC_BIN): $(SHARED_SRC) $(MOAC_SRC)
 	@$(MAKE) GO_BUILDFLAGS="$(GO_BUILDFLAGS) -o $(MOAC_BIN)" CMD=build ARGS=./cmd/moac .base
-$(MOAC_PWGEN_BIN): $(MOAC_PWGEN_SRC)
+$(MOAC_PWGEN_BIN): $(SHARED_SRC) $(MOAC_PWGEN_SRC)
 	@$(MAKE) GO_BUILDFLAGS="$(GO_BUILDFLAGS) -o $(MOAC_PWGEN_BIN)" CMD=build ARGS=./cmd/moac-pwgen .base
 
 build: $(BINS)

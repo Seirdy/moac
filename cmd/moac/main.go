@@ -37,7 +37,12 @@ COMMANDS:
 	helpText = "moac - analyze password strength with physical limits" + usage
 )
 
-func parseOpts(
+// Version can be set at link time to override debug.BuildInfo.Main.Version,
+// which is "(devel)" when building from within the module. See
+// golang.org/issue/29814 and golang.org/issue/29228.
+var Version string //nolint:gochecknoglobals
+
+func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
 	opts *[]getopt.Option,
 ) (*moac.Givens, bool, bool) {
 	var (
@@ -51,6 +56,9 @@ func parseOpts(
 		switch opt.Option {
 		case 'h':
 			fmt.Println(helpText)
+			os.Exit(0)
+		case 'v':
+			fmt.Println(Version)
 			os.Exit(0)
 		case 'q':
 			quantum = true
@@ -121,7 +129,7 @@ func fetchPassword(password *string) {
 }
 
 func main() {
-	opts, optind, err := getopt.Getopts(os.Args, "hqre:s:m:g:P:t:p:")
+	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:t:p:")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, usage)
 		os.Exit(1)

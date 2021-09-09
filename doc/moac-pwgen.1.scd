@@ -11,7 +11,10 @@ moac-pwgen [OPTIONS...] [CHARSETS...]
 # OPTIONS
 
 *-h*
-	Display a brief help message.
+	Display a brief help message and exit.
+
+*-v*
+	Print the version and exit.
 
 *-q*
 	Account for quantum computers using Grover's algorithm
