@@ -48,7 +48,7 @@ moac-pwgen [OPTIONS...] [CHARSETS...]
 See the *DEFAULT VALUES* section in *moac*(1) for physical values.
 
 The default charsets are *lowercase*, *uppercase*, *numbers*, *symbols*,
-*latin*, and *' '* (a space).
+and *' '* (a space).
 
 # CHARSETS
 
