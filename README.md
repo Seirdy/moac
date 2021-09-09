@@ -1,13 +1,13 @@
 MOAC
 ====
 
-[![godocs.io](https://godocs.io/git.sr.ht/~seirdy/moac?status.svg)](https://godocs.io/git.sr.ht/~seirdy/moac)
+[![godocs.io](https://godocs.io/git.sr.ht/~seirdy/moac?status.svg)](https://godocs.io/git.sr.ht/~seirdy/moac) [![builds.sr.ht status](https://builds.sr.ht/~seirdy/moac.svg)](https://builds.sr.ht/~seirdy/moac)
 
 [![sourcehut](https://img.shields.io/badge/repository-sourcehut-lightgrey.svg?logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==)](https://sr.ht/~seirdy/MOAC) [![GitLab mirror](https://img.shields.io/badge/mirror-GitLab-orange.svg?logo=gitlab)](https://gitlab.com/Seirdy/moac) [![GitHub mirror](https://img.shields.io/badge/mirror-GitHub-black.svg?logo=github)](https://github.com/Seirdy/moac) [![Codeberg mirror](https://img.shields.io/badge/mirror-Codeberg-blue.svg?logo=codeberg)](https://codeberg.org/Seirdy/moac)
 
-[![builds.sr.ht status](https://builds.sr.ht/~seirdy/moac.svg)](https://builds.sr.ht/~seirdy/moac)
+Generate passwords and measure their strength according to physical limits to computation.
 
-The MOAC repository consists of tools and libraries that take a unique approach to generating passwords and analyzing their strength. This software is concerned only with password strength, and knows nothing about the context in which passwords will be used; as such, it makes the assumption that password guessability is the only metric that matters, and a brute-force attack is constrained only by the laws of physics. It's inspired by a blog post I wrote: [Becoming physically immune to brute-force attacks](https://seirdy.one/2021/01/12/password-strength.html).
+This software is concerned only with password strength, and knows nothing about the context in which passwords will be used; as such, it makes the assumption that password guessability is the only metric that matters, and a brute-force attack is constrained only by the laws of physics. It's inspired by a blog post I wrote: [Becoming physically immune to brute-force attacks](https://seirdy.one/2021/01/12/password-strength.html).
 
 Users provide given values like the mass available to attackers, a time limit for the brute-force attack, and the energy available. `moac` outputs the likelihood of a successful attack or the minimum password entropy for a possible brute-force failure. Entropy is calculated with the assumption that passwords are randomly generated.
 
@@ -36,7 +36,7 @@ sudo make install # Install in /usr/local/ by default
 Usage (with examples)
 ---------------------
 
-For full usage of the command-line executables, see [`moac(1)`](https://git.sr.ht/~seirdy/moac/tree/master/item/doc/moac.1.scd) and [`moac-pwgen(1)`](https://git.sr.ht/~seirdy/moac/tree/master/item/doc/moac-pwgen.1.scd). Manpage sources are in `doc/`.
+For full usage of the command-line executables, see the [`moac(1)`](https://git.sr.ht/~seirdy/moac/tree/master/item/doc/moac.1.scd) and [`moac-pwgen(1)`](https://git.sr.ht/~seirdy/moac/tree/master/item/doc/moac-pwgen.1.scd) manpages. Manpage sources are in `doc/`.
 
 ### Bottlenecks and redundancy
 
@@ -73,7 +73,7 @@ $ moac-pwgen -qm 5.97e24 -t 1.45e17 lowercase uppercase numbers symbols latin
 
 If the same computer instead tried to guess the password `,ȿĢıqɽȂīĲďɖȟMǧiœcɪʊȦĻțșŌƺȰ&ǡśŗȁĵɍɞƋIŀƷ?}ʯ4ůʑʅęȳŞ`, there's a chance that it wouldn't have succeeded in time.
 
-_Note: given that the Earth wasn't hollow during the book's opening, it's unlikely that the Earth consumed its own mass to compute. Further research is necessary; perhaps it used solar power, or secret shipments of tiny black-hole batteries? Organic life was supposed to provide a large part of its functionality, so maybe we should restrict ourselves to the Earth's biomass._
+_Note: given that the Earth wasn't hollow during the book's opening, it's unlikely that the Earth consumed its own mass to compute. The Earth is also much warmer than 2.7 kelvins. Further research is necessary: perhaps it used solar power, or secret shipments of tiny black-hole batteries? Organic life was supposed to provide a large part of its functionality, so maybe we should restrict ourselves to the Earth's biomass._
 
 ### Ideas for other programs that can use `moac`
 
@@ -103,6 +103,29 @@ For contexts in which you can't paste a password (e.g. a full-disk encryption pa
 Those "weird characters" are configurable; check the manpages or GoDoc for more info. I admit that charsets like `ipaExtensions` were mostly added for fun, but they can be quite useful for detecting bugs in other software that accepts text input.
 
 Starting with v0.3.2, password generation defaults to alphanumerics and basic QWERTY symbols. I figured that this is probably for the best, as long as most of us have to work with software that breaks when encountering non-QWERTY symbols. After all, everyone knows that password entry existed long before [languages besides English](https://blog.tdwright.co.uk/2018/11/06/anglocentrism-broke-my-tests-ignore-localisation-at-your-peril/) were invented.
+
+Contributing
+------------
+
+I try to accommodate everyone's workflow. Here's ways to contribute and how, in my order of preference:
+
+### Bug reports
+
+Preferred and canonical location: <https://todo.sr.ht/~seirdy/MOAC>. Send an email to <mailto:~seirdy/MOAC@todo.sr.ht> to automatically file a bug, no account needed.
+
+I also check issues in the GitHub, GitLab, and Codeberg mirrors linked at the top of the README, if you prefer. No matter which option you choose, your bug gets emailed to me.
+
+### Patches, questions, and feature requests
+
+Preferred location: <https://lists.sr.ht/~seirdy/moac>. Send emails and patches to <mailto:~seirdy/moac@lists.sr.ht>.
+
+For patches, run `make test` to run the unit tests, and `make lint` to run [golangci-lint](https://github.com/golangci/golangci-lint) and [gokart](https://github.com/praetorian-inc/gokart).
+
+I also check the GitHub, GitLab, and Codeberg mirrors for issues and PRs.
+
+### Direct contact
+
+Check my contact info at the bottom of the manpages.
 
 Alternatives
 ------------
