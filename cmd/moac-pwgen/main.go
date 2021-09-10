@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"git.sr.ht/~seirdy/moac"
+	"git.sr.ht/~seirdy/moac/internal/version"
 	"git.sr.ht/~seirdy/moac/pwgen"
 	"git.sr.ht/~sircmpwn/getopt"
 )
@@ -30,11 +31,6 @@ OPTIONS:
 	helpText = "moac-pwgen - generate passwords with the described strength" + usage
 )
 
-// Version can be set at link time to override debug.BuildInfo.Main.Version,
-// which is "(devel)" when building from within the module. See
-// golang.org/issue/29814 and golang.org/issue/29228.
-var Version string //nolint:gochecknoglobals
-
 func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
 	opts *[]getopt.Option,
 ) (*moac.Givens, bool, int, int) {
@@ -52,7 +48,7 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 			fmt.Println(helpText)
 			os.Exit(0)
 		case 'v':
-			fmt.Println(Version)
+			fmt.Println(version.GetVersion())
 			os.Exit(0)
 		case 'q':
 			quantum = true

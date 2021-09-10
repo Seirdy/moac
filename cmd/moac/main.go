@@ -8,6 +8,7 @@ import (
 
 	"git.sr.ht/~seirdy/moac"
 	"git.sr.ht/~seirdy/moac/entropy"
+	"git.sr.ht/~seirdy/moac/internal/version"
 	"git.sr.ht/~sircmpwn/getopt"
 	"golang.org/x/term"
 )
@@ -37,11 +38,6 @@ COMMANDS:
 	helpText = "moac - analyze password strength with physical limits" + usage
 )
 
-// Version can be set at link time to override debug.BuildInfo.Main.Version,
-// which is "(devel)" when building from within the module. See
-// golang.org/issue/29814 and golang.org/issue/29228.
-var Version string //nolint:gochecknoglobals
-
 func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
 	opts *[]getopt.Option,
 ) (*moac.Givens, bool, bool) {
@@ -58,7 +54,7 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 			fmt.Println(helpText)
 			os.Exit(0)
 		case 'v':
-			fmt.Println(Version)
+			fmt.Println(version.GetVersion())
 			os.Exit(0)
 		case 'q':
 			quantum = true

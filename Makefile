@@ -4,7 +4,7 @@ MOAC_BIN = moac
 MOAC_PWGEN_BIN = moac-pwgen
 BINS= $(MOAC_BIN) $(MOAC_PWGEN_BIN)
 
-SHARED_SRC = Makefile *.go entropy/*.go
+SHARED_SRC = Makefile *.go entropy/*.go internal/*/*.go
 MOAC_SRC = cmd/moac/*.go
 MOAC_PWGEN_SRC = pwgen/*.go cmd/moac-pwgen/*.go
 SRC = $(SHARED_SRC) $(MOAC_EXCLUSIVE_SRC) $(MOAC_PWGEN_EXCLUSIVE_SRC)
@@ -35,7 +35,7 @@ ZSHCOMPDIR ?= $(DATAROOTDIR)/zsh/site-functions
 # general build flags
 LINKMODE = internal
 # extldflags is ignored unless you use one of the cgo options at the bottom
-GO_LDFLAGS += -w -s -X main.Version='$(VERSION)' -linkmode='$(LINKMODE)' -extldflags \"$(LDFLAGS)\"
+GO_LDFLAGS += -w -s -X git.sr.ht/~seirdy/moac/internal/version.version='$(VERSION)' -linkmode='$(LINKMODE)' -extldflags \"$(LDFLAGS)\"
 BUILDMODE ?= default
 GO_BUILDFLAGS += -trimpath -mod=readonly -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -buildmode=$(BUILDMODE) -ldflags='$(GO_LDFLAGS)'
 TESTFLAGS ?= # -msan, -race, coverage, etc.
@@ -48,6 +48,7 @@ gokart-lint: $(SRC)
 	$(GOKART) scan $(GOKART_FLAGS) .
 	$(GOKART) scan $(GOKART_FLAGS) ./entropy
 	$(GOKART) scan $(GOKART_FLAGS) ./pwgen
+	$(GOKART) scan $(GOKART_FLAGS) ./internal
 	$(GOKART) scan $(GOKART_FLAGS) ./cmd/moac
 	$(GOKART) scan $(GOKART_FLAGS) ./cmd/moac-pwgen
 
