@@ -27,7 +27,7 @@ moac [OPTIONS...] [COMMAND]
 
 *-s* <entropy>
 	Password entropy. Overrides the provided password's computed entropy if it's
-	lower.
+	lower. Defaults to 256 bits.
 
 *-m* <mass>
 	Mass at attacker's disposal (kg). Used to compute mass-energy. Overrides the
@@ -38,6 +38,10 @@ moac [OPTIONS...] [COMMAND]
 
 *-P* <power>
 	Power available to the computer (W)
+
+*-T* <temperature>
+	The temperature of the system (K). Defaults to 273 kelvin. Used to calculate
+	the Landauer limit.
 
 *-t* <time>
 	Time limit for brute-force attack (s).

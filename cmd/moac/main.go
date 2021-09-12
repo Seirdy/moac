@@ -19,16 +19,17 @@ USAGE:
   moac [OPTIONS] [COMMAND]
 
 OPTIONS:
-  -h	Display this help message.
+  -h	Display this help message
   -q	Account for quantum computers using Grover's algorithm
   -r	Interactively enter a password in the terminal; overrides -p
-  -e <energy>	Maximum energy used by attacker (J).
-  -s <entropy>	Password entropy.
-  -m <mass>	Mass at attacker's disposal (kg).
-  -g <energy>	Energy used per guess (J).
+  -e <energy>	Maximum energy used by attacker (J)
+  -s <entropy>	Password entropy
+  -m <mass>	Mass at attacker's disposal (kg)
+  -g <energy>	Energy used per guess (J)
   -P <power>	Power available to the computer (W)
-  -t <time>	Time limit for brute-force attack (s).
-  -p <password>	Password to analyze (do not use a real password).
+  -T <temperature>	Temperature of the system (K)
+  -t <time>	Time limit for brute-force attack (s)
+  -p <password>	Password to analyze (do not use a real password)
 
 COMMANDS:
   strength	Calculate the liklihood of a successful guess 
@@ -70,6 +71,8 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 			givens.EnergyPerGuess, err = strconv.ParseFloat(opt.Value, 64)
 		case 'P':
 			givens.Power, err = strconv.ParseFloat(opt.Value, 64)
+		case 'T':
+			givens.Temperature, err = strconv.ParseFloat(opt.Value, 64)
 		case 't':
 			givens.Time, err = strconv.ParseFloat(opt.Value, 64)
 		case 'p':
@@ -125,7 +128,7 @@ func fetchPassword(password *string) {
 }
 
 func main() {
-	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:t:p:")
+	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:p:")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, usage)
 		os.Exit(1)

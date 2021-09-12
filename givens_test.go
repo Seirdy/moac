@@ -20,10 +20,23 @@ type givensTestCase struct {
 	expectedErrBF error
 }
 
-func givensTestCases() []givensTestCase {
+func givensTestCases() []givensTestCase { //nolint:funlen // single statement; length only from test case count
 	return []givensTestCase{
 		{ // from README
 			name:    "hitchhiker",
+			quantum: true,
+			given: moac.Givens{
+				Mass:        5.97e24,
+				Time:        1.45e17,
+				Temperature: 1900,
+				Password:    "ȣMǚHǨȎ#ŕģ=ʬƦQoţ}tʂŦȃťŇ+ħHǰĸȵʣɐɼŋĬŧǺʀǜǬɰ'ʮ0ʡěɱ6ȫŭ",
+			},
+			expectedBF:    1.401e-4,
+			expectedME:    408.4,
+			expectedErrBF: nil,
+		},
+		{ // same as above but without custom temp
+			name:    "hitchhiker default temp",
 			quantum: true,
 			given: moac.Givens{
 				Mass:     5.97e24,

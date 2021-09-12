@@ -11,6 +11,7 @@ _arguments \
 	"-m[mass at attacker's disposal (kg)]" \
 	"-g[energy used per guess (J)]" \
 	"-P[power available to the computer (W)]" \
+	"-T[temperature of the system (K)]" \
 	"-t[time limit for brute-force attack (s)]" \
 	"-p[password to analyze (do not use a real password)]" \
 

@@ -58,20 +58,21 @@ Let's assume this is a maximally efficient quantum computer powered by the Earth
 
 - Age of the Earth: ~4.6 billion years, or ~1.45e17 seconds
 - Mass of the Earth: ~5.97e24 kg
+- Temperature of the upper mantle: 1900 K
 
 ```console
-$ moac -qm 5.97e24 -t 1.45e17 entropy-limit
-427
+$ moac -qm 5.97e24 -t 1.45e17 -T 1900 entropy-limit
+408
 ```
 
-Understanding the answer to Life, the Universe, and Everything requires less than `2^427` computations. If the same computer instead tried to brute-force a password, what kind of password might be out of its reach?
+Understanding the answer to Life, the Universe, and Everything requires less than `2^408` computations. If the same computer instead tried to brute-force a password, what kind of password might be out of its reach?
 
 ```console
-$ moac-pwgen -qm 5.97e24 -t 1.45e17 lowercase uppercase numbers symbols latin
-ɥìƄ¦sČÍM²ȬïľA\ɻ¨zŴǓĤúǓ¤ʬƗ;ɮĢƃƅǞɃƜʌȴɖǃƨǥ_Ǝ3ſǹǅɃ8ɟ
+$ moac-pwgen -qm 5.97e24 -t 1.45e17 -T 1900 lowercase uppercase numbers symbols latin
+ɮʠðʋsĳóʣ[5ȍìŒŞȨRɸÒ¨ůİȤ&ǒŘĥėǺʞĚʥ¼ɖƅ~ɛ\{ƸÝ4Ǎ6ő&Æ
 ```
 
-If the same computer instead tried to guess the password `,ȿĢıqɽȂīĲďɖȟMǧiœcɪʊȦĻțșŌƺȰ&ǡśŗȁĵɍɞƋIŀƷ?}ʯ4ůʑʅęȳŞ`, there's a chance that it wouldn't have succeeded in time.
+If the same computer instead tried to guess the password `ɮʠðʋsĳóʣ[5ȍìŒŞȨRɸÒ¨ůİȤ&ǒŘĥėǺʞĚʥ¼ɖƅ~ɛ\{ƸÝ4Ǎ6ő&Æ`, there's a chance that it wouldn't have succeeded in time.
 
 _Note: given that the Earth wasn't hollow during the book's opening, it's unlikely that the Earth consumed its own mass to compute. The Earth is also much warmer than 2.7 kelvins. Further research is necessary: perhaps it used solar power, or secret shipments of tiny black-hole batteries? Organic life was supposed to provide a large part of its functionality, so maybe we should restrict ourselves to the Earth's biomass._
 

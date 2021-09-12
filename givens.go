@@ -17,6 +17,7 @@ type Givens struct {
 	Energy           float64
 	Mass             float64 // mass used to build a computer or convert to energy
 	Time             float64 // Duration of the attack, in seconds.
+	Temperature      float64 // Duration of the attack, in seconds.
 	EnergyPerGuess   float64
 	Power            float64
 	GuessesPerSecond float64
@@ -29,8 +30,8 @@ const (
 	G = 6.67408e-11
 	// Hubble is Hubble's Constant, hertz.
 	Hubble = 2.2e-18
-	// Temp is the temperature a low estimate for the temperature of cosmic background radiation, kelvin.
-	Temp = 2.7
+	// UTemp is a low estimate for the temperature of cosmic background radiation, kelvin.
+	UTemp = 2.7
 	// Boltzmann is Boltzmann's constant, J/K.
 	Boltzmann = 1.3806503e-23
 	// Planck is Planck's Constant, J*s.
@@ -40,12 +41,16 @@ const (
 	UMass = C * C * C / (2 * G * Hubble)
 	// Bremermann is Bremermann's limit.
 	Bremermann = C * C / Planck
-	// Landauer limit.
-	Landauer = Boltzmann * Temp * math.Ln2
 
 	// DefaultEntropy is the number of bits of entropy to target if no target entropy is provided.
 	DefaultEntropy = 256
 )
+
+// landauer outputs the Landauer Limit.
+// See https://en.wikipedia.org/wiki/Landauer%27s_principle
+func landauer(temp float64) float64 {
+	return Boltzmann * temp * math.Ln2
+}
 
 // populateDefaults fills in default values for entropy calculation if not provided.
 func populateDefaults(givens *Givens) {
@@ -60,9 +65,13 @@ func populateDefaults(givens *Givens) {
 		}
 	}
 
+	if givens.Temperature == 0 {
+		givens.Temperature = UTemp
+	}
+
 	if givens.EnergyPerGuess == 0 {
 		// maybe put something more elaborate here given different constraints
-		givens.EnergyPerGuess = Landauer
+		givens.EnergyPerGuess = landauer(givens.Temperature)
 	}
 }
 

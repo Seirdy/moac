@@ -23,7 +23,7 @@ moac-pwgen [OPTIONS...] [CHARSETS...]
 	Maximum energy used by attacker (J).
 
 *-s* <entropy>
-	Desired assword entropy.
+	Desired assword entropy. Defaults to 256 bits.
 
 *-m* <mass>
 	Mass at attacker's disposal (kg). Used to compute mass-energy. Overrides the
@@ -34,6 +34,10 @@ moac-pwgen [OPTIONS...] [CHARSETS...]
 
 *-P* <power>
 	Power available to the computer (W)
+
+*-T* <temperature>
+	The temperature of the system (K). Defaults to 273 kelvin. Used to calculate
+	the Landauer limit.
 
 *-t* <time>
 	Time limit for brute-force attack (s).
