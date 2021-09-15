@@ -85,11 +85,15 @@ enable = [
 ]
 
 [linters-settings]
-
 	[linters-settings.cyclop]
 		max-complexity = 13
 	[linters-settings.gomnd.settings.mnd]
 		ignored-numbers = [2, 10, 32, 64]
+	[linters-settings.dupl]
+		threshold = 23
+	[linters-settings.govet]
+		enable-all = true
+		check-shadowing = true
 
 [issues]
 	exclude-use-default = false

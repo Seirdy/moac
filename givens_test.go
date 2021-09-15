@@ -47,8 +47,7 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 			expectedErrBF: nil,
 		},
 		{ // from blog post: https://seirdy.one/2021/01/12/password-strength.html
-			name:    "universe",
-			quantum: false,
+			name: "universe",
 			given: moac.Givens{
 				// default mass is the mass of the observable universe
 				Entropy: 510,
@@ -59,8 +58,7 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 		},
 		{ // Should use the default provided entropy but fall back to the
 			// lower computed value
-			name:    "only energy",
-			quantum: false,
+			name: "only energy",
 			given: moac.Givens{
 				Energy: 4e52,
 			},
@@ -101,7 +99,7 @@ func TestBruteForceability(t *testing.T) {
 			if !errors.Is(err, test.expectedErrBF) {
 				t.Fatalf("BruteForceability() = %v", err)
 			}
-			if math.Abs(got-test.expectedBF)/test.expectedBF > margin {
+			if beyondAcceptableMargin(got, test.expectedBF) {
 				t.Errorf("Bruteforceability() = %.4g; want %.4g", got, test.expectedBF)
 			}
 		})
@@ -112,9 +110,13 @@ func TestMinEntropy(t *testing.T) {
 	for _, test := range givensTestCases() {
 		t.Run(test.name, func(t *testing.T) {
 			got := moac.MinEntropy(&test.given, test.quantum)
-			if math.Abs(got-test.expectedME)/test.expectedME > margin {
+			if beyondAcceptableMargin(got, test.expectedME) {
 				t.Errorf("MinEntropy() = %.4g; want %.4g", got, test.expectedME)
 			}
 		})
 	}
+}
+
+func beyondAcceptableMargin(got, expected float64) bool {
+	return math.Abs(got-expected)/expected > margin
 }

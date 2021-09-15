@@ -126,9 +126,9 @@ func buildGoodTestCases() []pwgenTestCase {
 }
 
 // second param should include at least one element of the first param.
-func latterUsesFormer(former []rune, latter *[]rune) bool {
+func latterUsesFormer(former []rune, latter []rune) bool {
 	for _, char := range former {
-		for _, pwChar := range *latter {
+		for _, pwChar := range latter {
 			if pwChar == char {
 				return true
 			}
@@ -138,8 +138,8 @@ func latterUsesFormer(former []rune, latter *[]rune) bool {
 	return false
 }
 
-func pwUsesEachCharset(charsets *[][]rune, password *[]rune) (string, bool) {
-	for _, charset := range *charsets {
+func pwUsesEachCharset(charsets [][]rune, password []rune) (string, bool) {
+	for _, charset := range charsets {
 		if !latterUsesFormer(charset, password) {
 			return string(charset), false
 		}
@@ -197,9 +197,15 @@ func pwHasGoodLength(password string, minLen, maxLen int, entropyWanted float64)
 	return nil
 }
 
+func unexpectedErr(actualErr, expectedErr error) bool {
+	errorIsExpected := actualErr != nil && expectedErr != nil
+
+	return errorIsExpected && !errors.Is(actualErr, expectedErr)
+}
+
 func validateTestCase(test pwgenTestCase, charsets [][]rune) error {
 	password, err := GenPW(test.charsetsWanted, test.entropyWanted, test.minLen, test.maxLen)
-	if err != nil && !errors.Is(err, test.expectedErr) {
+	if unexpectedErr(err, test.expectedErr) {
 		return fmt.Errorf("GenPW() errored: %w", err)
 	}
 
@@ -209,7 +215,7 @@ func validateTestCase(test pwgenTestCase, charsets [][]rune) error {
 
 	pwRunes := []rune(password)
 	if err == nil {
-		if unusedCharset, validPW := pwUsesEachCharset(&charsets, &pwRunes); !validPW {
+		if unusedCharset, validPW := pwUsesEachCharset(charsets, pwRunes); !validPW {
 			errorStr := fmt.Sprintf(
 				"GenPW() = %s; didn't use each charset\nunused charset: %s\ncharsets wanted are",
 				password, unusedCharset,
@@ -227,7 +233,7 @@ func validateTestCase(test pwgenTestCase, charsets [][]rune) error {
 		return fmt.Errorf("GenPW() = %s; used invalid character \"%v\"", password, string(invalidRune))
 	}
 
-	if err != nil && !errors.Is(err, test.expectedErr) {
+	if unexpectedErr(err, test.expectedErr) {
 		return fmt.Errorf("Error calculating entropy: %w", err)
 	}
 

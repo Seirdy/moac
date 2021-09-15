@@ -75,6 +75,14 @@ func populateDefaults(givens *Givens) {
 	}
 }
 
+func setBottleneck(computedValues [2]float64, given *float64) {
+	for _, computedValue := range computedValues {
+		if *given == 0 || (computedValue > 0 && computedValue < *given) {
+			*given = computedValue
+		}
+	}
+}
+
 func calculatePower(givens *Givens) {
 	var (
 		powerFromComputationSpeed = givens.GuessesPerSecond * givens.EnergyPerGuess
@@ -83,11 +91,7 @@ func calculatePower(givens *Givens) {
 		computedPowers = [2]float64{powerFromComputationSpeed, powerFromEnergy}
 	)
 
-	for _, power := range computedPowers {
-		if givens.Power == 0 || (power > 0 && power < givens.Power) {
-			givens.Power = power
-		}
-	}
+	setBottleneck(computedPowers, &givens.Power)
 }
 
 func calculateEnergy(givens *Givens) {
@@ -97,11 +101,7 @@ func calculateEnergy(givens *Givens) {
 		computedEnergies = [2]float64{energyFromMass, energyFromPower}
 	)
 
-	for _, energy := range computedEnergies {
-		if givens.Energy == 0 || (energy > 0 && energy < givens.Energy) {
-			givens.Energy = energy
-		}
-	}
+	setBottleneck(computedEnergies, &givens.Energy)
 }
 
 // Errors for missing physical values that are required to compute desired values.
