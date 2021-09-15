@@ -75,6 +75,12 @@ test-cov:
 	@$(MAKE) TESTFLAGS="-coverpkg=$(COVERPKG) -coverprofile=coverage.out" test
 	$(GO) tool cover -func=coverage.out
 
+fmt:
+	fieldalignment -fix ./...
+	gofumpt -s -w .
+
+pre-commit: fmt lint test
+
 doc/moac.1: doc/moac.1.scd
 	scdoc < $< > $@
 doc/moac-pwgen.1: doc/moac-pwgen.1.scd
@@ -152,4 +158,4 @@ build-cgo:
 build-cgo-static:
 	@$(MAKE) EXTRA_LDFLAGS=-static-pie build-cgo
 
-.PHONY: all clean doc lint test test-race test-msan test-san test-cov build build-cgo build-cgo-static install
+.PHONY: all clean doc lint fmt pre-commit test test-race test-msan test-san test-cov build build-cgo build-cgo-static install

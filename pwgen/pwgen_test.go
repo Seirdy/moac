@@ -11,12 +11,12 @@ import (
 )
 
 type pwgenTestCase struct {
+	expectedErr    error
 	name           string
 	charsetsWanted []string
 	entropyWanted  float64
 	minLen         int
 	maxLen         int
-	expectedErr    error
 }
 
 type minMaxLen struct {
@@ -106,9 +106,8 @@ func buildGoodTestCases() []pwgenTestCase {
 		for _, minMaxLengths := range minMaxLengths {
 			for _, pwgenCharset := range pwgenCharsets {
 				newCase := pwgenTestCase{
-					pwgenCharset.name, pwgenCharset.charsetsWanted,
-					entropyWanted, minMaxLengths.minLen, minMaxLengths.maxLen,
-					nil,
+					expectedErr: nil, name: pwgenCharset.name, charsetsWanted: pwgenCharset.charsetsWanted,
+					entropyWanted: entropyWanted, minLen: minMaxLengths.minLen, maxLen: minMaxLengths.maxLen,
 				}
 				if minMaxLengths.maxLen > 0 && minMaxLengths.maxLen < len(pwgenCharset.charsetsWanted) {
 					newCase.expectedErr = ErrInvalidLenBounds

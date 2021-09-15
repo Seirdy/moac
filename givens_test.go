@@ -11,13 +11,12 @@ import (
 const margin = 0.0025 // acceptable error
 
 type givensTestCase struct {
-	name    string
-	given   moac.Givens
-	quantum bool
-	// Expected values should be within 10% error
+	expectedErrBF error
+	name          string
+	given         moac.Givens
 	expectedBF    float64
 	expectedME    float64
-	expectedErrBF error
+	quantum       bool
 }
 
 func givensTestCases() []givensTestCase { //nolint:funlen // single statement; length only from test case count
