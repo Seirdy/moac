@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"syscall"
@@ -29,7 +30,7 @@ OPTIONS:
   -P <power>	Power available to the computer (W)
   -T <temperature>	Temperature of the system (K)
   -t <time>	Time limit for brute-force attack (s)
-  -p <password>	Password to analyze (do not use a real password)
+  -p <password>	Password to analyze; use "-" for stdin
 
 COMMANDS:
   strength	Calculate the liklihood of a successful guess 
@@ -137,6 +138,13 @@ func main() {
 	givens, quantum, readPassword := parseOpts(&opts)
 	if readPassword {
 		fetchPassword(&givens.Password)
+	} else if givens.Password == "-" {
+		stdinBytes, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
+			os.Exit(1)
+		}
+		givens.Password = string(stdinBytes)
 	}
 
 	args := os.Args[optind:]

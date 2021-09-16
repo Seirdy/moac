@@ -47,9 +47,11 @@ moac [OPTIONS...] [COMMAND]
 	Time limit for brute-force attack (s).
 
 *-p* <password>
-	Password to analyze. Note that this will be visible in plaintext to anything
-	on your system that can view running processes, so don't use a real password.
-	Use *-r* to interactively enter a password instead.
+	Password to analyze. Use '-' to read the password from stdin.
+
+	Note that when passing a password as an argument, it will be visible in
+	plaintext to anything on your system that can view running processes. Use *-r*
+	to interactively enter a password instead.
 
 # DEFAULT VALUES
 
