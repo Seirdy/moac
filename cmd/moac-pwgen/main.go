@@ -34,13 +34,12 @@ OPTIONS:
 
 func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
 	opts *[]getopt.Option,
-) (*moac.Givens, bool, int, int) {
+) (givens *moac.Givens, quantum bool, minLen, maxLen int) {
 	var (
-		givens  moac.Givens
-		quantum bool
-		minLen  int64
-		maxLen  int64
-		err     error
+		givensValue moac.Givens
+		minLen64    int64
+		maxLen64    int64
+		err         error
 	)
 
 	for _, opt := range *opts {
@@ -54,23 +53,23 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 		case 'q':
 			quantum = true
 		case 'e':
-			givens.Energy, err = strconv.ParseFloat(opt.Value, 64)
+			givensValue.Energy, err = strconv.ParseFloat(opt.Value, 64)
 		case 's':
-			givens.Entropy, err = strconv.ParseFloat(opt.Value, 32)
+			givensValue.Entropy, err = strconv.ParseFloat(opt.Value, 32)
 		case 'm':
-			givens.Mass, err = strconv.ParseFloat(opt.Value, 64)
+			givensValue.Mass, err = strconv.ParseFloat(opt.Value, 64)
 		case 'g':
-			givens.EnergyPerGuess, err = strconv.ParseFloat(opt.Value, 64)
+			givensValue.EnergyPerGuess, err = strconv.ParseFloat(opt.Value, 64)
 		case 'P':
-			givens.Power, err = strconv.ParseFloat(opt.Value, 64)
+			givensValue.Power, err = strconv.ParseFloat(opt.Value, 64)
 		case 'T':
-			givens.Temperature, err = strconv.ParseFloat(opt.Value, 64)
+			givensValue.Temperature, err = strconv.ParseFloat(opt.Value, 64)
 		case 't':
-			givens.Time, err = strconv.ParseFloat(opt.Value, 64)
+			givensValue.Time, err = strconv.ParseFloat(opt.Value, 64)
 		case 'l':
-			minLen, err = strconv.ParseInt(opt.Value, 10, 32)
+			minLen64, err = strconv.ParseInt(opt.Value, 10, 32)
 		case 'L':
-			maxLen, err = strconv.ParseInt(opt.Value, 10, 32)
+			maxLen64, err = strconv.ParseInt(opt.Value, 10, 32)
 		}
 
 		if err != nil {
@@ -79,7 +78,7 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 		}
 	}
 
-	return &givens, quantum, int(minLen), int(maxLen)
+	return &givensValue, quantum, int(minLen64), int(maxLen64)
 }
 
 func main() {
@@ -90,7 +89,6 @@ func main() {
 	}
 
 	givens, quantum, minLen, maxLen := parseOpts(&opts)
-
 	args := os.Args[optind:]
 	// If the only user-supplied given is entropy, then just use that
 	// entropy level and skip calculating the strength of a brute-force attack.

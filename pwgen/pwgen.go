@@ -82,7 +82,7 @@ func indexOf(src []int, e int) int {
 	return -1
 }
 
-func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64, minLen, maxLen int) (string, error) {
+func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64, minLen, maxLen int) (pw string, err error) {
 	var charsToPickFrom, pwBuilder strings.Builder
 
 	if maxLen > 0 && maxLen < len(charsetsGiven) {
@@ -121,7 +121,7 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64, minLe
 		}
 	}
 
-	pw := pwBuilder.String()
+	pw = pwBuilder.String()
 	pwRunes := []rune(pw)
 
 	// keep inserting chars at random locations until the pw is long enough

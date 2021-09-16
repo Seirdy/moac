@@ -78,7 +78,7 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 				"𓂸",
 				"عظ؆ص",
 				// lots of duplicate chars
-				"ἀἁἂἃἄἅἆἇἈἉἊἋἌἍἎἏἐἑἒἓἔἕἘἙἚἛἜἝἠἡἢἣἤἥἦἧἨἩἪἫἬἭἮἯἰἱἲἳἴἵἶἷἸἹἺἻἼἽἾἿὀὁὂὃὄὅὈὉὊὋὌὍὐὑὒὓὔὕὖὗὙὛὝὟὠὡὢὣὤὥὦὧὨὩὪὫὬὭὮὯὰάὲέὴήὶίὸόὺύὼώᾀᾁᾂᾃᾄᾅᾆᾇᾈᾉᾊᾋᾌᾍᾎᾏᾐᾑᾒᾓᾔᾕᾖᾗᾘᾙᾚᾛᾜᾝᾞᾟᾠᾡᾢᾣᾤᾥᾦᾧᾨᾩᾪᾫᾬᾭᾮᾯᾰᾱᾲᾳᾴᾶᾷᾸᾹᾺΆᾼ᾽ι᾿῀῁ῂῃῄῆῇῈΈῊΉῌ῍῎῏ῐῑῒΐῖῗῘῙῚΊ῝῞῟ῠῡῢΰῤῥῦῧῨῩῪΎῬ῭΅`ῲῳῴῶῷῸΌῺΏῼ", //nolint:lll
+				"ἀἁἂἃἄἅἆἇἈἉἊἋἌἍἎἏἐἑἒἓἔἕἘἙἚἛἜἝἠἡἢἣἤἥἦἧἨἩἪἫἬἭἮἯἰἱἲἳἴἵἶἷἸἹἺἻἼἽἾἿὀὁὂὃὄὅὈὉὊὋὌὍὐὑὒὓὔὕὖὗὙὛὝὟὠὡὢὣὤὥὦὧὨὩὪὫὬὭὮὯὰάὲέὴήὶίὸόὺύὼώᾀᾁᾂᾃᾄᾅᾆᾇᾈᾉᾊᾋᾌᾍᾎᾏᾐᾑᾒᾓᾔᾕᾖᾗᾘᾙᾚᾛᾜᾝᾞᾟᾠᾡᾢᾣᾤᾥᾦᾧᾨᾩᾪᾫᾬᾭᾮᾯᾰᾱᾲᾳᾴᾶᾷᾸᾹᾺΆᾼ᾽ι᾿῀῁ῂῃῄῆῇῈΈῊΉῌ῍῎῏ῐῑῒΐῖῗῘῙῚΊ῝῞῟ῠῡῢΰῤῥῦῧῨῩῪΎῬ῭΅`ῲῳῴῶῷῸΌῺΏῼ", //nolint:lll // not worth splitting a single charset
 				"𓂸",
 			},
 		},
@@ -126,7 +126,7 @@ func buildGoodTestCases() []pwgenTestCase {
 }
 
 // second param should include at least one element of the first param.
-func latterUsesFormer(former []rune, latter []rune) bool {
+func latterUsesFormer(former, latter []rune) bool {
 	for _, char := range former {
 		for _, pwChar := range latter {
 			if pwChar == char {
@@ -146,6 +146,19 @@ func pwUsesEachCharset(charsets [][]rune, password []rune) (string, bool) {
 	}
 
 	return "", true
+}
+
+func pwUsesEachCharsetErrStr(password, unusedCharset string, charsets [][]rune) string {
+	errorStr := fmt.Sprintf(
+		"GenPW() = %s; didn't use each charset\nunused charset: %s\ncharsets wanted are",
+		password, unusedCharset,
+	)
+	for _, charset := range charsets {
+		errorStr += "\n"
+		errorStr += string(charset)
+	}
+
+	return errorStr
 }
 
 func pwOnlyUsesAllowedRunes(charsets *[][]rune, password *[]rune) (rune, bool) {
@@ -173,7 +186,7 @@ func pwOnlyUsesAllowedRunes(charsets *[][]rune, password *[]rune) (rune, bool) {
 func pwHasGoodLength(password string, minLen, maxLen int, entropyWanted float64) error {
 	entropyCalculated, err := entropy.Entropy(password)
 	if err != nil {
-		return fmt.Errorf("Error calculating entropy: %w", err)
+		return fmt.Errorf("error calculating entropy: %w", err)
 	}
 
 	pwLen := utf8.RuneCountInString(password)
@@ -216,16 +229,7 @@ func validateTestCase(test pwgenTestCase, charsets [][]rune) error {
 	pwRunes := []rune(password)
 	if err == nil {
 		if unusedCharset, validPW := pwUsesEachCharset(charsets, pwRunes); !validPW {
-			errorStr := fmt.Sprintf(
-				"GenPW() = %s; didn't use each charset\nunused charset: %s\ncharsets wanted are",
-				password, unusedCharset,
-			)
-			for _, charset := range charsets {
-				errorStr += "\n"
-				errorStr += string(charset)
-			}
-
-			return fmt.Errorf(errorStr)
+			return fmt.Errorf(pwUsesEachCharsetErrStr(password, unusedCharset, charsets))
 		}
 	}
 

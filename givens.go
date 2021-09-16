@@ -136,11 +136,7 @@ func (givens *Givens) populate() {
 	calculatePower(givens)
 
 	powerGPS := givens.Power / givens.EnergyPerGuess
-	for _, gps := range [2]float64{bremermannGPS, powerGPS} {
-		if givens.GuessesPerSecond == 0 || (gps > 0 && gps < givens.GuessesPerSecond) {
-			givens.GuessesPerSecond = gps
-		}
-	}
+	setBottleneck([2]float64{bremermannGPS, powerGPS}, &givens.GuessesPerSecond)
 
 	calculateEnergy(givens)
 
@@ -162,7 +158,7 @@ func BruteForceability(givens *Givens, quantum bool) (float64, error) {
 		return 0, fmt.Errorf("BruteForceability: cannot compute entropy: %w", ErrMissingPE)
 	}
 
-	computedBruteForceability := bruteForceability(givens, quantum)
+	computedBruteForceability := computeBruteForceability(givens, quantum)
 
 	// if bruteforceability isn't valid, we have a bug.
 	if computedBruteForceability == 0 || math.IsNaN(computedBruteForceability) {
@@ -172,7 +168,7 @@ func BruteForceability(givens *Givens, quantum bool) (float64, error) {
 	return computedBruteForceability, nil
 }
 
-func bruteForceability(givens *Givens, quantum bool) float64 {
+func computeBruteForceability(givens *Givens, quantum bool) float64 {
 	// with Grover's algorithm, quantum computers get an exponential speedup
 	var effectiveEntropy float64
 
@@ -198,21 +194,21 @@ func bruteForceability(givens *Givens, quantum bool) float64 {
 
 // MinEntropy calculates the maximum password entropy that the MOAC can certainly brute-force.
 // Passwords need an entropy greater than this to have a chance of not being guessed.
-func MinEntropy(givens *Givens, quantum bool) (entropy float64) {
+func MinEntropy(givens *Givens, quantum bool) (entropyNeeded float64) {
 	givens.populate()
 
 	energyBound := math.Log2(givens.Energy / givens.EnergyPerGuess)
 
 	if givens.Time > 0 {
 		timeBound := math.Log2(givens.Time * givens.GuessesPerSecond)
-		entropy = math.Min(energyBound, timeBound)
+		entropyNeeded = math.Min(energyBound, timeBound)
 	} else {
-		entropy = energyBound
+		entropyNeeded = energyBound
 	}
 
 	if quantum {
-		return entropy * 2
+		return entropyNeeded * 2
 	}
 
-	return entropy
+	return entropyNeeded
 }
