@@ -216,7 +216,7 @@ func unexpectedErr(actualErr, expectedErr error) bool {
 	return errorIsExpected && !errors.Is(actualErr, expectedErr)
 }
 
-func validateTestCase(test pwgenTestCase, charsets [][]rune) error {
+func validateTestCase(test *pwgenTestCase, charsets [][]rune) error {
 	password, err := GenPW(test.charsetsWanted, test.entropyWanted, test.minLen, test.maxLen)
 	if unexpectedErr(err, test.expectedErr) {
 		return fmt.Errorf("GenPW() errored: %w", err)
@@ -252,11 +252,12 @@ func validateTestCase(test pwgenTestCase, charsets [][]rune) error {
 }
 
 func TestGenPw(t *testing.T) {
-	for _, test := range buildTestCases() {
-		t.Run(test.name, func(t *testing.T) {
-			charsets := buildCharsets(test.charsetsWanted)
-			for i := 0; i < loops; i++ {
-				err := validateTestCase(test, charsets)
+	testCases := buildTestCases()
+	for i := range testCases {
+		t.Run(testCases[i].name, func(t *testing.T) {
+			charsets := buildCharsets(testCases[i].charsetsWanted)
+			for j := 0; j < loops; j++ {
+				err := validateTestCase(&testCases[i], charsets)
 				if err != nil {
 					t.Error(err.Error())
 
