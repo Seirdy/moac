@@ -138,7 +138,7 @@ func latterUsesFormer(former, latter []rune) bool {
 	return false
 }
 
-func pwUsesEachCharset(charsets [][]rune, password []rune) (string, bool) {
+func pwUsesEachCharset(charsets map[string][]rune, password []rune) (string, bool) {
 	for _, charset := range charsets {
 		if !latterUsesFormer(charset, password) {
 			return string(charset), false
@@ -148,7 +148,7 @@ func pwUsesEachCharset(charsets [][]rune, password []rune) (string, bool) {
 	return "", true
 }
 
-func pwUsesEachCharsetErrStr(password, unusedCharset string, charsets [][]rune) string {
+func pwUsesEachCharsetErrStr(password, unusedCharset string, charsets map[string][]rune) string {
 	errorStr := fmt.Sprintf(
 		"GenPW() = %s; didn't use each charset\nunused charset: %s\ncharsets wanted are",
 		password, unusedCharset,
@@ -161,9 +161,9 @@ func pwUsesEachCharsetErrStr(password, unusedCharset string, charsets [][]rune) 
 	return errorStr
 }
 
-func pwOnlyUsesAllowedRunes(charsets *[][]rune, password *[]rune) (rune, bool) {
+func pwOnlyUsesAllowedRunes(charsets map[string][]rune, password *[]rune) (rune, bool) {
 	var allowedChars string
-	for _, charset := range *charsets {
+	for _, charset := range charsets {
 		allowedChars += string(charset)
 	}
 
@@ -216,7 +216,7 @@ func unexpectedErr(actualErr, expectedErr error) bool {
 	return errorIsExpected && !errors.Is(actualErr, expectedErr)
 }
 
-func validateTestCase(test *pwgenTestCase, charsets [][]rune) error {
+func validateTestCase(test *pwgenTestCase, charsets map[string][]rune) error {
 	password, err := GenPW(test.charsetsWanted, test.entropyWanted, test.minLen, test.maxLen)
 	if unexpectedErr(err, test.expectedErr) {
 		return fmt.Errorf("GenPW() errored: %w", err)
@@ -233,7 +233,7 @@ func validateTestCase(test *pwgenTestCase, charsets [][]rune) error {
 		}
 	}
 
-	if invalidRune, validPW := pwOnlyUsesAllowedRunes(&charsets, &pwRunes); !validPW {
+	if invalidRune, validPW := pwOnlyUsesAllowedRunes(charsets, &pwRunes); !validPW {
 		return fmt.Errorf("GenPW() = %s; used invalid character \"%v\"", password, string(invalidRune))
 	}
 

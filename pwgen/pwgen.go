@@ -28,6 +28,13 @@ func addRuneToPw(password *strings.Builder, runes []rune) {
 	password.WriteRune(newChar)
 }
 
+func addRuneAtRandLoc(pwRunes *[]rune, runesToPickFrom []rune) {
+	newChar := runesToPickFrom[randInt(len(runesToPickFrom))]
+	index := randInt(len(*pwRunes))
+	*pwRunes = append((*pwRunes)[:index+1], (*pwRunes)[index:]...)
+	(*pwRunes)[index] = newChar
+}
+
 // ErrInvalidLenBounds represents bad minLen/maxLen values.
 var ErrInvalidLenBounds = errors.New("bad length bounds")
 
@@ -82,8 +89,14 @@ func indexOf(src []int, e int) int {
 	return -1
 }
 
-func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64, minLen, maxLen int) (pw string, err error) {
-	var charsToPickFrom, pwBuilder strings.Builder
+func genpwFromGivenCharsets(
+	charsetsGiven map[string][]rune, entropyWanted float64, minLen, maxLen int,
+) (pw string, err error) {
+	var (
+		charsToPickFrom, pwBuilder strings.Builder
+		charsetSlice               = make([][]rune, 0, len(charsetsGiven))
+		pwUsesCustomCharset        bool
+	)
 
 	if maxLen > 0 && maxLen < len(charsetsGiven) {
 		return pwBuilder.String(), fmt.Errorf(
@@ -91,8 +104,13 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64, minLe
 		)
 	}
 
-	for _, charset := range charsetsGiven {
+	for name, charset := range charsetsGiven {
 		charsToPickFrom.WriteString(string(charset))
+		charsetSlice = append(charsetSlice, charset)
+
+		if _, nonCustomCharset := entropy.Charsets[name]; !pwUsesCustomCharset && !nonCustomCharset {
+			pwUsesCustomCharset = true
+		}
 	}
 
 	runesToPickFrom := []rune(charsToPickFrom.String())
@@ -110,60 +128,64 @@ func genpwFromGivenCharsets(charsetsGiven [][]rune, entropyWanted float64, minLe
 	pwBuilder.Grow(pwLength + 1)
 
 	specialIndexes := computeSpecialIndexes(pwLength, len(charsetsGiven))
+	pwRunes := buildFixedLengthPw(&pwBuilder, pwLength, specialIndexes, runesToPickFrom, charsetSlice)
+
+	// keep inserting chars at random locations until the pw is long enough
+	if pwUsesCustomCharset {
+		randomlyInsertRunesTillStrong(maxLen, &pwRunes, entropyWanted, runesToPickFrom)
+	}
+
+	return string(pwRunes), nil
+}
+
+func buildFixedLengthPw(
+	pwBuilder *strings.Builder, pwLength int, specialIndexes []int, runesToPickFrom []rune, charsetSlice [][]rune,
+) []rune {
 	currentLength := 0
 
 	for specialI := 0; currentLength < pwLength; currentLength++ {
 		if i := indexOf(specialIndexes, currentLength); i >= 0 {
-			addRuneToPw(&pwBuilder, charsetsGiven[i]) // one of each charset @ a special index
+			addRuneToPw(pwBuilder, charsetSlice[i]) // one of each charset @ a special index
 			specialI++
 		} else {
-			addRuneToPw(&pwBuilder, runesToPickFrom)
+			addRuneToPw(pwBuilder, runesToPickFrom)
 		}
 	}
 
-	pw = pwBuilder.String()
-	pwRunes := []rune(pw)
-
-	// keep inserting chars at random locations until the pw is long enough
-	for ; maxLen == 0 || currentLength < maxLen; currentLength++ {
-		newChar := runesToPickFrom[randInt(len(runesToPickFrom))]
-		index := randInt(len(pwRunes))
-		pwRunes = append(pwRunes[:index+1], pwRunes[index:]...)
-		pwRunes[index] = newChar
-		pw = string(pwRunes)
-
-		computedEntropy, err := entropy.Entropy(pw)
-		if err != nil {
-			log.Panicf("failed to determine if password is long enough: %v", err)
-		}
-
-		if entropyWanted < computedEntropy {
-			break
-		}
-	}
-
-	return pw, nil
+	return []rune(pwBuilder.String())
 }
 
-func buildCharsets(charsetsEnumerated []string) [][]rune {
-	var charsetsGiven [][]rune
+func randomlyInsertRunesTillStrong(maxLen int, pwRunes *[]rune, entropyWanted float64, runesToPickFrom []rune) {
+	for maxLen == 0 || len(*pwRunes) < maxLen {
+		computedEntropy, err := entropy.Entropy(string(*pwRunes))
+		if err != nil {
+			log.Panicf("failed to determine if password entropy is high enough: %v", err)
+		}
 
-	for _, charset := range charsetsEnumerated {
+		if entropyWanted <= computedEntropy {
+			break
+		}
+
+		addRuneAtRandLoc(pwRunes, runesToPickFrom)
+	}
+}
+
+func buildCharsets(charsetsEnumerated []string) map[string][]rune {
+	charsetsGiven := make(map[string][]rune, len(charsetsEnumerated))
+
+	for i, charset := range charsetsEnumerated {
 		charsetRunes, found := entropy.Charsets[charset]
 
 		switch {
 		case found:
-			charsetsGiven = append(charsetsGiven, charsetRunes)
+			charsetsGiven[charset] = charsetRunes
 		case charset == "latin":
-			charsetsGiven = append(
-				charsetsGiven,
-				entropy.Charsets["latin1"],
-				entropy.Charsets["latinExtendedA"],
-				entropy.Charsets["latinExtendedB"],
-				entropy.Charsets["ipaExtensions"],
-			)
+			charsetsGiven["latin1"] = entropy.Charsets["latin1"]
+			charsetsGiven["latinExtendedA"] = entropy.Charsets["latinExtendedA"]
+			charsetsGiven["latinExtendedB"] = entropy.Charsets["latinExtendedB"]
+			charsetsGiven["ipaExtensions"] = entropy.Charsets["ipaExtensions"]
 		default:
-			charsetsGiven = append(charsetsGiven, []rune(charset))
+			charsetsGiven[fmt.Sprint(i)] = []rune(charset)
 		}
 	}
 
