@@ -45,12 +45,7 @@ all: build doc
 golangci-lint: $(SRC)
 	$(GOLANGCI_LINT) run
 gokart-lint: $(SRC)
-	$(GOKART) scan $(GOKART_FLAGS) .
-	$(GOKART) scan $(GOKART_FLAGS) ./entropy
-	$(GOKART) scan $(GOKART_FLAGS) ./pwgen
-	$(GOKART) scan $(GOKART_FLAGS) ./internal
-	$(GOKART) scan $(GOKART_FLAGS) ./cmd/moac
-	$(GOKART) scan $(GOKART_FLAGS) ./cmd/moac-pwgen
+	$(GOKART) scan $(GOKART_FLAGS) ./...
 
 lint: golangci-lint gokart-lint
 
@@ -82,9 +77,9 @@ fmt:
 pre-commit: fmt lint test
 
 doc/moac.1: doc/moac.1.scd
-	scdoc < $< > $@
+	scdoc < doc/moac.1.scd > doc/moac.1
 doc/moac-pwgen.1: doc/moac-pwgen.1.scd
-	scdoc < $< > $@
+	scdoc < doc/moac-pwgen.1.scd > doc/moac-pwgen.1
 
 doc: doc/moac.1 doc/moac-pwgen.1
 
