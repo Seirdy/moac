@@ -2,38 +2,15 @@
 package pwgen
 
 import (
-	"crypto/rand"
 	"errors"
 	"fmt"
 	"log"
 	"math"
-	"math/big"
 	"strings"
 
 	"git.sr.ht/~seirdy/moac"
 	"git.sr.ht/~seirdy/moac/entropy"
 )
-
-func randInt(max int) int {
-	newInt, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
-	if err != nil {
-		log.Panicf("specialIndexes: %v", err)
-	}
-
-	return int(newInt.Int64())
-}
-
-func addRuneToPw(password *strings.Builder, runes []rune) {
-	newChar := runes[randInt(len(runes))]
-	password.WriteRune(newChar)
-}
-
-func addRuneAtRandLoc(pwRunes *[]rune, runesToPickFrom []rune) {
-	newChar := runesToPickFrom[randInt(len(runesToPickFrom))]
-	index := randInt(len(*pwRunes))
-	*pwRunes = append((*pwRunes)[:index+1], (*pwRunes)[index:]...)
-	(*pwRunes)[index] = newChar
-}
 
 // ErrInvalidLenBounds represents bad minLen/maxLen values.
 var ErrInvalidLenBounds = errors.New("bad length bounds")
@@ -77,16 +54,6 @@ func computeSpecialIndexes(pwLength, charsetCount int) []int {
 	}
 
 	return res
-}
-
-func indexOf(src []int, e int) int {
-	for i, a := range src {
-		if a == e {
-			return i
-		}
-	}
-
-	return -1
 }
 
 func genpwFromGivenCharsets(
@@ -145,10 +112,10 @@ func buildFixedLengthPw(
 
 	for specialI := 0; currentLength < pwLength; currentLength++ {
 		if i := indexOf(specialIndexes, currentLength); i >= 0 {
-			addRuneToPw(pwBuilder, charsetSlice[i]) // one of each charset @ a special index
+			addRuneToEnd(pwBuilder, charsetSlice[i]) // one of each charset @ a special index
 			specialI++
 		} else {
-			addRuneToPw(pwBuilder, runesToPickFrom)
+			addRuneToEnd(pwBuilder, runesToPickFrom)
 		}
 	}
 
