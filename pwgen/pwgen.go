@@ -152,7 +152,18 @@ func buildCharsets(charsetsEnumerated []string) map[string][]rune {
 			charsetsGiven["latinExtendedB"] = entropy.Charsets["latinExtendedB"]
 			charsetsGiven["ipaExtensions"] = entropy.Charsets["ipaExtensions"]
 		default:
-			charsetsGiven[fmt.Sprint(i)] = []rune(charset)
+			newCharset := []rune(charset)
+			// remove all of newCharset's items from the existing charsets
+			// this ensures that custom charsets do indeed show up in the
+			// generated passwords but don't overlap with existing charsets
+			for j, givenCharset := range charsetsGiven {
+				charsetsGiven[j] = removeLatterFromFormer(givenCharset, newCharset)
+				if len(charsetsGiven[j]) == 0 {
+					delete(charsetsGiven, j)
+				}
+			}
+
+			charsetsGiven[fmt.Sprint(i)] = newCharset
 		}
 	}
 

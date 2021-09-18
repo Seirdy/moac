@@ -40,3 +40,30 @@ func indexOf(src []int, e int) int {
 
 	return -1
 }
+
+func removeIndex(s []rune, index int) []rune {
+	ret := make([]rune, 0)
+	ret = append(ret, s[:index]...)
+
+	return append(ret, s[index+1:]...)
+}
+
+func removeLatterFromFormer(former, latter []rune) []rune {
+	res := make([]rune, 0)
+
+	for i := 0; i < len(former); i++ {
+		for _, latterItem := range latter {
+			if (former)[i] == latterItem {
+				res = removeIndex(former, i)
+
+				break
+			}
+		}
+	}
+
+	if len(res) > 0 {
+		return res
+	}
+
+	return former
+}
