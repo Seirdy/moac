@@ -103,7 +103,7 @@ func main() {
 	if len(args) > 0 {
 		charsets = args
 	} else {
-		charsets = []string{"lowercase", "uppercase", "numbers", "symbols", " "}
+		charsets = []string{"ascii"}
 	}
 
 	pw, err := pwgen.GenPW(charsets, entropyLimit, minLen, maxLen)

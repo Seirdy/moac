@@ -137,6 +137,12 @@ func randomlyInsertRunesTillStrong(maxLen int, pwRunes *[]rune, entropyWanted fl
 	}
 }
 
+func mapMultiCopy(dest, src map[string][]rune, fields []string) {
+	for _, field := range fields {
+		dest[field] = src[field]
+	}
+}
+
 func buildCharsets(charsetsEnumerated []string) map[string][]rune {
 	charsetsGiven := make(map[string][]rune, len(charsetsEnumerated))
 
@@ -146,11 +152,14 @@ func buildCharsets(charsetsEnumerated []string) map[string][]rune {
 		switch {
 		case found:
 			charsetsGiven[charset] = charsetRunes
+		case charset == "ascii":
+			mapMultiCopy(
+				charsetsGiven, entropy.Charsets, []string{"lowercase", "uppercase", "numbers", "symbols"},
+			)
 		case charset == "latin":
-			charsetsGiven["latin1"] = entropy.Charsets["latin1"]
-			charsetsGiven["latinExtendedA"] = entropy.Charsets["latinExtendedA"]
-			charsetsGiven["latinExtendedB"] = entropy.Charsets["latinExtendedB"]
-			charsetsGiven["ipaExtensions"] = entropy.Charsets["ipaExtensions"]
+			mapMultiCopy(
+				charsetsGiven, entropy.Charsets, []string{"latin1", "latinExtendedA", "latinExtendedB", "ipaExtensions"},
+			)
 		default:
 			newCharset := []rune(charset)
 			// remove all of newCharset's items from the existing charsets

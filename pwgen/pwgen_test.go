@@ -45,6 +45,12 @@ func buildBadTestCases() []pwgenTestCase {
 			expectedErr:    ErrInvalidLenBounds,
 		},
 		{
+			name:           "too short for all ASCII",
+			charsetsWanted: []string{"ascii"},
+			maxLen:         3,
+			expectedErr:    ErrInvalidLenBounds,
+		},
+		{
 			name:           "bad lengths",
 			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "🦖؆ص😈"},
 			maxLen:         12,
@@ -66,8 +72,12 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "世界🧛"},
 		},
 		{
-			name:           "alnum",
-			charsetsWanted: []string{"lowercase", "uppercase", "numbers"},
+			name:           "ascii",
+			charsetsWanted: []string{"ascii"},
+		},
+		{
+			name:           "latin",
+			charsetsWanted: []string{"latin"},
 		},
 		{
 			name: "tinyPassword",
@@ -121,7 +131,7 @@ func buildGoodTestCases() (testCases []pwgenTestCase, iterationsPerCharset int) 
 					expectedErr: nil, name: pwgenCharset.name, charsetsWanted: pwgenCharset.charsetsWanted,
 					entropyWanted: entropyWanted, minLen: minMaxLengths.minLen, maxLen: minMaxLengths.maxLen,
 				}
-				if minMaxLengths.maxLen > 0 && minMaxLengths.maxLen < len(pwgenCharset.charsetsWanted) {
+				if minMaxLengths.maxLen > 0 && minMaxLengths.maxLen < len(buildCharsets(pwgenCharset.charsetsWanted)) {
 					newCase.expectedErr = ErrInvalidLenBounds
 				}
 

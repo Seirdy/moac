@@ -54,8 +54,7 @@ moac-pwgen [OPTIONS...] [CHARSETS...]
 
 See the *DEFAULT VALUES* section in *moac*(1) for physical values.
 
-The default charsets are *lowercase*, *uppercase*, *numbers*, *symbols*,
-and *' '* (a space).
+The default charset is *ascii*.
 
 # CHARSETS
 
@@ -77,6 +76,8 @@ Choose from the following charsets:
 *latinExtendedB*	the "Latin Extended B" Unicode block
 
 *ipaExtensions*	the "IPA Extensions" Unicode block
+
+*ascii*	alias for "lowercase uppercase numbers symbols". This is the default.
 
 *latin*	alias for "latin1 latinExtendedA latinExtendedB ipaExtensions"
 
