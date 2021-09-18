@@ -1,0 +1,200 @@
+---
+issues:
+  exclude-rules:
+    - linters:
+        - forbidigo
+      path: cmd/moac/main.go
+      text: use of `fmt.Print(ln|f)?` forbidden by pattern
+    - linters:
+        - forbidigo
+      path: cmd/moac-pwgen/main.go
+      text: use of `fmt.Print(ln|f)?` forbidden by pattern
+    - linters:
+        - exhaustivestruct
+      path: givens_test.go
+    - linters:
+        - goerr113
+      path: pwgen/pwgen_test.go
+  exclude-use-default: false
+linters:
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - cyclop
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - durationcheck
+    - errcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - exhaustivestruct
+    - exportloopref
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gci
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - gofmt
+    - gofumpt
+    - goheader
+    - goimports
+    - gomnd
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ifshort
+    - importas
+    - ineffassign
+    - lll
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - nlreturn
+    - noctx
+    - nolintlint
+    - prealloc
+    - predeclared
+    - promlinter
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - tagliatelle
+    - testpackage
+    - thelper
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - wastedassign
+    - whitespace
+    - wrapcheck
+    - wsl
+    - goerr113
+linters-settings:
+  cyclop:
+    max-complexity: 10
+    package-average: 10
+  dupl:
+    threshold: 23
+  errcheck:
+    check-blank: true
+    check-type-assertions: true
+  goconst:
+    numbers: true
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - experimental
+      - opinionated
+  gomnd:
+    settings:
+      mnd:
+        ignored-numbers:
+          - 2
+          - 10
+          - 32
+          - 64
+  govet:
+    check-shadowing: true
+    enable-all: true
+  misspell:
+    locale: US
+  nestif:
+    min-complexity: 3
+  prealloc:
+    for-loops: false
+    simple: false
+  predeclared:
+    q: true
+  revive:
+    confidence: 0.5
+    rules:
+      - name: argument-limit
+        arguments:
+          - 5
+      - name: function-result-limit
+        arguments:
+          - 4
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: error-return
+      - name: error-naming
+      - name: exported
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: redefines-builtin-id
+      - name: dot-imports
+      - name: if-return
+      - name: confusing-naming
+      - name: get-return
+      - name: modifies-parameter
+      - name: confusing-results
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: unnecessary-stmt
+      - name: struct-tag
+      - name: modifies-value-receiver
+      - name: constant-logical-expr
+      - name: range-val-in-closure
+      - name: waitgroup-by-value
+      - name: atomic
+      - name: empty-lines
+      - name: duplicated-imports
+      - name: import-shadowing
+      - name: unused-receiver
+      - name: unhandled-error
+        arguments:
+          - fmt.Printf
+          - fmt.Print
+          - fmt.Fprintf
+          - fmt.Println
+          - password.WriteRune
+          - charsToPickFrom.WriteString
+      - name: cognitive-complexity
+        arguments:
+          - 16
+      - name: string-of-int
+      - name: early-return
+      - name: unconditional-recursion
+      - name: identical-branches
+      - name: unexported-naming
+      - name: nested-structs
+      - name: useless-break
+run:
+  deadline: 1m
+  skip-dirs-use-default: false
+  skip-files: []
+  sort-results: true
