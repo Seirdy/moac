@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"git.sr.ht/~seirdy/moac"
@@ -114,7 +115,7 @@ func getEntropy(givens *moac.Givens) float64 {
 	return computedEntropy
 }
 
-func fetchPassword(password *string) {
+func readPwInteractive(password *string) {
 	fmt.Print("Enter password: ")
 
 	bytepw, err := term.ReadPassword(int(syscall.Stdin)) //nolint:unconvert // needed for some platforms
@@ -128,6 +129,16 @@ func fetchPassword(password *string) {
 	*password = string(bytepw)
 }
 
+func readPwStdin(password *string) {
+	stdinBytes, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "moac: %v\n", err)
+		os.Exit(1)
+	}
+
+	*password = string(stdinBytes)
+}
+
 func main() {
 	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:p:")
 	if err != nil {
@@ -137,15 +148,12 @@ func main() {
 
 	givens, quantum, readPassword := parseOpts(&opts)
 	if readPassword {
-		fetchPassword(&givens.Password)
+		readPwInteractive(&givens.Password)
 	} else if givens.Password == "-" {
-		stdinBytes, err := ioutil.ReadAll(os.Stdin)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-			os.Exit(1)
-		}
-		givens.Password = string(stdinBytes)
+		readPwStdin(&givens.Password)
 	}
+
+	givens.Password = strings.TrimSuffix(givens.Password, "\n")
 
 	args := os.Args[optind:]
 	if len(args) == 0 {
