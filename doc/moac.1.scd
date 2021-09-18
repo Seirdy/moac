@@ -17,7 +17,9 @@ moac [OPTIONS...] [COMMAND]
 	Print the version and exit.
 
 *-q*
-	Account for quantum computers using Grover's algorithm
+	Account for quantum computers using Grover's algorithm. Note that as of late
+	2021, the viability of quantum computers capable of using Grover's Algorithm
+	is unknown.
 
 *-r*
 	Interactively enter a password in the terminal; overrides *-p*

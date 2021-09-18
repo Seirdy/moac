@@ -18,7 +18,7 @@ My original intent when making this tool was to illustrate how easy it is to mak
 Project Status
 --------------
 
-MOAC is actively developed as of September 2021. It's almost ready for a v1.0.0 release; I'd just like to hear some opinions/feedback before I tag+push.
+MOAC is actively developed as of September 2021.
 
 Installation
 ------------
@@ -27,7 +27,7 @@ Installation
 
 - Go toolchain
 - `make` (tested with GNU Make, `bmake`, and OpenBSD Make)
-- `scdoc` (for building manpages)
+- `scdoc` (for building man pages)
 
 ```sh
 sudo make install # Install in /usr/local/ by default
@@ -36,7 +36,7 @@ sudo make install # Install in /usr/local/ by default
 Usage (with three examples)
 ---------------------------
 
-For full usage of the command-line executables, see the [`moac(1)`](https://git.sr.ht/~seirdy/moac/tree/master/item/doc/moac.1.scd) and [`moac-pwgen(1)`](https://git.sr.ht/~seirdy/moac/tree/master/item/doc/moac-pwgen.1.scd) manpages. Manpage sources are in `doc/`.
+For full usage of the command-line executables, see the [`moac(1)`](https://git.sr.ht/~seirdy/moac/tree/master/item/doc/moac.1.scd) and [`moac-pwgen(1)`](https://git.sr.ht/~seirdy/moac/tree/master/item/doc/moac-pwgen.1.scd) man pages. Man page sources are in `doc/`.
 
 ### Bottlenecks and redundancy
 
@@ -68,7 +68,7 @@ $ moac -qm 5.97e24 -t 1.45e17 -T 1900 entropy-limit
 Understanding the answer to Life, the Universe, and Everything requires less than `2^408` computations. If the same computer instead tried to brute-force a password, what kind of password might be out of its reach?
 
 ```console
-$ moac-pwgen -qm 5.97e24 -t 1.45e17 -T 1900 lowercase uppercase numbers symbols latin
+$ moac-pwgen -qm 5.97e24 -t 1.45e17 -T 1900 ascii latin
 ɮʠðʋsĳóʣ[5ȍìŒŞȨRɸÒ¨ůİȤ&ǒŘĥėǺʞĚʥ¼ɖƅ~ɛ\{ƸÝ4Ǎ6ő&Æ
 ```
 
@@ -133,9 +133,13 @@ For contexts in which you can't paste a password (e.g. a full-disk encryption pa
 
 ### Why are there so many weird characters in the generated passwords?
 
-Those "weird characters" are configurable; check the manpages or GoDoc for more info. I admit that charsets like `ipaExtensions` were mostly added for fun, but they can be quite useful for detecting bugs in other software that accepts text input.
+Those "weird characters" are configurable; check the man pages or GoDoc for more info. I admit that charsets like `ipaExtensions` were mostly added for fun, but they can be quite useful for detecting bugs in other software that accepts text input.
 
 Starting with v0.3.2, password generation defaults to alphanumerics and basic QWERTY symbols. I figured that this is probably for the best, as long as most of us have to work with software that breaks when encountering non-QWERTY symbols. After all, everyone knows that password entry existed long before [languages besides English](https://blog.tdwright.co.uk/2018/11/06/anglocentrism-broke-my-tests-ignore-localisation-at-your-peril/) were invented.
+
+### Why does MOAC try to use one character from each charset?
+
+A lot of bad software mandates the usage of one character from a given charset (one number, one symbol, etc). This makes compliance with that bad software easier.
 
 ### Why are MOAC's default values the values of the observable universe?
 
@@ -150,13 +154,13 @@ I try to accommodate everyone's workflow. Here's ways to contribute and how, in 
 
 ### Bug reports and TODOs
 
-Preferred and canonical location: <https://todo.sr.ht/~seirdy/MOAC>. Send an email to <mailto:~seirdy/MOAC@todo.sr.ht> to automatically file a bug, no account needed.
+Preferred and canonical location: <https://todo.sr.ht/~seirdy/MOAC>. Send an email to [~seirdy/moac@todo.sr.ht](mailto:~seirdy/MOAC@todo.sr.ht) to automatically file a bug, no account needed.
 
 I also check issues in the GitHub, GitLab, and Codeberg mirrors linked at the top of the README, if you prefer. No matter which option you choose, your bug gets emailed to me.
 
 ### Patches, questions, and feature requests
 
-Preferred location: <https://lists.sr.ht/~seirdy/moac>. Send emails and patches to <mailto:~seirdy/moac@lists.sr.ht>.
+Preferred location: <https://lists.sr.ht/~seirdy/moac>. Send emails and patches to [~seirdy/moac@lists.sr.ht](mailto:~seirdy/moac@lists.sr.ht).
 
 For patches, run `make test` to run the unit tests, and `make lint` to run [golangci-lint](https://github.com/golangci/golangci-lint) and [gokart](https://github.com/praetorian-inc/gokart).
 
@@ -164,7 +168,7 @@ I also check the GitHub, GitLab, and Codeberg mirrors for issues and PRs.
 
 ### Security vulnerabilities, non-public contact
 
-If you want to connect with me directly: check my contact info at the bottom of the manpages. I do accept PGP-encrypted emails, if you have that set up.
+If you want to connect with me directly: check my contact info at the bottom of the man pages. I do accept PGP-encrypted emails, if you have that set up.
 
 Other forms of contact are on [my website](https://seirdy.one/about.html)
 
