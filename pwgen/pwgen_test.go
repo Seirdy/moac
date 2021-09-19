@@ -28,7 +28,7 @@ var ErrTooLong = fmt.Errorf("password too long: %w", ErrInvalidLenBounds)
 
 // Number of times to run each test-case.
 // We run each test case multiple times because of the non-determinism inherent to GenPW().
-const loops int = 128
+const loops int = 64
 
 func buildTestCases() (testCases []pwgenTestCase, iterations int) {
 	goodCases, iterations := buildGoodTestCases()
@@ -89,11 +89,18 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 			name: "many dupe zeroes",
 			charsetsWanted: []string{
 				"uppercase", "lowercase", "numbers", "symbols", "latin", "🧛",
+				"000000",
+				"000000",
+				"0",
+				"000000000000000000000000000000",
+				"1234000",
+				"000000",
+				"ascii",
 				"000000000000000000000000000000",
 			},
 		},
 		{
-			name: "multipleCustomCharsets",
+			name: "complex custom charsets",
 			charsetsWanted: []string{
 				"uppercase", "numbers", "lowercase",
 				"𓂸",
@@ -160,31 +167,52 @@ func latterUsesElemFromFormer(former, latter []rune) int {
 	return -1
 }
 
-func pwUsesEachCharset(charsets map[string][]rune, password []rune) (string, bool) {
-	pwCopy := make([]rune, len(password))
+func pwUsesEachCharsetSinglePass(charsets map[string][]rune, password []rune) (map[string][]rune, bool) {
+	var (
+		unusedCharsets = make(map[string][]rune)
+		pwCopy         = make([]rune, len(password))
+		pass           = true
+	)
+
 	copy(pwCopy, password)
 
 	for i := range charsets {
 		pwCharIndex := latterUsesElemFromFormer(charsets[i], pwCopy)
 		if pwCharIndex == -1 {
-			return string(charsets[i]), false
+			unusedCharsets[i] = charsets[i]
+			pass = false
+
+			continue
 		}
 
 		pwCopy = append(pwCopy[:pwCharIndex], pwCopy[pwCharIndex+1:]...)
 	}
 
-	return "", true
+	return unusedCharsets, pass
 }
 
-func pwUsesEachCharsetErrStr(password, unusedCharset string, charsets map[string][]rune) string {
-	errorStr := fmt.Sprintf(
-		"GenPW() = %s; didn't use each charset\nunused charset: %s\ncharsets wanted are",
-		password, unusedCharset,
-	)
-	for _, charset := range charsets {
-		errorStr += "\n"
-		errorStr += string(charset)
+func pwUsesEachCharset(charsets map[string][]rune, password []rune) error {
+	if unusedCharsets, validPW := pwUsesEachCharsetSinglePass(charsets, password); !validPW {
+		if unusedCharset2, validPW2 := pwUsesEachCharsetSinglePass(unusedCharsets, password); !validPW2 {
+			return errors.New(pwUsesEachCharsetErrStr(string(password), unusedCharset2))
+		}
 	}
+
+	return nil
+}
+
+func pwUsesEachCharsetErrStr(password string, unusedCharsets map[string][]rune) string {
+	var unusedCharsetsStr string
+
+	for _, unusedCharset := range unusedCharsets {
+		unusedCharsetsStr += string(unusedCharset)
+		unusedCharsetsStr += "\n"
+	}
+
+	errorStr := fmt.Sprintf(
+		"GenPW() = %s; didn't use %d charsets\nunused charsets: %s\n",
+		password, len(unusedCharsets), unusedCharsetsStr,
+	)
 
 	return errorStr
 }
@@ -255,7 +283,7 @@ func pwCorrectLength(pwRunes []rune, minLen, maxLen int, entropyWanted float64, 
 
 	if pwLen > minLen && entropyWanted > 0 {
 		truncatedPass := pwRunes[:len(pwRunes)-1]
-		_, truncatedUsesEachCharset := pwUsesEachCharset(charsets, truncatedPass)
+		_, truncatedUsesEachCharset := pwUsesEachCharsetSinglePass(charsets, truncatedPass)
 
 		truncatedEntropy, err := entropy.Entropy(string(truncatedPass))
 		if err != nil {
@@ -288,8 +316,8 @@ func validateTestCase(test *pwgenTestCase, charsets map[string][]rune) error {
 
 	pwRunes := []rune(password)
 	if err == nil {
-		if unusedCharset, validPW := pwUsesEachCharset(charsets, pwRunes); !validPW {
-			return errors.New(pwUsesEachCharsetErrStr(password, unusedCharset, charsets))
+		if errUsesEachCharset := pwUsesEachCharset(charsets, pwRunes); errUsesEachCharset != nil {
+			return errUsesEachCharset
 		}
 	}
 
@@ -325,7 +353,7 @@ func TestGenPw(t *testing.T) {
 			for j := 0; j < loops; j++ {
 				err := validateTestCase(&testCase, charsets)
 				if err != nil {
-					if errors.Is(err, ErrTooLong) && testCase.name == "multipleCustomCharsets" {
+					if errors.Is(err, ErrTooLong) && testCase.name == "complex custom charsets" {
 						log.Println(err)
 						tooLongCount++
 					} else {
@@ -339,6 +367,7 @@ func TestGenPw(t *testing.T) {
 	}
 
 	if percent := float64(tooLongCount) / float64(iterations) * 100; percent > 0.1 {
-		t.Errorf("%d out of %d passwords (%.3g%%) in multipleCustomCharsets were too long", tooLongCount, iterations, percent)
+		t.Errorf("%d out of %d passwords (%.3g%%) in complex custom charsets were too long",
+			tooLongCount, iterations, percent)
 	}
 }

@@ -162,21 +162,38 @@ func buildCharsets(charsetsEnumerated []string) map[string][]rune {
 			)
 		default:
 			newCharset := []rune(charset)
-			// remove all of newCharset's items from the existing charsets
-			// this ensures that custom charsets do indeed show up in the
-			// generated passwords but don't overlap with existing charsets
-			for j, givenCharset := range charsetsGiven {
-				charsetsGiven[j] = removeLatterFromFormer(givenCharset, newCharset)
-				if len(charsetsGiven[j]) == 0 {
-					delete(charsetsGiven, j)
-				}
-			}
-
-			charsetsGiven[fmt.Sprint(i)] = newCharset
+			addAndSubsetCharset(charsetsGiven, &newCharset, fmt.Sprint(i))
 		}
 	}
 
 	return charsetsGiven
+}
+
+// addAndSubsetCharset adds newCharset to charsetsGiven and de-duplicates them.
+// It only adds the new charset if it wouldn't be redundant after de-duplication.
+func addAndSubsetCharset(existingCharsets map[string][]rune, newCharset *[]rune, newCharsetName string) {
+	addNewCharset := true
+
+	for j, givenCharset := range existingCharsets {
+		existingCharsets[j] = removeLatterFromFormer(givenCharset, *newCharset)
+		if len(existingCharsets[j]) == 0 {
+			delete(existingCharsets, j)
+
+			continue
+		}
+
+		*newCharset = removeLatterFromFormer(*newCharset, existingCharsets[j])
+
+		if len(*newCharset) == 0 {
+			addNewCharset = false
+
+			break
+		}
+	}
+
+	if addNewCharset {
+		existingCharsets[newCharsetName] = *newCharset
+	}
 }
 
 // GenPW generates a random password using characters from the charsets enumerated by charsetsEnumerated.
