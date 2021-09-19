@@ -86,7 +86,8 @@ doc: doc/moac.1 doc/moac-pwgen.1
 install: all
 	mkdir -p \
 		$(DESTDIR)$(BINDIR) \
-		$(DESTDIR)$(MANDIR)/man1
+		$(DESTDIR)$(MANDIR)/man1 \
+		$(DESTDIR)$(ZSHCOMPDIR)
 	cp -f $(BINS) $(DESTDIR)$(BINDIR)
 	chmod 755 $(DESTDIR)$(BINDIR)/$(MOAC_BIN)
 	chmod 755 $(DESTDIR)$(BINDIR)/$(MOAC_PWGEN_BIN)
