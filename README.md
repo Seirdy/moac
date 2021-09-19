@@ -1,7 +1,7 @@
 MOAC
 ====
 
-[![godocs.io](https://godocs.io/git.sr.ht/~seirdy/moac?status.svg)](https://godocs.io/git.sr.ht/~seirdy/moac) [![builds.sr.ht status](https://builds.sr.ht/~seirdy/moac.svg)](https://builds.sr.ht/~seirdy/moac)
+[![godocs.io](https://godocs.io/git.sr.ht/~seirdy/moac?status.svg)](https://godocs.io/git.sr.ht/~seirdy/moac) [![builds.sr.ht status](https://builds.sr.ht/~seirdy/moac.svg)](https://builds.sr.ht/~seirdy/moac) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5227/badge)](https://bestpractices.coreinfrastructure.org/projects/5227)
 
 [![sourcehut](https://img.shields.io/badge/repository-sourcehut-lightgrey.svg?logo=data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==)](https://sr.ht/~seirdy/MOAC) [![GitLab mirror](https://img.shields.io/badge/mirror-GitLab-orange.svg?logo=gitlab)](https://gitlab.com/Seirdy/moac) [![GitHub mirror](https://img.shields.io/badge/mirror-GitHub-black.svg?logo=github)](https://github.com/Seirdy/moac) [![Codeberg mirror](https://img.shields.io/badge/mirror-Codeberg-blue.svg?logo=codeberg)](https://codeberg.org/Seirdy/moac)
 
@@ -22,6 +22,8 @@ MOAC is actively developed as of September 2021.
 
 Installation
 ------------
+
+Check the [refs](https://git.sr.ht/~seirdy/moac/refs/) for changelogs; select a ref to download pre-built binaries. Alternatively, build MOAC from source:
 
 ### Dependencies
 
@@ -162,7 +164,7 @@ I also check issues in the GitHub, GitLab, and Codeberg mirrors linked at the to
 
 Preferred location: <https://lists.sr.ht/~seirdy/moac>. Send emails and patches to [~seirdy/moac@lists.sr.ht](mailto:~seirdy/moac@lists.sr.ht).
 
-For patches, run `make test` to run the unit tests, and `make lint` to run [golangci-lint](https://github.com/golangci/golangci-lint) and [gokart](https://github.com/praetorian-inc/gokart).
+For patches, run `make test` to run the unit tests, and `make lint` to run [golangci-lint](https://github.com/golangci/golangci-lint) and [gokart](https://github.com/praetorian-inc/gokart). Adding tests is highly encouraged, but I'll probably be fine with implementing them myself.
 
 I also check the GitHub, GitLab, and Codeberg mirrors for issues and PRs.
 
