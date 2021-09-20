@@ -29,6 +29,7 @@ tasks:
   - lint: |
       go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
       go install github.com/praetorian-inc/gokart@latest
+      go install github.com/mrtazz/checkmake/cmd/checkmake@latest
       cd moac
       bmake lint
 

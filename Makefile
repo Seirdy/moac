@@ -18,6 +18,7 @@ COVERPKG = .,./entropy,./pwgen,./internal/slicing
 GO ?= go
 GOLANGCI_LINT ?= $(GOBIN)/golangci-lint
 GOKART ?= $(GOBIN)/gokart
+CHECKMAKE ?= $(GOBIN)/checkmake
 GOKART_FLAGS ?= -g
 
 CMD = build
@@ -46,8 +47,10 @@ golangci-lint: $(SRC)
 	$(GOLANGCI_LINT) run
 gokart-lint: $(SRC)
 	$(GOKART) scan $(GOKART_FLAGS) ./...
+checkmake: Makefile
+	$(CHECKMAKE) Makefile
 
-lint: golangci-lint gokart-lint
+lint: golangci-lint gokart-lint checkmake
 
 .base: $(SRC)
 	CC=$(CC) CCLD=$(CCLD) CGO_CFLAGS="$(CFLAGS)" CGO_ENABLED=$(CGO_ENABLED) $(GO) $(CMD) $(GO_BUILDFLAGS) $(ARGS)
@@ -151,6 +154,8 @@ test-msan:
 	@$(MAKE) TESTFLAGS='-msan' BUILDMODE=$(BUILDMODE_CGO) .test-cgo
 
 test-san: test-race test-msan
+
+pre-push: test-san # we already ran fmt, lint, test on pre-commit. this is a slower sanitizer-enabled test.
 
 .build-cgo-base:
 	@$(MAKE) CFLAGS="$(CFLAGS_CFI)" CGO_ENABLED=1 LINKMODE=external BUILDMODE=$(BUILDMODE_CGO) LDFLAGS="$(LDFLAGS_CFI) $(EXTRA_LDFLAGS)" build
