@@ -35,6 +35,8 @@ Check the [refs](https://git.sr.ht/~seirdy/moac/refs/) for changelogs; select a 
 sudo make install-strip # Install in /usr/local/ by default; set PREFIX to change.
 ```
 
+To upgrade or reinstall, run the above again; to uninstall, run `sudo make uninstall`
+
 Usage (with three examples)
 ---------------------------
 
@@ -152,27 +154,7 @@ Caveat: the limits of the speed of light in the face of an expanding universe ma
 Contributing
 ------------
 
-I try to accommodate everyone's workflow. Here's ways to contribute and how, in my order of preference:
-
-### Bug reports and TODOs
-
-Preferred and canonical location: <https://todo.sr.ht/~seirdy/MOAC>. Send an email to [~seirdy/moac@todo.sr.ht](mailto:~seirdy/MOAC@todo.sr.ht) to automatically file a bug, no account needed.
-
-I also check issues in the GitHub, GitLab, and Codeberg mirrors linked at the top of the README, if you prefer. No matter which option you choose, your bug gets emailed to me.
-
-### Patches, questions, and feature requests
-
-Preferred location: <https://lists.sr.ht/~seirdy/moac>. Send emails and patches to [~seirdy/moac@lists.sr.ht](mailto:~seirdy/moac@lists.sr.ht).
-
-For patches, run `make test` to run the unit tests, and `make lint` to run [golangci-lint](https://github.com/golangci/golangci-lint) and [gokart](https://github.com/praetorian-inc/gokart). Adding tests is highly encouraged, but I'll probably be fine with implementing them myself.
-
-I also check the GitHub, GitLab, and Codeberg mirrors for issues and PRs.
-
-### Security vulnerabilities, non-public contact
-
-If you want to connect with me directly: check my contact info at the bottom of the man pages. I do accept PGP-encrypted emails, if you have that set up.
-
-Other forms of contact are on [my website](https://seirdy.one/about.html)
+See `CONTRIBUTING.md` in the repository root.
 
 Alternatives
 ------------
