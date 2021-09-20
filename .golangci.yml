@@ -14,7 +14,10 @@ issues:
       path: givens_test.go
     - linters:
         - goerr113
-      path: pwgen/pwgen_test.go
+      path: pwgen/genpw_test.go
+    - linters:
+        - goerr113
+      path: pwgen/buildcharsets_test.go
     - linters:
         - lll
       path: _test.go
