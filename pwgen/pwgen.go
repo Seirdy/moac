@@ -143,7 +143,14 @@ func mapMultiCopy(dest, src map[string][]rune, fields []string) {
 	}
 }
 
-func buildCharsets(charsetsEnumerated []string) map[string][]rune {
+// BuildCharsets creates the charsets to use when generating passwords.
+// It de-duplicates custom charsets and ensures that there is no overlap
+// between different charsets.
+// It replaces "ascii" and "latin" aliases with their individual
+// components, and checks each charset named in charsetsNamed against
+// entropy.Constants. Named charsets that don't correspond to entries
+// in entropy.Constants are treated as elements of a new custom charset.
+func BuildCharsets(charsetsEnumerated []string) map[string][]rune {
 	charsetsGiven := make(map[string][]rune, len(charsetsEnumerated))
 
 	for i, charset := range charsetsEnumerated {
@@ -208,7 +215,7 @@ func addAndSubsetCharset(existingCharsets map[string][]rune, newCharset *[]rune,
 // minLen and maxLen are ignored when set to zero; otherwise, they set lower/upper
 // bounds on password character count and override entropyWanted if necessary.
 func GenPW(charsetsEnumerated []string, entropyWanted float64, minLen, maxLen int) (string, error) {
-	charsetsGiven := buildCharsets(charsetsEnumerated)
+	charsetsGiven := BuildCharsets(charsetsEnumerated)
 	if entropyWanted == 0 {
 		return genpwFromGivenCharsets(charsetsGiven, moac.DefaultEntropy, minLen, maxLen)
 	}

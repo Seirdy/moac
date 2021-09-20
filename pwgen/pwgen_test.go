@@ -138,7 +138,7 @@ func buildGoodTestCases() (testCases []pwgenTestCase, iterationsPerCharset int) 
 					expectedErr: nil, name: pwgenCharset.name, charsetsWanted: pwgenCharset.charsetsWanted,
 					entropyWanted: entropyWanted, minLen: minMaxLengths.minLen, maxLen: minMaxLengths.maxLen,
 				}
-				if minMaxLengths.maxLen > 0 && minMaxLengths.maxLen < len(buildCharsets(pwgenCharset.charsetsWanted)) {
+				if minMaxLengths.maxLen > 0 && minMaxLengths.maxLen < len(BuildCharsets(pwgenCharset.charsetsWanted)) {
 					newCase.expectedErr = ErrInvalidLenBounds
 				}
 
@@ -349,7 +349,7 @@ func TestGenPw(t *testing.T) {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
-			charsets := buildCharsets(testCase.charsetsWanted)
+			charsets := BuildCharsets(testCase.charsetsWanted)
 			for j := 0; j < loops; j++ {
 				err := validateTestCase(&testCase, charsets)
 				if err != nil {
