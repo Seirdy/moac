@@ -32,7 +32,7 @@ Check the [refs](https://git.sr.ht/~seirdy/moac/refs/) for changelogs; select a 
 - `scdoc` (for building man pages)
 
 ```sh
-sudo make install # Install in /usr/local/ by default; set PREFIX to change.
+sudo make install-strip # Install in /usr/local/ by default; set PREFIX to change.
 ```
 
 Usage (with three examples)

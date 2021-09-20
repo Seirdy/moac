@@ -35,7 +35,7 @@ ZSHCOMPDIR ?= $(DATAROOTDIR)/zsh/site-functions
 # general build flags
 LINKMODE = internal
 # extldflags is ignored unless you use one of the cgo options at the bottom
-GO_LDFLAGS += -w -s -X git.sr.ht/~seirdy/moac/internal/version.version='$(VERSION)' -linkmode='$(LINKMODE)' -extldflags \"$(LDFLAGS)\"
+GO_LDFLAGS += -w -X git.sr.ht/~seirdy/moac/internal/version.version='$(VERSION)' -linkmode='$(LINKMODE)' -extldflags \"$(LDFLAGS)\"
 BUILDMODE ?= default
 GO_BUILDFLAGS += -trimpath -mod=readonly -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -buildmode=$(BUILDMODE) -ldflags='$(GO_LDFLAGS)'
 TESTFLAGS ?= # -msan, -race, coverage, etc.
@@ -83,19 +83,31 @@ doc/moac-pwgen.1: doc/moac-pwgen.1.scd
 
 doc: doc/moac.1 doc/moac-pwgen.1
 
-install: all
-	mkdir -p \
-		$(DESTDIR)$(BINDIR) \
-		$(DESTDIR)$(MANDIR)/man1 \
-		$(DESTDIR)$(ZSHCOMPDIR)
+INSTALL_SHARE = install-man install-completion
+
+install-bin: build
+	mkdir -p $(DESTDIR)$(BINDIR)
 	cp -f $(BINS) $(DESTDIR)$(BINDIR)
-	chmod 755 $(DESTDIR)$(BINDIR)/$(MOAC_BIN)
-	chmod 755 $(DESTDIR)$(BINDIR)/$(MOAC_PWGEN_BIN)
+	chmod 755 $(DESTDIR)$(BINDIR)/$(MOAC_BIN) $(DESTDIR)$(BINDIR)/$(MOAC_PWGEN_BIN)
+install-bin-strip:
+	@GO_LDFLAGS='-s' $(MAKE) install-bin
+install-man: doc
+	mkdir -p  $(DESTDIR)$(MANDIR)/man1
 	cp -f doc/*.1 $(DESTDIR)$(MANDIR)/man1
-	chmod 644 $(DESTDIR)$(MANDIR)/man1/moac.1
-	chmod 644 $(DESTDIR)$(MANDIR)/man1/moac-pwgen.1
+	chmod 644 $(DESTDIR)$(MANDIR)/man1/moac.1 $(DESTDIR)$(MANDIR)/man1/moac-pwgen.1
+install-completion:
+	mkdir -p  $(DESTDIR)$(ZSHCOMPDIR)
 	cp -f completions/zsh/_* $(DESTDIR)$(ZSHCOMPDIR)
 	chmod 644 $(DESTDIR)$(ZSHCOMPDIR)/_moac $(DESTDIR)$(ZSHCOMPDIR)/_moac-pwgen
+
+install: install-bin $(INSTALL_SHARE)
+install-strip: install-bin-strip $(INSTALL_SHARE)
+
+uninstall:
+	rm -f \
+		$(DESTDIR)$(BINDIR)/$(MOAC_BIN) $(DESTDIR)$(BINDIR)/$(MOAC_PWGEN_BIN) \
+		$(DESTDIR)$(MANDIR)/man1/moac.1 $(DESTDIR)$(MANDIR)/man1/moac-pwgen.1 \
+		$(DESTDIR)$(ZSHCOMPDIR)/_moac $(DESTDIR)$(ZSHCOMPDIR)/_moac-pwgen
 
 # =================================================================================
 
@@ -154,4 +166,7 @@ build-cgo:
 build-cgo-static:
 	@$(MAKE) EXTRA_LDFLAGS=-static-pie build-cgo
 
-.PHONY: all clean doc lint fmt pre-commit test test-race test-msan test-san test-cov build build-cgo build-cgo-static install
+.PHONY: test test-race test-msan test-san test-cov
+.PHONY: build build-cgo build-cgo-static
+.PHONY: install-bin install-man install-completion install-bin-strip install-strip install
+.PHONY: all clean doc lint fmt pre-commit pre-push uninstall
