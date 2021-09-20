@@ -12,7 +12,7 @@ SRC = $(SHARED_SRC) $(MOAC_EXCLUSIVE_SRC) $(MOAC_PWGEN_EXCLUSIVE_SRC)
 CGO_ENABLED ?= 0
 GOPATH ?= `$(GO) env GOPATH`
 GOBIN ?= $(GOPATH)/bin
-COVERPKG = .,./entropy,./pwgen
+COVERPKG = .,./entropy,./pwgen,./internal/slicing
 
 
 GO ?= go

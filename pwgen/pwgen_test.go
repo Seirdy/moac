@@ -1,4 +1,6 @@
-package pwgen // nolint:testpackage // use some private funcs cuz it's easier
+package pwgen_test
+
+// Exhaustively test GenPW
 
 import (
 	"errors"
@@ -8,6 +10,7 @@ import (
 	"unicode/utf8"
 
 	"git.sr.ht/~seirdy/moac/entropy"
+	"git.sr.ht/~seirdy/moac/pwgen"
 )
 
 type pwgenTestCase struct {
@@ -24,11 +27,11 @@ type minMaxLen struct {
 	maxLen int
 }
 
-var ErrTooLong = fmt.Errorf("password too long: %w", ErrInvalidLenBounds)
+var ErrTooLong = fmt.Errorf("password too long: %w", pwgen.ErrInvalidLenBounds)
 
 // Number of times to run each test-case.
 // We run each test case multiple times because of the non-determinism inherent to GenPW().
-const loops int = 64
+const loops int = 128
 
 func buildTestCases() (testCases []pwgenTestCase, iterations int) {
 	goodCases, iterations := buildGoodTestCases()
@@ -42,20 +45,20 @@ func buildBadTestCases() []pwgenTestCase {
 			name:           "too short for all charsets",
 			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "🦖؆ص😈"},
 			maxLen:         5,
-			expectedErr:    ErrInvalidLenBounds,
+			expectedErr:    pwgen.ErrInvalidLenBounds,
 		},
 		{
 			name:           "too short for all ASCII",
 			charsetsWanted: []string{"ascii"},
 			maxLen:         3,
-			expectedErr:    ErrInvalidLenBounds,
+			expectedErr:    pwgen.ErrInvalidLenBounds,
 		},
 		{
 			name:           "bad lengths",
 			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "🦖؆ص😈"},
 			maxLen:         12,
 			minLen:         18,
-			expectedErr:    ErrInvalidLenBounds,
+			expectedErr:    pwgen.ErrInvalidLenBounds,
 		},
 	}
 }
@@ -106,7 +109,9 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 				"𓂸",
 				"عظ؆ص",
 				// lots of duplicate chars
-				"ἀἁἂἃἄἅἆἇἈἉἊἋἌἍἎἏἐἑἒἓἔἕἘἙἚἛἜἝἠἡἢἣἤἥἦἧἨἩἪἫἬἭἮἯἰἱἲἳἴἵἶἷἸἹἺἻἼἽἾἿὀὁὂὃὄὅὈὉὊὋὌὍὐὑὒὓὔὕὖὗὙὛὝὟὠὡὢὣὤὥὦὧὨὩὪὫὬὭὮὯὰάὲέὴήὶίὸόὺύὼώᾀᾁᾂᾃᾄᾅᾆᾇᾈᾉᾊᾋᾌᾍᾎᾏᾐᾑᾒᾓᾔᾕᾖᾗᾘᾙᾚᾛᾜᾝᾞᾟᾠᾡᾢᾣᾤᾥᾦᾧᾨᾩᾪᾫᾬᾭᾮᾯᾰᾱᾲᾳᾴᾶᾷᾸᾹᾺΆᾼ᾽ι᾿῀῁ῂῃῄῆῇῈΈῊΉῌ῍῎῏ῐῑῒΐῖῗῘῙῚΊ῝῞῟ῠῡῢΰῤῥῦῧῨῩῪΎῬ῭΅`ῲῳῴῶῷῸΌῺΏῼ", //nolint:lll // see prev
+				"ἀἁἂἃἄἅἆἇἈἉἊἋἌἍἎἏἐἑἒἓἔἕἘἙἚἛἜἝἠἡἢἣἤἥἦἧἨἩἪἫἬἭἮἯἰἱἲἳἴἵἶἷἸἹἺἻἼἽἾἿὀὁὂὃὄὅὈὉὊὋὌὍὐὑὒὓὔὕ" +
+					"ὖὗὙὛὝὟὠὡὢὣὤὥὦὧὨὩὪὫὬὭὮὯὰάὲέὴήὶίὸόὺύὼώᾀᾁᾂᾃᾄᾅᾆᾇᾈᾉᾊᾋᾌᾍᾎᾏᾐᾑᾒᾓᾔᾕᾖᾗᾘᾙᾚᾛᾜᾝᾞᾟᾠᾡᾢᾣᾤᾥᾦᾧ" +
+					"ᾨᾩᾪᾫᾬᾭᾮᾯᾰᾱᾲᾳᾴᾶᾷᾸᾹᾺΆᾼ᾽ι᾿῀῁ῂῃῄῆῇῈΈῊΉῌ῍῎῏ῐῑῒΐῖῗῘῙῚΊ῝῞῟ῠῡῢΰῤῥῦῧῨῩῪΎῬ῭΅`ῲῳῴῶῷῸΌῺΏῼ",
 				"𓂸",
 			},
 		},
@@ -138,8 +143,8 @@ func buildGoodTestCases() (testCases []pwgenTestCase, iterationsPerCharset int) 
 					expectedErr: nil, name: pwgenCharset.name, charsetsWanted: pwgenCharset.charsetsWanted,
 					entropyWanted: entropyWanted, minLen: minMaxLengths.minLen, maxLen: minMaxLengths.maxLen,
 				}
-				if minMaxLengths.maxLen > 0 && minMaxLengths.maxLen < len(BuildCharsets(pwgenCharset.charsetsWanted)) {
-					newCase.expectedErr = ErrInvalidLenBounds
+				if minMaxLengths.maxLen > 0 && minMaxLengths.maxLen < len(pwgen.BuildCharsets(pwgenCharset.charsetsWanted)) {
+					newCase.expectedErr = pwgen.ErrInvalidLenBounds
 				}
 
 				testCases = append(
@@ -305,7 +310,7 @@ func pwCorrectLength(pwRunes []rune, minLen, maxLen int, entropyWanted float64, 
 }
 
 func validateTestCase(test *pwgenTestCase, charsets map[string][]rune) error {
-	password, err := GenPW(test.charsetsWanted, test.entropyWanted, test.minLen, test.maxLen)
+	password, err := pwgen.GenPW(test.charsetsWanted, test.entropyWanted, test.minLen, test.maxLen)
 	if unexpectedErr(err, test.expectedErr) {
 		return fmt.Errorf("GenPW() errored: %w", err)
 	}
@@ -349,7 +354,7 @@ func TestGenPw(t *testing.T) {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
-			charsets := BuildCharsets(testCase.charsetsWanted)
+			charsets := pwgen.BuildCharsets(testCase.charsetsWanted)
 			for j := 0; j < loops; j++ {
 				err := validateTestCase(&testCase, charsets)
 				if err != nil {

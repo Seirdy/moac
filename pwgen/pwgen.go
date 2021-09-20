@@ -181,17 +181,27 @@ func BuildCharsets(charsetsEnumerated []string) map[string][]rune {
 func addAndSubsetCharset(existingCharsets map[string][]rune, newCharset *[]rune, newCharsetName string) {
 	addNewCharset := true
 
+	dedupedCharset := dedupeRunes(*newCharset)
+
 	for j, givenCharset := range existingCharsets {
-		existingCharsets[j] = removeLatterFromFormer(givenCharset, *newCharset)
+		var overlap []rune
+		existingCharsets[j], overlap = removeLatterFromFormer(givenCharset, dedupedCharset)
+
 		if len(existingCharsets[j]) == 0 {
 			delete(existingCharsets, j)
 
 			continue
 		}
 
-		*newCharset = removeLatterFromFormer(*newCharset, existingCharsets[j])
+		// password will be too predictable if we remove the majority of an existing charset
+		if len(overlap) > len(existingCharsets[j]) {
+			existingCharsets[j] = append(existingCharsets[j], overlap...)
+			dedupedCharset, _ = removeLatterFromFormer(dedupedCharset, givenCharset)
+			newExistingCharset := existingCharsets[j]
+			sortRunes(&newExistingCharset)
+		}
 
-		if len(*newCharset) == 0 {
+		if len(dedupedCharset) == 0 {
 			addNewCharset = false
 
 			break
@@ -199,7 +209,7 @@ func addAndSubsetCharset(existingCharsets map[string][]rune, newCharset *[]rune,
 	}
 
 	if addNewCharset {
-		existingCharsets[newCharsetName] = *newCharset
+		existingCharsets[newCharsetName] = dedupedCharset
 	}
 }
 
