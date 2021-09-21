@@ -11,7 +11,7 @@ This software is concerned only with password strength, and knows nothing about 
 
 Users provide given values like the mass available to attackers, a time limit for the brute-force attack, and the energy available. `moac` outputs the likelihood of a successful attack or the minimum password entropy for a possible brute-force failure. Entropy is calculated with the assumption that passwords are randomly generated.
 
-`moac-pwgen` can also generate passwords capable of withstanding a brute-force attack limited by given physical quantities.
+`moac-pwgen` can also generate passwords capable of withstanding a brute-force attack limited by given physical quantities. Generated passwords are random and near impossible to memorize; these are suitable for non-human entry, e.g. auto-entry by a password manager.
 
 My original intent when making this tool was to illustrate how easy it is to make a password whose strength is "overkill". It has since evolved into a generic password generator and evaluator.
 
@@ -129,11 +129,13 @@ Two reasons: the blog post I wrote (linked at the top) got me itching to impleme
 
 It takes a very naive approach, assuming that any attacker is optimizing for randomly-generated passwords. More specifically, it measures password entropy as if `moac-pwgen` generated the password. All it does it guess which charsets are used and measure permutations of available characters for the given password length.
 
+When generating passwords using custom charsets, it de-duplicates repeated characters and cross-charset overlap to avoid over-inflating password entropy estimates.
+
 ### Why do these passwords look impossible to memorize or type?
 
-MOAC is not meant to be used to generate passwords to type by hand. It's intended to be used with a password manager that auto-types or copies passwords for you.
+MOAC is not meant to be used to generate passwords to type by hand. It's intended to be used with a password manager that auto-enters or copies/pastes passwords for you.
 
-For contexts in which you can't paste a password (e.g. a full-disk encryption password entered during boot), use something else.
+For contexts in which you must enter a password manually (e.g. a full-disk encryption password entered during boot), use something else. I recommend a diceware-based passphrase in a language/charset compatible with your preferred available input method.
 
 ### Why are there so many weird characters in the generated passwords?
 
@@ -141,9 +143,24 @@ Those "weird characters" are configurable; check the man pages or GoDoc for more
 
 Starting with v0.3.2, password generation defaults to alphanumerics and basic QWERTY symbols. I figured that this is probably for the best, as long as most of us have to work with software that breaks when encountering non-QWERTY symbols. After all, everyone knows that password entry existed long before [languages besides English](https://blog.tdwright.co.uk/2018/11/06/anglocentrism-broke-my-tests-ignore-localisation-at-your-peril/) were invented.
 
-### Why does MOAC try to use one character from each charset?
+### Why does MOAC's password generator try to use one character from each charset?
 
 A lot of bad software mandates the usage of one character from a given charset (one number, one symbol, etc). This makes compliance with that bad software easier.
+
+### Does MOAC support grapheme clusters?
+
+When measuring password strength, MOAC counts code points (runes); it does not group grapheme clusters together. This is suitable for entropy calculations. Most password length requirements do not take grapheme clusters into account, so code points also make for a sufficient measure of password length.
+
+The only times MOAC could ever encounter grapheme clusters are when given a password to analyze or when given a custom charset to use when generating passwords. In the former situation, it will count each code point in a cluster towards a password's length and custom charset size; in the latter situation, it will treat each code point as a distinct character. This process needs additional refinement: it needs to handle non-printable code points inside a grapheme cluster ([ticket #18](https://todo.sr.ht/~seirdy/MOAC/18)) and warn CLI users who aren't expecting grapheme clusters to get split up ([ticket #19](https://todo.sr.ht/~seirdy/MOAC/19)).
+
+The inability to work with grapheme clusters in custom charsets is a known limitation.
+
+MOAC may may or may not learn to preserve grapheme clusters in the future. There are two reasons for the hesitation:
+
+1. MOAC's password generation uses Unicode code points ("runes") as the fundamental building blocks of passwords
+2. MOAC's main focus is password generation optimized for _non-human entry_ (e.g., auto-entry by a password manager); generating passwords containing grapheme clusters is generally not useful for such a use-case.
+
+The use-case for a generic random-string generator certainly exists, but isn't a significant enough focus to demand this great a refactor.
 
 ### Why are MOAC's default values the values of the observable universe?
 
