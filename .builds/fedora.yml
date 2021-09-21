@@ -1,33 +1,48 @@
-image: fedora/34
+---
+# rationale for choosing Fedora or Arch for CI:
+# - up-to-date packages for clang
+# - compiler-rt is complete; contains CFI, msan, tsan sanitizers
+# - already plan to save Debian Sid for testing on ARM
+# Between Arch and Fedora, I chose Fedora bc I like to test stuff in Rawhide
+# on my workstation
+image: fedora/35
 packages:
   - alternatives
   - clang
   - curl
   - compiler-rt
-  - git # for go
+  - git  # for go and versioning
   - lld
   - make
+  - scdoc
   - tar
 environment:
-  PATH: /home/build/sdk/go/bin:/home/build/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-  LOOPS: 512
+  PATH: /home/build/go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  # fewer loops since we're running sanitizers, which slow things down.
+  # run more loops in the openbsd manifest since that doesn't use sanitizers
+  LOOPS: 128
 sources:
   - https://git.sr.ht/~seirdy/moac
 tasks:
-  - install_go: |
-      mkdir -p /home/build/sdk
-      curl -s https://dl.google.com/go/go1.17.linux-amd64.tar.gz | tar -C /home/build/sdk -xzf -
-      go version
   - setup_env: |
-      sudo sh moac/.builds/setup-fedora.sh
-  - build: |
-      cd moac
-      make build
-      make MOAC_BIN=moac-cgo MOAC_PWGEN_BIN=moac-pwgen-cgo EXTRA_SANITIZERS=cfi,safe-stack build-cgo
-      tar czf ~/moac-linux-amd64-glibc-pie.tar.gz ./moac ./moac-cgo ./moac-pwgen ./moac-pwgen-cgo
+      sh moac/.builds/setup-toolchain.sh
+      go version
   - test: |
       cd moac
-      make test-san
+      make test-san --no-print-directory
+  - build-san: |
+      cd moac
+      make EXTRA_SANITIZERS=cfi,safe-stack build-san --no-print-directory
+      tar czf ~/moac-linux-sanitizers.tar.gz ./moac-msan ./moac-pwgen-msan ./moac-race ./moac-pwgen-race
+  - dist: |
+      go clean -cache
+      cd moac
+      make clean ARCHIVE_PREFIX=moac dist-multiarch --no-print-directory
+      mv dist/*.tar.gz ~/
 
 artifacts:
-  - moac-linux-amd64-glibc-pie.tar.gz
+  - moac-linux-sanitizers.tar.gz
+  - moac-linux-386.tar.gz
+  - moac-linux-amd64.tar.gz
+  - moac-linux-arm.tar.gz
+  - moac-linux-arm64.tar.gz

@@ -1,6 +1,8 @@
+---
 image: openbsd/latest
 packages:
   - devel/llvm
+  - git
   - go
 sources:
   - https://git.sr.ht/~seirdy/moac
@@ -10,12 +12,17 @@ tasks:
   - build: |
       cd moac
       go version
-      # go on openbsd must use libc for syscalls as of 1.16 due to api instability
-      make BUILDMODE_CGO=exe EXTRA_SANITIZERS='' build-cgo
+      # go on openbsd must use libc for syscalls as of 1.16
+      # due to syscall api instability
+      make BUILDMODE_CGO=exe EXTRA_SANITIZERS='' GO_LDFLAGS='-s -buildid=' build-cgo
+      sha256 ./moac
+      sha256 ./moac-pwgen
       tar czf ~/moac-openbsd-amd64.tar.gz ./moac ./moac-pwgen
   - test: |
       cd moac
       make test-cov
+      mv coverage.out ~
 
 artifacts:
   - moac-openbsd-amd64.tar.gz
+  - coverage.out

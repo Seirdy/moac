@@ -1,38 +1,20 @@
+---
 image: alpine/edge
 packages:
-  - clang
-  - compiler-rt
   - go
-  - lld
-  # we use gmake in fedora and openbsd make in openbsd, so freebsd make is the last major make impl. to test.
+  - git
   - bmake
-  - musl-dev
 sources:
   - https://git.sr.ht/~seirdy/moac
 environment:
-  PATH: /home/build/sdk/gotip/bin:/home/build/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  PATH: /home/build/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   LOOPS: 128
 tasks:
-  - setup_env: |
-      # install go, make clang the default compiler, set up cfi blacklists
-      sudo sh moac/.builds/setup-alpine.sh
-      go install golang.org/dl/gotip@latest
-      "$(go env GOPATH)/bin/gotip" download
-  - build: |
+  - test: |
       go version
       cd moac
-      bmake build
-      bmake MOAC_BIN=moac-cgo MOAC_PWGEN_BIN=moac-pwgen-cgo build-cgo
-      tar czf ~/moac-linux-amd64-musl-static.tar.gz ./moac ./moac-cgo ./moac-pwgen ./moac-pwgen-cgo
-  - test: |
-      cd moac
-      bmake test-race
+      bmake test
   - lint: |
-      go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-      go install github.com/praetorian-inc/gokart@latest
-      go install github.com/mrtazz/checkmake/cmd/checkmake@latest
+      sh ./moac/.builds/install-linters.sh
       cd moac
       bmake lint
-
-artifacts:
-  - moac-linux-amd64-musl-static.tar.gz
