@@ -19,6 +19,9 @@ GO ?= go
 GOLANGCI_LINT ?= $(GOBIN)/golangci-lint
 GOKART ?= $(GOBIN)/gokart
 CHECKMAKE ?= $(GOBIN)/checkmake
+GOFUMPT ?= $(GOBIN)/gofumpt
+FIELDALIGNMENT ?= $(GOBIN)/fieldalignment
+
 GOKART_FLAGS ?= -g
 
 CMD = build
@@ -74,8 +77,8 @@ test-cov:
 	$(GO) tool cover -func=coverage.out
 
 fmt:
-	fieldalignment -fix ./...
-	gofumpt -s -w .
+	$(FIELDALIGNMENT) -fix ./...
+	$(GOFUMPT) -s -w .
 
 pre-commit: fmt lint test
 
