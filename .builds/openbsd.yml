@@ -4,6 +4,8 @@ packages:
   - go
 sources:
   - https://git.sr.ht/~seirdy/moac
+environment:
+  LOOPS: 512
 tasks:
   - build: |
       cd moac

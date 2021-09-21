@@ -1,5 +1,5 @@
-Contributing to MOAC
-====================
+Contributing to MOA
+===================
 
 I try to accommodate everyone's workflow. Here's ways to contribute and how, in my order of preference:
 
@@ -40,5 +40,7 @@ Run `make fmt` to format code, `make lint` to run the linters, and `make test` t
 
 The linters are very opinionated. If you find this annoying, you can send your patch anyway; I'll clean it up if it looks useful.
 
-Everything possible should have tests. If a line returning an error is impossible to reach and thus uncovered, replace it with a panic. Any uncovered line that isn't a panic is in need of a test.
+Everything possible should be covered by tests. If a branch handling an error should be impossible to reach and is therefore uncovered, replace it with a panic. Any uncovered line that isn't a panic is in need of a test.
+
+If you want live test feedback while hacking and find the tests to be too slow (they typically take under 3s by default on my low-end notebook), set the environment variable `LOOPS` to something below `64`. I like to set it to `16` for live sub-second feedback but leave it at the default `64` in my pre-commit hook. Test-cases run multiple times because of the non-determinism inherent to random password generation. Tests are a bit slow since `GenPW()`'s tests have thousands of test-cases generated from lists of possible parameters.
 

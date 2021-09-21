@@ -10,6 +10,7 @@ packages:
   - tar
 environment:
   PATH: /home/build/sdk/go/bin:/home/build/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  LOOPS: 512
 sources:
   - https://git.sr.ht/~seirdy/moac
 tasks:

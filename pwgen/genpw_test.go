@@ -6,6 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
+	"os"
+	"strconv"
 	"testing"
 	"unicode/utf8"
 
@@ -31,12 +34,13 @@ var ErrTooLong = fmt.Errorf("password too long: %w", pwgen.ErrInvalidLenBounds)
 
 // Number of times to run each test-case.
 // We run each test case multiple times because of the non-determinism inherent to GenPW().
-const loops int = 128
+const defaultLoops = 64
 
-func buildTestCases() (testCases []pwgenTestCase, iterations int) {
-	goodCases, iterations := buildGoodTestCases()
+func buildTestCases(loops int) (testCases map[testGroup][]pwgenTestCase, iterations int) {
+	testCases, iterations = buildGoodTestCases(loops)
+	testCases[testGroup{name: "bad testcases"}] = buildBadTestCases()
 
-	return append(goodCases, buildBadTestCases()...), iterations
+	return testCases, iterations
 }
 
 func buildBadTestCases() []pwgenTestCase {
@@ -63,33 +67,44 @@ func buildBadTestCases() []pwgenTestCase {
 	}
 }
 
-type pwgenCharset struct {
+type testGroup struct {
 	name           string
+	tooLongAllowed float64
+}
+
+type pwgenCharset struct {
+	group          testGroup
 	charsetsWanted []string
 }
 
 func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 	pwgenCharsets := []pwgenCharset{
 		{
-			name:           "everything",
+			group:          testGroup{name: "everything"},
 			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "世界🧛"},
 		},
 		{
-			name:           "ascii",
+			group:          testGroup{name: "ascii"},
 			charsetsWanted: []string{"ascii"},
 		},
 		{
-			name:           "latin",
+			group:          testGroup{name: "latin"},
 			charsetsWanted: []string{"latin"},
 		},
 		{
-			name: "tinyPassword",
+			group: testGroup{name: "nonprintable gibberish", tooLongAllowed: 24},
+			charsetsWanted: []string{
+				"uppercase", "numbers", "lowercase", `"O4UÞjÖÿ.ßòºÒ&Û¨5ü4äMî3îÌ`,
+			},
+		},
+		{
+			group: testGroup{name: "tinyPassword"},
 			charsetsWanted: []string{
 				"uppercase", "numbers", "lowercase", "numbers", "numbers", "symbols", "lowercase", "ipaExtensions", "🧛",
 			},
 		},
 		{
-			name: "many dupe zeroes",
+			group: testGroup{name: "many dupe zeroes"},
 			charsetsWanted: []string{
 				"uppercase", "lowercase", "numbers", "symbols", "latin", "🧛",
 				"000000",
@@ -103,7 +118,7 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 			},
 		},
 		{
-			name: "complex custom charsets",
+			group: testGroup{name: "complex custom charsets", tooLongAllowed: 0.3},
 			charsetsWanted: []string{
 				"uppercase", "numbers", "lowercase",
 				"𓂸",
@@ -122,7 +137,7 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 	return pwgenCharsets, minMaxLengths, entropiesWanted
 }
 
-func buildGoodTestCases() (testCases []pwgenTestCase, iterationsPerCharset int) {
+func buildGoodTestCases(loops int) (testCases map[testGroup][]pwgenTestCase, iterationsPerCharset int) {
 	pwgenCharsets, minMaxLengths, entropiesWanted := goodTestData()
 	iterationsPerCharset = len(minMaxLengths) * len(entropiesWanted) * loops
 
@@ -134,21 +149,23 @@ func buildGoodTestCases() (testCases []pwgenTestCase, iterationsPerCharset int) 
 		iterationsPerCharset,
 	)
 
+	testCases = make(map[testGroup][]pwgenTestCase, len(pwgenCharsets))
+
 	var caseIndex int
 
 	for _, entropyWanted := range entropiesWanted {
 		for _, minMaxLengths := range minMaxLengths {
 			for _, pwgenCharset := range pwgenCharsets {
 				newCase := pwgenTestCase{
-					expectedErr: nil, name: pwgenCharset.name, charsetsWanted: pwgenCharset.charsetsWanted,
+					expectedErr: nil, name: pwgenCharset.group.name, charsetsWanted: pwgenCharset.charsetsWanted,
 					entropyWanted: entropyWanted, minLen: minMaxLengths.minLen, maxLen: minMaxLengths.maxLen,
 				}
 				if minMaxLengths.maxLen > 0 && minMaxLengths.maxLen < len(pwgen.BuildCharsets(pwgenCharset.charsetsWanted)) {
 					newCase.expectedErr = pwgen.ErrInvalidLenBounds
 				}
 
-				testCases = append(
-					testCases,
+				testCases[pwgenCharset.group] = append(
+					testCases[pwgenCharset.group],
 					newCase,
 				)
 				caseIndex++
@@ -344,35 +361,93 @@ func validateTestCase(test *pwgenTestCase, charsets map[string][]rune) error {
 	return nil
 }
 
+func getLoops() int {
+	loopsStr := os.Getenv("LOOPS")
+	loops, err := strconv.ParseInt(loopsStr, 10, 64)
+
+	if err != nil || loops == 0 {
+		return defaultLoops
+	}
+
+	return int(loops)
+}
+
+func min(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+
+	return b
+}
+
+// need to split this into good/bad test cases.
+
 func TestGenPw(t *testing.T) {
-	var (
-		testCases, iterations = buildTestCases()
-		tooLongCount          int
-	)
+	t.Parallel()
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
+	loops := getLoops()
+	testCases, iterations := buildTestCases(loops)
+
+	for groupName, testCaseGroup := range testCases {
+		testCaseGroup := testCaseGroup
+		groupName := groupName
+
+		t.Run(groupName.name, func(t *testing.T) {
 			t.Parallel()
-			charsets := pwgen.BuildCharsets(testCase.charsetsWanted)
-			for j := 0; j < loops; j++ {
-				err := validateTestCase(&testCase, charsets)
-				if err != nil {
-					if errors.Is(err, ErrTooLong) && testCase.name == "complex custom charsets" {
-						log.Println(err)
-						tooLongCount++
-					} else {
-						t.Error(err.Error())
-					}
+			tooLongCount := 0
+			err := runTestCaseGroup(testCaseGroup, &tooLongCount, groupName.tooLongAllowed == 0, loops)
+			if err != nil {
+				t.Error(err)
+			}
+			log.Print(
+				"number of too-long passwords for charset " +
+					groupName.name +
+					fmt.Sprintf(" %d/%d", tooLongCount, iterations),
+			)
 
-					break
+			var allowedPercentWithOverage float64
+			if groupName.tooLongAllowed > 0 {
+				// with a low number of iterations, the percent overage is less
+				//	accurate so we need to be a bit more generous.
+				scaleFactor := 1 + math.Log(100/float64(loops))
+				switch {
+				case loops >= 100:
+					allowedPercentWithOverage = groupName.tooLongAllowed
+				case loops < 10:
+					allowedPercentWithOverage = (50 + groupName.tooLongAllowed) / 2
+				case loops < 4:
+					allowedPercentWithOverage = 100
+				default:
+					allowedPercentWithOverage = min(groupName.tooLongAllowed*scaleFactor, 33)
 				}
+			}
+			if percent := float64(tooLongCount) / float64(iterations) * 100; percent > allowedPercentWithOverage {
+				t.Errorf("%d out of %d passwords (%.3g%%) in charset group %s were too long; acceptable threshold is %.3g%%",
+					tooLongCount, iterations, percent, groupName.name, allowedPercentWithOverage)
 			}
 		})
 	}
+}
 
-	if percent := float64(tooLongCount) / float64(iterations) * 100; percent > 0.1 {
-		t.Errorf("%d out of %d passwords (%.3g%%) in complex custom charsets were too long",
-			tooLongCount, iterations, percent)
+func runTestCaseGroup(testCaseGroup []pwgenTestCase, tooLongCount *int, overageIsAllowed bool, loops int) error {
+	for _, testCase := range testCaseGroup {
+		testCase := testCase
+		charsets := pwgen.BuildCharsets(testCase.charsetsWanted)
+
+		for j := 0; j < loops; j++ {
+			err := validateTestCase(&testCase, charsets)
+			if err != nil {
+				if !errors.Is(err, ErrTooLong) || overageIsAllowed {
+					return err
+				}
+
+				if *tooLongCount < 15 { // don't spam output with >15 errors
+					log.Println(err)
+				}
+				*tooLongCount++
+			}
+		}
 	}
+
+	return nil
 }

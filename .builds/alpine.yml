@@ -11,6 +11,7 @@ sources:
   - https://git.sr.ht/~seirdy/moac
 environment:
   PATH: /home/build/sdk/gotip/bin:/home/build/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  LOOPS: 128
 tasks:
   - setup_env: |
       # install go, make clang the default compiler, set up cfi blacklists

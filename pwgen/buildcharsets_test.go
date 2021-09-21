@@ -70,6 +70,19 @@ func buildCharsetsTables() []buildCharsetsTestCase { //nolint:funlen // single s
 			},
 		},
 		{
+			name: "unprintable gibberish",
+			charsetsNamed: []string{
+				string(entropy.Charsets["uppercase"]) + string(entropy.Charsets["lowercase"]),
+				"lowercase", "numbers", `"O4UÞjÖÿ.ßòºÒ&Û¨5ü4äMî3îÌ`,
+			},
+			charsetsExpected: map[string][]rune{
+				"lowercase": []rune("abcdefghiklmnopqrstuvwxyz"),
+				"numbers":   []rune("0126789"),
+				"3":         []rune(`"&.345MOUj¨ºÌÒÖÛÞßäîòüÿ`),
+				"0":         []rune("ABCDEFGHIJKLNPQRSTVWXYZabcdefghiklmnopqrstuvwxyz"),
+			},
+		},
+		{
 			name: "subset and composite",
 			charsetsNamed: []string{
 				string(entropy.Charsets["uppercase"]) + string(entropy.Charsets["lowercase"]),
@@ -83,7 +96,7 @@ func buildCharsetsTables() []buildCharsetsTestCase { //nolint:funlen // single s
 		},
 		{
 			// say a user specifies a custom charset that shadows *almost* an entire previous charset, save for a single element
-			// the only way to guarantee one from each set is to
+			// we shouldn't get a charset that includes only that single element
 			name: "composite missing one letter",
 			charsetsNamed: []string{
 				"lowercase", "numbers",
@@ -155,23 +168,21 @@ func handleMissingCharsets(missing [][]rune, errType string) (errStr string, pas
 }
 
 func TestBuildCharsets(t *testing.T) {
+	t.Parallel()
+
 	for _, testCase := range buildCharsetsTables() {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 			// map order isn't deterministic, so repeat each test case a few times
-			for i := 0; i < 1; i++ {
-				charsetsActual := pwgen.BuildCharsets(testCase.charsetsNamed)
-				if err := expectedMatchesActual(testCase.charsetsExpected, charsetsActual); err != nil {
-					errStr := err.Error() + ":"
-					for key, val := range charsetsActual {
-						errStr += fmt.Sprintf("\n"+`"%s": []rune("%s"),`, key, string(val))
-					}
-
-					t.Error(errStr)
-
-					break
+			charsetsActual := pwgen.BuildCharsets(testCase.charsetsNamed)
+			if err := expectedMatchesActual(testCase.charsetsExpected, charsetsActual); err != nil {
+				errStr := err.Error() + ":"
+				for key, val := range charsetsActual {
+					errStr += fmt.Sprintf("\n"+`"%s": []rune("%s"),`, key, string(val))
 				}
+
+				t.Error(errStr)
 			}
 		})
 	}

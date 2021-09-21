@@ -10,8 +10,19 @@ issues:
       path: cmd/moac-pwgen/main.go
       text: use of `fmt.Print(ln|f)?` forbidden by pattern
     - linters:
+        - stylecheck
+      path: _test.go
+      source: "`.*ß.*`"
+      text: "ST1018" # we want unicode control chars in there.
+    - linters:
+        - exhaustivestruct
+      path: pwgen/genpw_test.go
+      source: "testGroup{name:"
+      text: "tooLongAllowed is missing in testGroup"
+    - linters:
         - exhaustivestruct
       path: givens_test.go
+      source: "given: *moac.Givens{"
     - linters:
         - goerr113
       path: pwgen/genpw_test.go
@@ -86,6 +97,7 @@ linters:
     - stylecheck
     - tagliatelle
     - testpackage
+    - tparallel
     - thelper
     - typecheck
     - unconvert
