@@ -32,7 +32,7 @@ tasks:
       make test-san --no-print-directory
   - build-san: |
       cd moac
-      make EXTRA_SANITIZERS=cfi,safe-stack build-san --no-print-directory
+      make EXTRA_SANITIZERS=cfi build-san --no-print-directory
       tar czf ~/moac-linux-sanitizers.tar.gz ./moac-msan ./moac-pwgen-msan ./moac-race ./moac-pwgen-race
   - dist: |
       go clean -cache
