@@ -49,7 +49,7 @@ LINKMODE = internal
 DEFAULT_GO_LDFLAGS = -w -X git.sr.ht/~seirdy/moac/internal/version.version="$(VERSION)" -linkmode=$(LINKMODE) -extldflags \"$(LDFLAGS)\"
 GO_LDFLAGS += $(DEFAULT_GO_LDFLAGS)
 BUILDMODE ?= default
-GO_BUILDFLAGS += -trimpath -mod=readonly -gcflags=-trimpath=$(GOPATH)/src -asmflags=-trimpath=$(GOPATH)/src -buildmode=$(BUILDMODE) -ldflags '$(GO_LDFLAGS)'
+GO_BUILDFLAGS += -trimpath -mod=readonly -buildmode=$(BUILDMODE) -ldflags '$(GO_LDFLAGS)'
 TESTFLAGS ?= # -msan, -race, coverage, etc.
 
 # used internally
@@ -153,10 +153,9 @@ dist:
 	@rm -rf $(DIST)/$(RELNAME)
 
 # For reproducible builds, throw out the non-deterministic Build ID
-# and explicitly set GOROOT_FINAL. Install Go to /usr/local for builds
-# with that Go toolchain to be reproducible.
+# Install Go to /usr/local for builds with that Go toolchain to be reproducible.
 dist-reprod:
-	GOROOT_FINAL=/usr/local/go $(MAKE) GO_LDFLAGS='-buildid= $(DEFAULT_GO_LDFLAGS)' .clean-bins dist
+	$(MAKE) GO_LDFLAGS='-buildid= $(DEFAULT_GO_LDFLAGS)' .clean-bins dist
 
 dist-multiarch:
 	@GOARCH=amd64 $(MAKE) dist-reprod
@@ -201,10 +200,10 @@ LDFLAGS_CFI = $(LDFLAGS) $(CFI) -pie
 
 # shared across regular, msan, and race CGO builds/tests
 .build-cgo-base:
-	@CC="$(CC)" CCLD="$(CCLD)" CFLAGS="$(CFLAGS_CFI)" LDFLAGS="$(LDFLAGS)" $(MAKE) CGO_ENABLED=1 LINKMODE=external $(CMD)
+	@CC="$(CC)" CCLD="$(CCLD)" CFLAGS="$(CFLAGS_CFI)" LDFLAGS="$(LDFLAGS)" CGO_CFLAGS="$(CFLAGS_CFI)" $(MAKE) CGO_ENABLED=1 LINKMODE=external $(CMD)
 
 build-cgo:
-	@$(MAKE) BUILDMODE=$(BUILDMODE_CGO) LDFLAGS="$(LDFLAGS_CFI)" .build-cgo-base
+	@$(MAKE) BUILDMODE=$(BUILDMODE_CGO) CFLAGS="$(CFLAGS_CFI)" LDFLAGS="$(LDFLAGS_CFI)" .build-cgo-base
 
 build-msan:
 	@GO_BUILDFLAGS='-msan' $(MAKE) .build-cgo-base
@@ -239,7 +238,7 @@ test-san: test-race test-msan
 # Tends to cause crashes when linking with glibc
 # alpine users should disable safe-stack since the alpine compiler-rt package is incomplete
 build-cgo-static:
-	@LDFLAGS='-static-pie' $(MAKE) build-cgo
+	@$(MAKE) LDFLAGS_CFI='$(LDFLAGS) $(CFI) -static-pie' build-cgo
 
 .PHONY: test test-race test-msan test-san test-cov
 .PHONY: build .build-cgo-base build-cgo build-cgo-static build-msan build-race
