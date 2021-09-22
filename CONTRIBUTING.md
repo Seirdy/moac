@@ -1,5 +1,5 @@
-Contributing to MOA
-===================
+Contributing to MOAC
+====================
 
 I try to accommodate everyone's workflow. Here's ways to contribute and how, in my order of preference:
 
@@ -43,4 +43,10 @@ The linters are very opinionated. If you find this annoying, you can send your p
 Everything possible should be covered by tests. If a branch handling an error should be impossible to reach and is therefore uncovered, replace it with a panic. Any uncovered line that isn't a panic is in need of a test.
 
 If you want live test feedback while hacking and find the tests to be too slow (they typically take under 3s by default on my low-end notebook), set the environment variable `LOOPS` to something below `64`. I like to set it to `16` for live sub-second feedback but leave it at the default `64` in my pre-commit hook. Test-cases run multiple times because of the non-determinism inherent to random password generation. Tests are a bit slow since `GenPW()`'s tests have thousands of test-cases generated from lists of possible parameters.
+
+Other ways to help
+------------------
+
+- See if you can/can't reproduce binaries for a given installation of the Go toolchain, and share your findings to the mailing list or GitHub/GitLab/Codeberg issue trackers.
+- Check out the documentation and see if anything seems unclear; I lack the perspective of someone reading these docs for the first time.
 

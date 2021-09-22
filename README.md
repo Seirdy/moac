@@ -30,12 +30,17 @@ Check the [refs](https://git.sr.ht/~seirdy/moac/refs/) for changelogs; select a 
 - Go toolchain
 - `make` (tested with GNU Make, `bmake`, and OpenBSD Make)
 - `scdoc` (for building man pages)
+- `git` (optional; for embedding the version number in the binary)
 
 ```sh
 sudo make install-strip # Install in /usr/local/ by default; set PREFIX to change.
 ```
 
 To upgrade or reinstall, run the above again; to uninstall, run `sudo make uninstall`
+
+### Reproducible builds
+
+Run `make dist-reprod` to build a tarball containing reproducible binaries. Binaries should be reproducible for a given Go toolchain; check `.builds/setup-toolchain.sh` to see how to reproduce all the binary artifacts built by the Fedora buildserver (except for the `linux-sanitizers` ones).
 
 Usage (with three examples)
 ---------------------------
