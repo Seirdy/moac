@@ -12,8 +12,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"git.sr.ht/~seirdy/moac/entropy"
-	"git.sr.ht/~seirdy/moac/pwgen"
+	"git.sr.ht/~seirdy/moac/v2/entropy"
+	"git.sr.ht/~seirdy/moac/v2/pwgen"
 )
 
 type pwgenTestCase struct {

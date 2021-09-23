@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"git.sr.ht/~seirdy/moac"
-	"git.sr.ht/~seirdy/moac/internal/cli"
-	"git.sr.ht/~seirdy/moac/internal/sanitize"
-	"git.sr.ht/~seirdy/moac/internal/version"
-	"git.sr.ht/~seirdy/moac/pwgen"
+	"git.sr.ht/~seirdy/moac/v2"
+	"git.sr.ht/~seirdy/moac/v2/internal/cli"
+	"git.sr.ht/~seirdy/moac/v2/internal/sanitize"
+	"git.sr.ht/~seirdy/moac/v2/internal/version"
+	"git.sr.ht/~seirdy/moac/v2/pwgen"
 	"git.sr.ht/~sircmpwn/getopt"
 )
 

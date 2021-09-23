@@ -1,4 +1,4 @@
-module git.sr.ht/~seirdy/moac
+module git.sr.ht/~seirdy/moac/v2
 
 go 1.16
 

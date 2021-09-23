@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"git.sr.ht/~seirdy/moac/entropy"
+	"git.sr.ht/~seirdy/moac/v2/entropy"
 )
 
 type testCase struct {

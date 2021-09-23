@@ -8,8 +8,8 @@ import (
 	"math"
 	"strings"
 
-	"git.sr.ht/~seirdy/moac"
-	"git.sr.ht/~seirdy/moac/entropy"
+	"git.sr.ht/~seirdy/moac/v2"
+	"git.sr.ht/~seirdy/moac/v2/entropy"
 )
 
 // ErrInvalidLenBounds represents bad minLen/maxLen values.

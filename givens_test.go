@@ -5,8 +5,8 @@ import (
 	"math"
 	"testing"
 
-	"git.sr.ht/~seirdy/moac"
-	"git.sr.ht/~seirdy/moac/internal/bounds"
+	"git.sr.ht/~seirdy/moac/v2"
+	"git.sr.ht/~seirdy/moac/v2/internal/bounds"
 )
 
 const margin = 0.0025 // acceptable error

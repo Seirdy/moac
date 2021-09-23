@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"git.sr.ht/~seirdy/moac/entropy"
-	"git.sr.ht/~seirdy/moac/internal/slicing"
-	"git.sr.ht/~seirdy/moac/pwgen"
+	"git.sr.ht/~seirdy/moac/v2/entropy"
+	"git.sr.ht/~seirdy/moac/v2/internal/slicing"
+	"git.sr.ht/~seirdy/moac/v2/pwgen"
 )
 
 type buildCharsetsTestCase struct {

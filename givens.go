@@ -6,8 +6,8 @@ import (
 	"log"
 	"math"
 
-	"git.sr.ht/~seirdy/moac/entropy"
-	"git.sr.ht/~seirdy/moac/internal/bounds"
+	"git.sr.ht/~seirdy/moac/v2/entropy"
+	"git.sr.ht/~seirdy/moac/v2/internal/bounds"
 )
 
 // Givens holds the "given" values used to compute password strength.
