@@ -15,9 +15,9 @@ type givensTestCase struct {
 	expectedErrBF error
 	name          string
 	given         moac.Givens
+	expectedBFQ   float64
 	expectedBF    float64
 	expectedME    float64
-	quantum       bool
 }
 
 // need to eventually remove the quantum bool from each test
@@ -26,61 +26,57 @@ type givensTestCase struct {
 func givensTestCases() []givensTestCase { //nolint:funlen // single statement; length only from test case count
 	return []givensTestCase{
 		{ // from README
-			name:    "hitchhiker",
-			quantum: true,
+			name: "hitchhiker",
 			given: moac.Givens{
 				Mass:        5.97e24,
 				Time:        1.45e17,
 				Temperature: 1900,
 				Password:    "ȣMǚHǨȎ#ŕģ=ʬƦQoţ}tʂŦȃťŇ+ħHǰĸȵʣɐɼŋĬŧǺʀǜǬɰ'ʮ0ʡěɱ6ȫŭ",
 			},
-			expectedBF:    1.401e-4,
-			expectedME:    408.4,
-			expectedErrBF: nil,
+			expectedBF:  6.653e-70,
+			expectedBFQ: 1.401e-4,
+			expectedME:  204.2,
 		},
 		{ // same as above but without custom temp
-			name:    "hitchhiker default temp",
-			quantum: true,
+			name: "hitchhiker default temp",
 			given: moac.Givens{
 				Mass:     5.97e24,
 				Time:     1.45e17,
 				Password: "ȣMǚHǨȎ#ŕģ=ʬƦQoţ}tʂŦȃťŇ+ħHǰĸȵʣɐɼŋĬŧǺʀǜǬɰ'ʮ0ʡěɱ6ȫŭ",
 			},
-			expectedBF:    0.0986,
-			expectedME:    427.3,
-			expectedErrBF: nil,
+			expectedBF:  4.682e-67,
+			expectedBFQ: 0.0986,
+			expectedME:  213.7,
 		},
-		{ // from blog post: https://seirdy.one/2021/01/12/password-strength.html
+		{ //nolint:dupl // false positive
 			name: "universe",
 			given: moac.Givens{
 				// default mass is the mass of the observable universe
 				Entropy: 510,
 			},
-			expectedBF:    9.527e-62,
-			expectedME:    307.3,
-			expectedErrBF: nil,
+			expectedBF:  9.527e-62,
+			expectedBFQ: 5.51e15,
+			expectedME:  307.3,
 		},
-		{ // Should use the default provided entropy but fall back to the
-			// lower computed value
+		{ //nolint:dupl // false positive
 			name: "only energy",
 			given: moac.Givens{
 				Energy: 4e52,
 			},
-			expectedBF:    0.0134,
-			expectedME:    250,
-			expectedErrBF: nil,
+			expectedBF:  0.0134,
+			expectedBFQ: 4.55e36,
+			expectedME:  249.8,
 		},
 		{
 			name:          "Mising energy, mass",
-			quantum:       false,
 			given:         moac.Givens{},
+			expectedBFQ:   0,
 			expectedBF:    0,
 			expectedME:    307.3,
 			expectedErrBF: moac.ErrMissingPE,
 		},
 		{
-			name:    "Mising password",
-			quantum: false,
+			name: "Mising password",
 			given: moac.Givens{
 				Mass:             0,
 				GuessesPerSecond: 0,
@@ -89,6 +85,7 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 				Power:            0,
 				EnergyPerGuess:   0,
 			},
+			expectedBFQ:   0,
 			expectedBF:    0,
 			expectedME:    307.3,
 			expectedErrBF: moac.ErrMissingPE,
@@ -96,25 +93,47 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 	}
 }
 
+func validateErrors(t *testing.T, err1, err2, expectedErr error, funcName string) {
+	t.Helper()
+
+	if !errors.Is(errors.Unwrap(err1), errors.Unwrap(err2)) {
+		t.Errorf(
+			`%s: errors for non-quantum and quantum variants differ: "%s" != "%s"`,
+			funcName, err1.Error(), err2.Error(),
+		)
+	}
+
+	if !errors.Is(err1, expectedErr) {
+		t.Errorf(
+			`%s: got error "%s", expected "%s"`,
+			funcName, err1.Error(), err2.Error(),
+		)
+	}
+}
+
+func validateFunction(t *testing.T, testCase *givensTestCase) {
+	t.Helper()
+
+	bf, errBF := testCase.given.BruteForceability()
+	bfq, errBFQ := testCase.given.BruteForceabilityQuantum()
+
+	validateErrors(t, errBF, errBFQ, testCase.expectedErrBF, "BruteForceability")
+
+	if beyondAcceptableMargin(bf, testCase.expectedBF) {
+		t.Errorf("BruteForceability() = %.4g; want %.4g", bf, testCase.expectedBF)
+	}
+
+	if beyondAcceptableMargin(bfq, testCase.expectedBFQ) {
+		t.Errorf("BruteForceabilityQuantum() = %.4g; want %.4g", bfq, testCase.expectedBFQ)
+	}
+}
+
 func TestBruteForceability(t *testing.T) {
 	for _, test := range givensTestCases() {
 		t.Run(test.name, func(t *testing.T) {
-			var (
-				got float64
-				err error
-			)
+			test := test
 
-			if test.quantum {
-				got, err = test.given.BruteForceabilityQuantum()
-			} else {
-				got, err = test.given.BruteForceability()
-			}
-			if !errors.Is(err, test.expectedErrBF) {
-				t.Fatalf("BruteForceability() = %v", err)
-			}
-			if beyondAcceptableMargin(got, test.expectedBF) {
-				t.Errorf("Bruteforceability() = %.4g; want %.4g", got, test.expectedBF)
-			}
+			validateFunction(t, &test)
 		})
 	}
 }
@@ -122,23 +141,17 @@ func TestBruteForceability(t *testing.T) {
 func TestMinEntropy(t *testing.T) {
 	for _, test := range givensTestCases() {
 		t.Run(test.name, func(t *testing.T) {
-			var (
-				got float64
-				err error
-			)
+			me, errME := test.given.MinEntropy()
+			meq, errMEQ := test.given.MinEntropyQuantum()
 
-			if test.quantum {
-				got, err = test.given.MinEntropyQuantum()
-			} else {
-				got, err = test.given.MinEntropy()
+			validateErrors(t, errME, errMEQ, test.expectedErrME, "MinEntropy")
+
+			if beyondAcceptableMargin(me, test.expectedME) {
+				t.Errorf("MinEntropy() = %.4g; want %.4g", me, test.expectedME)
 			}
 
-			if !errors.Is(err, test.expectedErrME) {
-				t.Errorf("MinEntropy returned error %s, expected %s", err.Error(), test.expectedErrME.Error())
-			}
-
-			if beyondAcceptableMargin(got, test.expectedME) {
-				t.Errorf("MinEntropy() = %.4g; want %.4g", got, test.expectedME)
+			if beyondAcceptableMargin(meq, me*2) {
+				t.Errorf("MinEntropyQuantum() = %.4g; want %.4g", meq, me*2)
 			}
 		})
 	}
