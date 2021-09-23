@@ -182,7 +182,9 @@ Caveat: the limits of the speed of light in the face of an expanding universe ma
 Contributing
 ------------
 
-See `CONTRIBUTING.md` in the repository root.
+Development is mostly happening in the v2 branch, which contains breaking changes.
+
+See `CONTRIBUTING.md` in the repository root for contribution guidelines.
 
 Alternatives
 ------------
