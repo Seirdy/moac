@@ -85,7 +85,8 @@ var (
 
 // FromCharsets computes the number of entropy bits in a string
 // with the given length that utilizes at least one character from each
-// of the given charsets.
+// of the given charsets. It does not perform any
+// subsetting/de-duplication upon the given charsets; they are just used as-is.
 func FromCharsets(charsetsUsed *[][]rune, length int) (float64, error) {
 	if len(*charsetsUsed) > length {
 		return 0.0, fmt.Errorf("password too short to use all available charsets: %w", ErrPasswordInvalid)

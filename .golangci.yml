@@ -201,7 +201,9 @@ linters-settings:
           - fmt.Fprintf
           - fmt.Println
           - password.WriteRune
+          - filteredCharset.WriteRune
           - charsToPickFrom.WriteString
+          - warningSubstring.WriteString
       - name: cognitive-complexity
         arguments:
           - 16

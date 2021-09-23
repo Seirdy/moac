@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"git.sr.ht/~seirdy/moac"
+	"git.sr.ht/~seirdy/moac/internal/sanitize"
 	"git.sr.ht/~seirdy/moac/internal/version"
 	"git.sr.ht/~seirdy/moac/pwgen"
 	"git.sr.ht/~sircmpwn/getopt"
@@ -81,6 +83,23 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 	return &givensValue, quantum, int(minLen64), int(maxLen64)
 }
 
+func warnOnBadCharacters(badCharsets []string) {
+	if len(badCharsets) == 0 {
+		return
+	}
+
+	var warningSubstring strings.Builder
+
+	for i := 0; i < len(badCharsets)-1; i++ {
+		warningSubstring.WriteString(badCharsets[i])
+		warningSubstring.WriteString(", ")
+	}
+
+	warningSubstring.WriteString(badCharsets[len(badCharsets)-1])
+
+	fmt.Fprintf(os.Stderr, "warning: charsets %v contained invalid codepoints, removing them\n", warningSubstring.String())
+}
+
 func main() {
 	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:l:L:")
 	if err != nil {
@@ -98,10 +117,11 @@ func main() {
 		entropyLimit = moac.MinEntropy(givens, quantum)
 	}
 
-	var charsets []string
+	var charsets, badCharsets []string
 
 	if len(args) > 0 {
-		charsets = args
+		charsets, badCharsets = sanitize.FilterStrings(args)
+		warnOnBadCharacters(badCharsets)
 	} else {
 		charsets = []string{"ascii"}
 	}

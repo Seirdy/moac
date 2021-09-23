@@ -224,6 +224,8 @@ func addAndSubsetCharset(existingCharsets map[string][]rune, newCharset *[]rune,
 // otherwise, it has entropyWanted bits of entropy.
 // minLen and maxLen are ignored when set to zero; otherwise, they set lower/upper
 // bounds on password character count and override entropyWanted if necessary.
+// GenPW will *not* strip any characters from given charsets that may be undesirable
+// (newlines, control characters, etc.), and does not preserve grapheme clusters.
 func GenPW(charsetsEnumerated []string, entropyWanted float64, minLen, maxLen int) (string, error) {
 	charsetsGiven := BuildCharsets(charsetsEnumerated)
 	if entropyWanted == 0 {

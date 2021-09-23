@@ -40,7 +40,7 @@ To upgrade or reinstall, run the above again; to uninstall, run `sudo make unins
 
 ### Reproducible builds
 
-Run `make dist-reprod` to build a tarball containing reproducible binaries. Binaries should be reproducible for a given Go toolchain; check `.builds/setup-toolchain.sh` to see how to reproduce all the binary artifacts built by the Fedora buildserver (except for the `linux-sanitizers` ones).
+Run `make dist-reprod` to build a tarball containing reproducible binaries. Binaries should be reproducible for a given Go toolchain; check `.builds/setup-toolchain.sh` to see which toolchain to use to reproduce binary artifacts built by the Fedora buildserver (except for the `linux-sanitizers` ones).
 
 Usage (with three examples)
 ---------------------------
@@ -156,7 +156,7 @@ A lot of bad software mandates the usage of one character from a given charset (
 
 When measuring password strength, MOAC counts code points (runes); it does not group grapheme clusters together. This is suitable for entropy calculations. Most password length requirements do not take grapheme clusters into account, so code points also make for a sufficient measure of password length.
 
-The only times MOAC could ever encounter grapheme clusters are when given a password to analyze or when given a custom charset to use when generating passwords. In the former situation, it will count each code point in a cluster towards a password's length and custom charset size; in the latter situation, it will treat each code point as a distinct character. This process needs additional refinement: it needs to handle non-printable code points inside a grapheme cluster ([ticket #18](https://todo.sr.ht/~seirdy/MOAC/18)) and warn CLI users who aren't expecting grapheme clusters to get split up ([ticket #19](https://todo.sr.ht/~seirdy/MOAC/19)).
+The only times MOAC could ever encounter grapheme clusters are when given a password to analyze or when given a custom charset to use when generating passwords. In the former situation, it will count each code point in a cluster towards a password's length and custom charset size; in the latter situation, it will treat each code point as a distinct character.
 
 The inability to work with grapheme clusters in custom charsets is a known limitation.
 
@@ -166,6 +166,12 @@ MOAC may may or may not learn to preserve grapheme clusters in the future. There
 2. MOAC's main focus is password generation optimized for _non-human entry_ (e.g., auto-entry by a password manager); generating passwords containing grapheme clusters is generally not useful for such a use-case.
 
 The use-case for a generic random-string generator certainly exists, but isn't a significant enough focus to demand this great a refactor.
+
+### How does MOAC handle characters with special behavior, like non-printable or mark characters?
+
+When reading custom charsets, the `moac-pwgen` program only accepts Unicode code points that correspond to printable characters, excluding marks (some software incorrectly estimates password length when presented with marks). Other code points are ignored and trigger a warning sent to STDERR. This ensures that generated passwords work well with fickle software and behave as predictably as possible.
+
+`moac` and the public functions in the Go library do not restrict acceptable Unicode ranges; they should work with all Unicode code points.
 
 ### Why are MOAC's default values the values of the observable universe?
 
