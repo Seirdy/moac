@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"git.sr.ht/~seirdy/moac"
+	"git.sr.ht/~seirdy/moac/internal/bounds"
 )
 
 const margin = 0.0025 // acceptable error
@@ -68,6 +69,24 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 			expectedME:  249.8,
 		},
 		{
+			name: "impossibly high temp",
+			given: moac.Givens{
+				Energy:      4e52,
+				Temperature: 1.5e32,
+			},
+			expectedErrBF: bounds.ErrImpossiblyHigh,
+			expectedErrME: bounds.ErrImpossiblyHigh,
+		},
+		{
+			name: "negativeTemp",
+			given: moac.Givens{
+				Energy:      4e52,
+				Temperature: -1e-10,
+			},
+			expectedErrBF: bounds.ErrImpossibleNegative,
+			expectedErrME: bounds.ErrImpossibleNegative,
+		},
+		{
 			name:          "Mising energy, mass",
 			given:         moac.Givens{},
 			expectedBFQ:   0,
@@ -96,17 +115,21 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 func validateErrors(t *testing.T, err1, err2, expectedErr error, funcName string) {
 	t.Helper()
 
-	if !errors.Is(errors.Unwrap(err1), errors.Unwrap(err2)) {
-		t.Errorf(
-			`%s: errors for non-quantum and quantum variants differ: "%s" != "%s"`,
-			funcName, err1.Error(), err2.Error(),
-		)
+	if err1 == nil && err2 == nil && expectedErr == nil {
+		return
 	}
 
 	if !errors.Is(err1, expectedErr) {
 		t.Errorf(
-			`%s: got error "%s", expected "%s"`,
-			funcName, err1.Error(), err2.Error(),
+			`%s: got error "%v", expected "%v"`,
+			funcName, err1, expectedErr,
+		)
+	}
+
+	if !errors.Is(err2, expectedErr) {
+		t.Errorf(
+			`%s: got error "%v", expected "%v"`,
+			funcName+"Quantum", err2, expectedErr,
 		)
 	}
 }

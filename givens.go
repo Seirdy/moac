@@ -114,10 +114,8 @@ var (
 
 // validate ensures that the values in Givens aren't physically impossible.
 func (givens *Givens) validate() error {
-	const errStr = "invalid physical value: %w"
-
 	if err := bounds.ValidateTemperature(givens.Temperature); err != nil {
-		return fmt.Errorf(errStr, err)
+		return fmt.Errorf("invalid physical value: %w", err)
 	}
 
 	return nil
@@ -221,8 +219,8 @@ func computeBruteForceability(givens *Givens) float64 {
 // MinEntropy calculates the maximum password entropy that the MOAC can certainly brute-force.
 // Passwords need an entropy greater than this to have a chance of not being guessed.
 func (givens *Givens) MinEntropy() (entropyNeeded float64, err error) {
-	if popErr := givens.Populate(); popErr != nil {
-		return 0, fmt.Errorf("MinEntropy: %w", popErr)
+	if err := givens.Populate(); err != nil {
+		return 0, fmt.Errorf("MinEntropy: %w", err)
 	}
 
 	energyBound := math.Log2(givens.Energy / givens.EnergyPerGuess)
