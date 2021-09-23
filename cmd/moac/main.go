@@ -91,8 +91,15 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 	return &givens, quantum, readPassword
 }
 
-func getBruteForceability(givens *moac.Givens, quantum bool) float64 {
-	likelihood, err := moac.BruteForceability(givens, quantum)
+func getBruteForceability(givens *moac.Givens, quantum bool) (likelihood float64) {
+	var err error
+
+	if quantum {
+		likelihood, err = givens.BruteForceabilityQuantum()
+	} else {
+		likelihood, err = givens.BruteForceability()
+	}
+
 	if err != nil {
 		cli.ExitOnErr(err, "")
 	}
@@ -132,7 +139,17 @@ func readPwStdin(password *string) {
 }
 
 func getMinEntropy(givens *moac.Givens, quantum bool) float64 {
-	minEntropy, err := moac.MinEntropy(givens, quantum)
+	var (
+		minEntropy float64
+		err        error
+	)
+
+	if quantum {
+		minEntropy, err = givens.MinEntropyQuantum()
+	} else {
+		minEntropy, err = givens.MinEntropy()
+	}
+
 	cli.ExitOnErr(err, "")
 
 	return minEntropy

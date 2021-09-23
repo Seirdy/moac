@@ -112,7 +112,12 @@ func main() {
 	entropyLimit := givens.Entropy
 
 	if givens.Energy+givens.Mass+givens.Power+givens.Time != 0 {
-		entropyLimit, err = moac.MinEntropy(givens, quantum)
+		if quantum {
+			entropyLimit, err = givens.MinEntropyQuantum()
+		} else {
+			entropyLimit, err = givens.MinEntropy()
+		}
+
 		cli.ExitOnErr(err, "")
 	}
 

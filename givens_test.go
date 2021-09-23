@@ -20,6 +20,9 @@ type givensTestCase struct {
 	quantum       bool
 }
 
+// need to eventually remove the quantum bool from each test
+// and instead test both quantum and non-quantum cases for each
+
 func givensTestCases() []givensTestCase { //nolint:funlen // single statement; length only from test case count
 	return []givensTestCase{
 		{ // from README
@@ -96,7 +99,16 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 func TestBruteForceability(t *testing.T) {
 	for _, test := range givensTestCases() {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := moac.BruteForceability(&test.given, test.quantum)
+			var (
+				got float64
+				err error
+			)
+
+			if test.quantum {
+				got, err = test.given.BruteForceabilityQuantum()
+			} else {
+				got, err = test.given.BruteForceability()
+			}
 			if !errors.Is(err, test.expectedErrBF) {
 				t.Fatalf("BruteForceability() = %v", err)
 			}
@@ -110,7 +122,16 @@ func TestBruteForceability(t *testing.T) {
 func TestMinEntropy(t *testing.T) {
 	for _, test := range givensTestCases() {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := moac.MinEntropy(&test.given, test.quantum)
+			var (
+				got float64
+				err error
+			)
+
+			if test.quantum {
+				got, err = test.given.MinEntropyQuantum()
+			} else {
+				got, err = test.given.MinEntropy()
+			}
 
 			if !errors.Is(err, test.expectedErrME) {
 				t.Errorf("MinEntropy returned error %s, expected %s", err.Error(), test.expectedErrME.Error())
