@@ -45,6 +45,8 @@ moac [OPTIONS...] [COMMAND]
 	The temperature of the system (K). Defaults to 273 kelvin. Used to calculate
 	the Landauer limit.
 
+	Temperature must be between 0 and the Planck Temperature, noninclusive.
+
 *-t* <time>
 	Time limit for brute-force attack (s).
 
@@ -62,11 +64,14 @@ values, *moac* uses the following default values:
 
 *entropy*: 256
 
-*mass*: mass of the visible universe
+*mass*: mass of the visible universe.
 
-*energy per guess*: Landauer limit
+*energy per guess*: Landauer limit.
 
 *guesses per second*: product of Bremermann's Limit and mass.
+
+*temperature*: 2.7 K, a low estimate for the temperature of cosmic background
+radiation.
 
 # COMMANDS
 

@@ -41,6 +41,8 @@ moac-pwgen [OPTIONS...] [CHARSETS...]
 	The temperature of the system (K). Defaults to 273 kelvin. Used to calculate
 	the Landauer limit.
 
+	Temperature must be between 0 and the Planck Temperature, noninclusive.
+
 *-t* <time>
 	Time limit for brute-force attack (s).
 

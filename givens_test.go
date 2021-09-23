@@ -11,6 +11,7 @@ import (
 const margin = 0.0025 // acceptable error
 
 type givensTestCase struct {
+	expectedErrME error
 	expectedErrBF error
 	name          string
 	given         moac.Givens
@@ -109,7 +110,12 @@ func TestBruteForceability(t *testing.T) {
 func TestMinEntropy(t *testing.T) {
 	for _, test := range givensTestCases() {
 		t.Run(test.name, func(t *testing.T) {
-			got := moac.MinEntropy(&test.given, test.quantum)
+			got, err := moac.MinEntropy(&test.given, test.quantum)
+
+			if !errors.Is(err, test.expectedErrME) {
+				t.Errorf("MinEntropy returned error %s, expected %s", err.Error(), test.expectedErrME.Error())
+			}
+
 			if beyondAcceptableMargin(got, test.expectedME) {
 				t.Errorf("MinEntropy() = %.4g; want %.4g", got, test.expectedME)
 			}

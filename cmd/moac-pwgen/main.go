@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"git.sr.ht/~seirdy/moac"
+	"git.sr.ht/~seirdy/moac/internal/cli"
 	"git.sr.ht/~seirdy/moac/internal/sanitize"
 	"git.sr.ht/~seirdy/moac/internal/version"
 	"git.sr.ht/~seirdy/moac/pwgen"
@@ -102,10 +103,7 @@ func warnOnBadCharacters(badCharsets []string) {
 
 func main() {
 	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:l:L:")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, usage)
-		os.Exit(1)
-	}
+	cli.ExitOnErr(err, usage)
 
 	givens, quantum, minLen, maxLen := parseOpts(&opts)
 	args := os.Args[optind:]
@@ -114,7 +112,8 @@ func main() {
 	entropyLimit := givens.Entropy
 
 	if givens.Energy+givens.Mass+givens.Power+givens.Time != 0 {
-		entropyLimit = moac.MinEntropy(givens, quantum)
+		entropyLimit, err = moac.MinEntropy(givens, quantum)
+		cli.ExitOnErr(err, "")
 	}
 
 	var charsets, badCharsets []string
@@ -127,10 +126,7 @@ func main() {
 	}
 
 	pw, err := pwgen.GenPW(charsets, entropyLimit, minLen, maxLen)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-		os.Exit(1)
-	}
+	cli.ExitOnErr(err, "")
 
 	fmt.Print(pw)
 }

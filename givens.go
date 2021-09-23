@@ -7,9 +7,10 @@ import (
 	"math"
 
 	"git.sr.ht/~seirdy/moac/entropy"
+	"git.sr.ht/~seirdy/moac/internal/bounds"
 )
 
-// Givens holds the values used to compute password strength.
+// Givens holds the "given" values used to compute password strength.
 // These values are all physical quantities, measured using standard SI units.
 type Givens struct {
 	Password         string
@@ -53,7 +54,7 @@ func landauer(temp float64) float64 {
 }
 
 // populateDefaults fills in default values for entropy calculation if not provided.
-func populateDefaults(givens *Givens) {
+func (givens *Givens) populateDefaults() {
 	if givens.Energy+givens.Mass == 0 {
 		// mass of the observable universe
 		givens.Mass = UMass
@@ -83,7 +84,7 @@ func setBottleneck(computedValues [2]float64, given *float64) {
 	}
 }
 
-func calculatePower(givens *Givens) {
+func (givens *Givens) calculatePower() {
 	var (
 		powerFromComputationSpeed = givens.GuessesPerSecond * givens.EnergyPerGuess
 		powerFromEnergy           = givens.Energy / givens.Time
@@ -94,7 +95,7 @@ func calculatePower(givens *Givens) {
 	setBottleneck(computedPowers, &givens.Power)
 }
 
-func calculateEnergy(givens *Givens) {
+func (givens *Givens) calculateEnergy() {
 	var (
 		energyFromMass   = givens.Mass * C * C
 		energyFromPower  = givens.Power * givens.Time
@@ -111,10 +112,25 @@ var (
 	ErrMissingPE    = fmt.Errorf("%w: missing password and/or entropy", ErrMissingValue)
 )
 
-// populate will solve for entropy, guesses per second, and energy if they aren't given.
+// validate ensures that the values in Givens aren't physically impossible.
+func (givens *Givens) validate() error {
+	const errStr = "invalid physical value: %w"
+
+	if err := bounds.ValidateTemperature(givens.Temperature); err != nil {
+		return fmt.Errorf(errStr, err)
+	}
+
+	return nil
+}
+
+// Populate will solve for entropy, guesses per second, and energy if they aren't given.
 // If they are given, it updates them if the computed value is a greater bottleneck than the given value.
-func (givens *Givens) populate() {
-	populateDefaults(givens)
+func (givens *Givens) Populate() error {
+	givens.populateDefaults()
+
+	if err := givens.validate(); err != nil {
+		return fmt.Errorf("cannot work with given values: %w", err)
+	}
 
 	if givens.Password != "" {
 		computedEntropy, err := entropy.Entropy(givens.Password)
@@ -133,16 +149,18 @@ func (givens *Givens) populate() {
 		bremermannGPS = Bremermann * givens.Mass
 	}
 
-	calculatePower(givens)
+	givens.calculatePower()
 
 	powerGPS := givens.Power / givens.EnergyPerGuess
 	setBottleneck([2]float64{bremermannGPS, powerGPS}, &givens.GuessesPerSecond)
 
-	calculateEnergy(givens)
+	givens.calculateEnergy()
 
 	if givens.Energy == 0 && givens.Time == 0 {
 		log.Panic("populating givens: failed to populate energy and time")
 	}
+
+	return nil
 }
 
 // BruteForceability computes the liklihood that a password will be
@@ -152,7 +170,9 @@ func (givens *Givens) populate() {
 // if BruteForceability > 1, it represents the number of times a password
 // can be brute-forced with certainty.
 func BruteForceability(givens *Givens, quantum bool) (float64, error) {
-	givens.populate()
+	if err := givens.Populate(); err != nil {
+		return 0, fmt.Errorf("BruteForceability: cannot proceed to compute any metrics: %w", err)
+	}
 
 	if givens.Entropy+givens.Time == 0 {
 		return 0, fmt.Errorf("BruteForceability: cannot compute entropy: %w", ErrMissingPE)
@@ -194,8 +214,10 @@ func computeBruteForceability(givens *Givens, quantum bool) float64 {
 
 // MinEntropy calculates the maximum password entropy that the MOAC can certainly brute-force.
 // Passwords need an entropy greater than this to have a chance of not being guessed.
-func MinEntropy(givens *Givens, quantum bool) (entropyNeeded float64) {
-	givens.populate()
+func MinEntropy(givens *Givens, quantum bool) (entropyNeeded float64, err error) {
+	if popErr := givens.Populate(); popErr != nil {
+		return 0, fmt.Errorf("MinEntropy: cannot proceed to compute any metrics: %w", popErr)
+	}
 
 	energyBound := math.Log2(givens.Energy / givens.EnergyPerGuess)
 
@@ -207,8 +229,8 @@ func MinEntropy(givens *Givens, quantum bool) (entropyNeeded float64) {
 	}
 
 	if quantum {
-		return entropyNeeded * 2
+		return entropyNeeded * 2, nil
 	}
 
-	return entropyNeeded
+	return entropyNeeded, nil
 }

@@ -10,6 +10,7 @@ import (
 
 	"git.sr.ht/~seirdy/moac"
 	"git.sr.ht/~seirdy/moac/entropy"
+	"git.sr.ht/~seirdy/moac/internal/cli"
 	"git.sr.ht/~seirdy/moac/internal/version"
 	"git.sr.ht/~sircmpwn/getopt"
 	"golang.org/x/term"
@@ -93,8 +94,7 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 func getBruteForceability(givens *moac.Givens, quantum bool) float64 {
 	likelihood, err := moac.BruteForceability(givens, quantum)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-		os.Exit(1)
+		cli.ExitOnErr(err, "")
 	}
 
 	return likelihood
@@ -107,10 +107,7 @@ func getEntropy(givens *moac.Givens) float64 {
 	}
 
 	computedEntropy, err := entropy.Entropy(givens.Password)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-		os.Exit(1)
-	}
+	cli.ExitOnErr(err, "")
 
 	return computedEntropy
 }
@@ -122,29 +119,28 @@ func readPwInteractive(password *string) {
 
 	fmt.Println()
 
-	if err != nil {
-		os.Exit(1)
-	}
+	cli.ExitOnErr(err, "failed to read password")
 
 	*password = string(bytepw)
 }
 
 func readPwStdin(password *string) {
 	stdinBytes, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "moac: %v\n", err)
-		os.Exit(1)
-	}
+	cli.ExitOnErr(err, "")
 
 	*password = string(stdinBytes)
 }
 
+func getMinEntropy(givens *moac.Givens, quantum bool) float64 {
+	minEntropy, err := moac.MinEntropy(givens, quantum)
+	cli.ExitOnErr(err, "")
+
+	return minEntropy
+}
+
 func main() {
 	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:p:")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "moac: %v\n%s", err, usage)
-		os.Exit(1)
-	}
+	cli.ExitOnErr(err, usage)
 
 	givens, quantum, readPassword := parseOpts(&opts)
 	if readPassword {
@@ -168,7 +164,7 @@ func main() {
 	case "entropy":
 		fmt.Printf("%.3g\n", getEntropy(givens))
 	case "entropy-limit":
-		fmt.Printf("%.3g\n", moac.MinEntropy(givens, quantum))
+		fmt.Printf("%.3g\n", getMinEntropy(givens, quantum))
 	default:
 		fmt.Fprintf(os.Stderr, "moac: unknown command %v\n%s", cmd, usage)
 		os.Exit(1)
