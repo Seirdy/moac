@@ -1,7 +1,6 @@
 package pwgen_test
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
@@ -111,8 +110,6 @@ func buildCharsetsTables() []buildCharsetsTestCase { //nolint:funlen // single s
 	}
 }
 
-var errBadCharset = errors.New("generated charsets don't match expected")
-
 func formerNotFoundInLatter(former, latter map[string][]rune) [][]rune {
 	formerSlice := slicing.MapToSlice(former)
 	latterSlice := slicing.MapToSlice(latter)
@@ -127,8 +124,10 @@ func formerNotFoundInLatter(former, latter map[string][]rune) [][]rune {
 	return missing
 }
 
-func expectedMatchesActual(expected, actual map[string][]rune) error {
-	errStr := "%w:"
+func expectedMatchesActual(t *testing.T, expected, actual map[string][]rune) {
+	t.Helper()
+
+	var errStr string
 
 	errStrFirstHalf, pass := handleMissingCharsets(
 		formerNotFoundInLatter(expected, actual), "missing expected entries")
@@ -146,10 +145,15 @@ func expectedMatchesActual(expected, actual map[string][]rune) error {
 	}
 
 	if pass {
-		return nil
+		return
 	}
 
-	return fmt.Errorf(errStr, errBadCharset)
+	errStr = fmt.Sprintf("generated charsets don't match expected: %s:\n", errStr)
+	for key, val := range actual {
+		errStr += fmt.Sprintf("\n"+`"%s": []rune("%s"),`, key, string(val))
+	}
+
+	t.Error(errStr)
 }
 
 func handleMissingCharsets(missing [][]rune, errType string) (errStr string, pass bool) {
@@ -176,14 +180,7 @@ func TestBuildCharsets(t *testing.T) {
 			t.Parallel()
 			// map order isn't deterministic, so repeat each test case a few times
 			charsetsActual := pwgen.BuildCharsets(testCase.charsetsNamed)
-			if err := expectedMatchesActual(testCase.charsetsExpected, charsetsActual); err != nil {
-				errStr := err.Error() + ":"
-				for key, val := range charsetsActual {
-					errStr += fmt.Sprintf("\n"+`"%s": []rune("%s"),`, key, string(val))
-				}
-
-				t.Error(errStr)
-			}
+			expectedMatchesActual(t, testCase.charsetsExpected, charsetsActual)
 		})
 	}
 }

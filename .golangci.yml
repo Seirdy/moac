@@ -15,10 +15,15 @@ issues:
       source: "`.*ß.*`"
       text: "ST1018" # we want unicode control chars in there.
     - linters:
+        - paralleltest
+      path: _test.go
+      # not all tests need to be parallelized
+      text: missing the call to method parallel
+    - linters:
         - exhaustivestruct
       path: pwgen/genpw_test.go
-      source: "testGroup{name:"
-      text: "tooLongAllowed is missing in testGroup"
+      source: "testGroupInfo{name:"
+      text: "tooLongAllowed is missing in testGroupInfo"
     - linters:
         - exhaustivestruct
       path: givens_test.go
@@ -109,12 +114,19 @@ linters:
     - wrapcheck
     - wsl
     - goerr113
+    - ireturn
+    - nilnil
+    - paralleltest
+    # - scopelint # deprecated
+    # - maligned # deprecated
+    # - golint # deprecated
+    # - interfacer # deprecated
 linters-settings:
   cyclop:
     max-complexity: 10
     package-average: 10
   dupl:
-    threshold: 23
+    threshold: 21
   errcheck:
     check-blank: true
     check-type-assertions: true
