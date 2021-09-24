@@ -49,7 +49,7 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 			expectedBFQ: 0.0986,
 			expectedME:  213.7,
 		},
-		{ //nolint:dupl // false positive
+		{
 			name: "universe",
 			given: moac.Givens{
 				// default mass is the mass of the observable universe
@@ -59,7 +59,7 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 			expectedBFQ: 5.51e15,
 			expectedME:  307.3,
 		},
-		{ //nolint:dupl // false positive
+		{
 			name: "only energy",
 			given: moac.Givens{
 				Energy: 4e52,

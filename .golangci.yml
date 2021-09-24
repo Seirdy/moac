@@ -34,10 +34,16 @@ issues:
     - linters:
         - goerr113
       path: pwgen/buildcharsets_test.go
+    # allow very long strings to surpass max line length unbroken
+    # if they get their own line
     - linters:
         - lll
-      path: _test.go
-      source: '\[\]rune\("...............*"\)'
+      source: '^\s*(\[\]rune\()?"......................*"(\))?,?$'
+    - linters:
+        - gochecknoglobals
+      # this package is suppopsed to export global vars
+      path: charsets/defaults.go
+      source: '^var DefaultCharsets'
   exclude-use-default: false
 linters:
   disable-all: true
@@ -126,7 +132,7 @@ linters-settings:
     max-complexity: 10
     package-average: 10
   dupl:
-    threshold: 21
+    threshold: 40
   errcheck:
     check-blank: true
     check-type-assertions: true
