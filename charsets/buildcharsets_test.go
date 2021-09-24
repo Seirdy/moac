@@ -1,11 +1,9 @@
-package pwgen_test
+package charsets_test
 
 import (
 	"testing"
 
 	"git.sr.ht/~seirdy/moac/v2/charsets"
-	"git.sr.ht/~seirdy/moac/v2/entropy"
-	"git.sr.ht/~seirdy/moac/v2/pwgen"
 )
 
 type buildCharsetsTestCase struct {
@@ -70,7 +68,7 @@ func buildCharsetsTables() []buildCharsetsTestCase { //nolint:funlen // single s
 		{
 			name: "unprintable gibberish",
 			charsetsNamed: []string{
-				string(entropy.Charsets["uppercase"]) + string(entropy.Charsets["lowercase"]),
+				charsets.Uppercase.String() + charsets.Lowercase.String(),
 				"lowercase", "numbers", `"O4UÞjÖÿ.ßòºÒ&Û¨5ü4äMî3îÌ`,
 			},
 			charsetsExpected: stringsToCharsetCollection([]string{
@@ -83,7 +81,7 @@ func buildCharsetsTables() []buildCharsetsTestCase { //nolint:funlen // single s
 		{
 			name: "subset and composite",
 			charsetsNamed: []string{
-				string(entropy.Charsets["uppercase"]) + string(entropy.Charsets["lowercase"]),
+				charsets.Uppercase.String() + charsets.Lowercase.String(),
 				"lowercase", "numbers",
 			},
 			charsetsExpected: []charsets.Charset{charsets.Lowercase, charsets.Uppercase, charsets.Numbers},
@@ -180,7 +178,7 @@ func TestBuildCharsets(t *testing.T) {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
-			charsetsActual := pwgen.BuildCharsets(testCase.charsetsNamed)
+			charsetsActual := charsets.ParseCharsets(testCase.charsetsNamed)
 			expectedMatchesActual(t, testCase.charsetsExpected, charsetsActual)
 		})
 	}

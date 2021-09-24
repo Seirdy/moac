@@ -161,7 +161,7 @@ func buildGoodTestCases(loops int) (testCases map[testGroupInfo][]pwgenTestCase,
 					expectedErr: nil, name: pwgenCharset.group.name, charsetsWanted: pwgenCharset.charsetsWanted,
 					entropyWanted: entropyWanted, minLen: minMaxLengths.minLen, maxLen: minMaxLengths.maxLen,
 				}
-				if minMaxLengths.maxLen > 0 && minMaxLengths.maxLen < len(pwgen.BuildCharsets(pwgenCharset.charsetsWanted)) {
+				if minMaxLengths.maxLen > 0 && minMaxLengths.maxLen < len(charsets.ParseCharsets(pwgenCharset.charsetsWanted)) {
 					newCase.expectedErr = pwgen.ErrInvalidLenBounds
 				}
 
@@ -328,7 +328,8 @@ func pwCorrectLength(pwRunes []rune, minLen, maxLen int, entropyWanted float64, 
 }
 
 func validateTestCase(test *pwgenTestCase, cs charsets.CharsetCollection) error {
-	password, err := pwgen.GenPW(test.charsetsWanted, test.entropyWanted, test.minLen, test.maxLen)
+	charsetsWanted := charsets.ParseCharsets(test.charsetsWanted)
+	password, err := pwgen.GenPW(charsetsWanted, test.entropyWanted, test.minLen, test.maxLen)
 
 	if unexpectedErr(err, test.expectedErr) {
 		return fmt.Errorf("GenPW() errored: %w", err)
@@ -434,7 +435,7 @@ func runTestCaseGroup(
 
 	for _, testCase := range testCaseGroup {
 		testCase := testCase
-		cs := pwgen.BuildCharsets(testCase.charsetsWanted)
+		cs := charsets.ParseCharsets(testCase.charsetsWanted)
 
 		for j := 0; j < loops; j++ {
 			err := validateTestCase(&testCase, cs)

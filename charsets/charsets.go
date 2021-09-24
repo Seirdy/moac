@@ -14,11 +14,11 @@ type Charset interface {
 }
 
 // CustomCharset is a charset constructed from an existing rune array.
-// This was originally made for moac-pwgen's support for user-provided
-// charsets in the form of strings containing desired runes.
+// It also features methods for mutability, allowing de-duplication and
+// sorting of contents.
 type CustomCharset []rune
 
-// Runes returns the original []rune the CustomCharset is based on.
+// Runes returns the underlying []rune the CustomCharset is based on.
 func (cc CustomCharset) Runes() []rune {
 	runesCopy := make([]rune, len(cc))
 	for i := range cc {
@@ -40,6 +40,28 @@ func (cc CustomCharset) Name() string {
 	return cc.String()
 }
 
+func (cc *CustomCharset) sortContents() {
+	sort.Slice(*cc, func(i, j int) bool { return (*cc)[i] < (*cc)[j] })
+}
+
+// dedupe performs naive rune deduplication on the charset's contents, assuming it has already been sorted.
+func (cc *CustomCharset) dedupe() {
+	if len(*cc) < 2 {
+		return
+	}
+
+	n := 1
+
+	for i := 1; i < len(*cc); i++ {
+		if (*cc)[i] != (*cc)[i-1] {
+			(*cc)[n] = (*cc)[i]
+			n++
+		}
+	}
+
+	*cc = (*cc)[:n]
+}
+
 // CharsetCollection holds a list of charsets, and can bulk-convert them to strings, runes, and names.
 type CharsetCollection []Charset
 
@@ -49,12 +71,6 @@ func (cs *CharsetCollection) addSingle(c CustomCharset) {
 
 	for i := range *cs {
 		moveOverlapToSmaller(&(*cs)[i], &c)
-
-		if len((*cs)[i].Runes()) == 0 {
-			(*cs)[i] = c
-
-			return
-		}
 	}
 
 	if len(c) > 0 {
@@ -73,25 +89,44 @@ func (cs *CharsetCollection) Add(newCharsets ...Charset) {
 	}
 }
 
-func separateOverlap(c1, c2 *CustomCharset) (overlap CustomCharset) {
-	for i := 0; i < len(*c1); i++ {
-		for j := 0; j < len(*c2); j++ {
-			if (*c1)[i] != (*c2)[j] {
-				continue
+// ParseCharsets creates a CharsetCollection from string identifiers.
+// The strings "lowercase", "uppercase", "numbers", and "symbols" all
+// refer to their respective constants; "ascii" is an alias for all
+// four. The same goes for "latin1", "latinExtendedA", "latinExtendedB",
+// and "ipaExtensions"; "latin" is an alias for these four.
+// Any other strings have their runes extracted and turned into a new
+// CustomCharset.
+// See CharsetCollection.Add() for docs on how each entry is added.
+func ParseCharsets(charsetNames []string) (cs CharsetCollection) {
+	for _, charsetName := range charsetNames {
+		switch charsetName {
+		case "ascii":
+			cs.Add(Lowercase, Uppercase, Numbers, Symbols)
+		case "latin":
+			cs.Add(Latin1, LatinExtendedA, LatinExtendedB, IPAExtensions)
+		default:
+			found := false
+
+			for _, defaultCharset := range DefaultCharsets {
+				if charsetName == defaultCharset.Name() {
+					cs.Add(defaultCharset)
+
+					found = true
+
+					break
+				}
 			}
 
-			overlap = append(overlap, (*c1)[i])
-			*c1 = append((*c1)[:i], (*c1)[i+1:]...)
-			*c2 = append((*c2)[:j], (*c2)[j+1:]...)
-			i--
-
-			break
+			if !found {
+				cs.Add(CustomCharset([]rune(charsetName)))
+			}
 		}
 	}
 
-	return overlap
+	return cs
 }
 
+// moveOverlapToSmaller moves all runes common to c1 and c2 to whichever has fewer unique runes.
 func moveOverlapToSmaller(c1 *Charset, c2 *CustomCharset) { //nolint:gocritic // c1 is ptr bc it's modified
 	c1c := newCustomCharset(*c1)
 	overlap := separateOverlap(&c1c, c2)
@@ -115,24 +150,21 @@ func newCustomCharset(c Charset) (fc CustomCharset) {
 	return CustomCharset(c.Runes())
 }
 
-func (cc *CustomCharset) sortContents() {
-	sort.Slice(*cc, func(i, j int) bool { return (*cc)[i] < (*cc)[j] })
-}
+func separateOverlap(c1, c2 *CustomCharset) (overlap CustomCharset) {
+	for i := 0; i < len(*c1); i++ {
+		for j := 0; j < len(*c2); j++ {
+			if (*c1)[i] != (*c2)[j] {
+				continue
+			}
 
-// dedupe performs naive rune deduplication on the charset's contents, assuming it has already been sorted.
-func (cc *CustomCharset) dedupe() {
-	if len(*cc) < 2 {
-		return
-	}
+			overlap = append(overlap, (*c1)[i])
+			*c1 = append((*c1)[:i], (*c1)[i+1:]...)
+			*c2 = append((*c2)[:j], (*c2)[j+1:]...)
+			i--
 
-	n := 1
-
-	for i := 1; i < len(*cc); i++ {
-		if (*cc)[i] != (*cc)[i-1] {
-			(*cc)[n] = (*cc)[i]
-			n++
+			break
 		}
 	}
 
-	*cc = (*cc)[:n]
+	return overlap
 }

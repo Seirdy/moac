@@ -8,30 +8,31 @@ import (
 	"fmt"
 	"testing"
 
+	"git.sr.ht/~seirdy/moac/v2/charsets"
 	"git.sr.ht/~seirdy/moac/v2/entropy"
 )
 
 type testCase struct {
-	charsetsUsed [][]rune
+	charsetsUsed charsets.CharsetCollection
 	length       int
 }
 
 func buildTestCases() []testCase {
 	return []testCase{
 		{
-			[][]rune{[]rune("abcdefghijklmnopqrstuvwxyz")},
+			[]charsets.Charset{charsets.Lowercase},
 			0,
 		},
 		{
-			[][]rune{entropy.Charsets["lowercase"], entropy.Charsets["uppercase"], []rune("¡¢£¤¥¦§¨©ª«¬®¯°±²³´μ¶·¸¹º»")},
+			[]charsets.Charset{
+				charsets.Lowercase, charsets.Uppercase,
+				charsets.CustomCharset([]rune("¡¢£¤¥¦§¨©ª«¬®¯°±²³´μ¶·¸¹º»")),
+			},
 			2,
 		},
 		{
-			[][]rune{
-				entropy.Charsets["lowercase"],
-				entropy.Charsets["lowercase"],
-				entropy.Charsets["lowercase"],
-				entropy.Charsets["uppercase"],
+			[]charsets.Charset{
+				charsets.Lowercase, charsets.Lowercase, charsets.Lowercase, charsets.Uppercase,
 			},
 			3,
 		},
@@ -43,7 +44,7 @@ func TestFromCharsetsErrors(t *testing.T) {
 		testCase := testCase
 
 		t.Run(fmt.Sprintf("fromCharsets case %d", i), func(t *testing.T) {
-			_, err := entropy.FromCharsets(&testCase.charsetsUsed, testCase.length)
+			_, err := entropy.FromCharsets(testCase.charsetsUsed, testCase.length)
 			if !errors.Is(err, entropy.ErrPasswordInvalid) {
 				t.Errorf("entropy.FromCharsets failed to error when given a password length that was too short")
 			}

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"git.sr.ht/~seirdy/moac/v2"
+	"git.sr.ht/~seirdy/moac/v2/charsets"
 	"git.sr.ht/~seirdy/moac/v2/internal/cli"
 	"git.sr.ht/~seirdy/moac/v2/internal/sanitize"
 	"git.sr.ht/~seirdy/moac/v2/internal/version"
@@ -121,16 +122,16 @@ func main() {
 		cli.ExitOnErr(err, "")
 	}
 
-	var charsets, badCharsets []string
+	var charsetNames, badCharsets []string
 
 	if len(args) > 0 {
-		charsets, badCharsets = sanitize.FilterStrings(args)
+		charsetNames, badCharsets = sanitize.FilterStrings(args)
 		warnOnBadCharacters(badCharsets)
 	} else {
-		charsets = []string{"ascii"}
+		charsetNames = []string{"ascii"}
 	}
 
-	pw, err := pwgen.GenPW(charsets, entropyLimit, minLen, maxLen)
+	pw, err := pwgen.GenPW(charsets.ParseCharsets(charsetNames), entropyLimit, minLen, maxLen)
 	cli.ExitOnErr(err, "")
 
 	fmt.Print(pw)

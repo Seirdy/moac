@@ -8,56 +8,52 @@ import (
 	"math"
 	"strings"
 	"unicode/utf8"
-)
 
-const (
-	lowercase      = "abcdefghijklmnopqrstuvwxyz"
-	uppercase      = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	numbers        = "0123456789"
-	symbols        = "!\"#%&'()*+,-./:;<=>?@[\\]^_`{|}~$-"
-	latin1         = "¡¢£¤¥¦§¨©ª«¬®¯°±²³´μ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ"
-	latinExtendedA = "ĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſ"                                                                                 //nolint:lll // not worth splitting a unicode block
-	latinExtendedB = "ƀƁƂƃƄƅƆƇƈƉƊƋƌƍƎƏƐƑƒƓƔƕƖƗƘƙƚƛƜƝƞƟƠơƢƣƤƥƦƧƨƩƪƫƬƭƮƯưƱƲƳƴƵƶƷƸƹƺƻƼƽƾƿǀǁǂǃǄǅǆǇǈǉǊǋǌǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǝǞǟǠǡǢǣǤǥǦǧǨǩǪǫǬǭǮǯǰǱǲǳǴǵǶǷǸǹǺǻǼǽǾǿȀȁȂȃȄȅȆȇȈȉȊȋȌȍȎȏȐȑȒȓȔȕȖȗȘșȚțȜȝȞȟȠȡȢȣȤȥȦȧȨȩȪȫȬȭȮȯȰȱȲȳȴȵȶȷȸȹȺȻȼȽȾȿɀɁɂɃɄɅɆɇɈɉɊɋɌɍɎɏ" //nolint:lll // see prev
-	ipaExtensions  = "ɐɑɒɓɔɕɖɗɘəɚɛɜɝɞɟɠɡɢɣɤɥɦɧɨɩɪɫɬɭɮɯɰɱɲɳɴɵɶɷɸɹɺɻɼɽɾɿʀʁʂʃʄʅʆʇʈʉʊʋʌʍʎʏʐʑʒʓʔʕʖʗʘʙʚʛʜʝʞʟʠʡʢʣʤʥʦʧʨʩʪʫʬʭʮʯ"                                                                                                                 //nolint:lll // see prev
+	"git.sr.ht/~seirdy/moac/v2/charsets"
 )
-
-// Charsets is a dictionary of known Unicode code blocks to use when generating passwords.
-// All runes are printable and single-width.
-var Charsets = map[string][]rune{ //nolint:gochecknoglobals // maps can't be const
-	"lowercase":      []rune(lowercase),
-	"uppercase":      []rune(uppercase),
-	"numbers":        []rune(numbers),
-	"symbols":        []rune(symbols),
-	"latin1":         []rune(latin1),
-	"latinExtendedA": []rune(latinExtendedA),
-	"latinExtendedB": []rune(latinExtendedB),
-	"ipaExtensions":  []rune(ipaExtensions),
-}
 
 // Entropy computes the number of entropy bits in the given password,
 // assumingly it was randomly generated.
 func Entropy(password string) (float64, error) {
 	charsetsUsed := findCharsetsUsed(password)
 
-	return FromCharsets(&charsetsUsed, utf8.RuneCountInString(password))
+	return FromCharsets(charsetsUsed, utf8.RuneCountInString(password))
 }
 
-func findCharsetsUsed(password string) [][]rune {
+// FromCharsets computes the number of entropy bits in a string
+// with the given length that utilizes at least one character from each
+// of the given charsets. It does not perform any
+// subsetting/de-duplication upon the given charsets; they are just used as-is.
+func FromCharsets(charsetsUsed charsets.CharsetCollection, length int) (float64, error) {
+	if len(charsetsUsed) > length {
+		return 0.0, fmt.Errorf("password too short to use all available charsets: %w", ErrPasswordInvalid)
+	}
+
+	charSizeSum := 0
+
+	for _, charset := range charsetsUsed {
+		charSizeSum += len(charset.Runes())
+	}
+	// combos is charsize ^ length, entropy is ln2(combos)
+	return float64(length) * math.Log2(float64(charSizeSum)), nil
+}
+
+func findCharsetsUsed(password string) charsets.CharsetCollection {
 	var (
 		filteredPassword = password
-		charsetsUsed     [][]rune
+		charsetsUsed     charsets.CharsetCollection
 	)
 
-	for _, charset := range Charsets {
-		if strings.ContainsAny(filteredPassword, string(charset)) {
+	for _, charset := range charsets.DefaultCharsets {
+		if strings.ContainsAny(filteredPassword, charset.String()) {
 			charsetsUsed = append(charsetsUsed, charset)
-			filterFromString(&filteredPassword, charset)
+			filterFromString(&filteredPassword, charset.Runes())
 		}
 	}
 	// any leftover characters that aren't from one of the hardcoded
 	// charsets become a new charset of their own
 	if filteredPassword != "" {
-		return append(charsetsUsed, []rune(filteredPassword))
+		charsetsUsed.Add(charsets.CustomCharset([]rune(filteredPassword)))
 	}
 
 	return charsetsUsed
@@ -82,21 +78,3 @@ func filterFromString(str *string, banned []rune) {
 var (
 	ErrPasswordInvalid = errors.New("invalid password")
 )
-
-// FromCharsets computes the number of entropy bits in a string
-// with the given length that utilizes at least one character from each
-// of the given charsets. It does not perform any
-// subsetting/de-duplication upon the given charsets; they are just used as-is.
-func FromCharsets(charsetsUsed *[][]rune, length int) (float64, error) {
-	if len(*charsetsUsed) > length {
-		return 0.0, fmt.Errorf("password too short to use all available charsets: %w", ErrPasswordInvalid)
-	}
-
-	charSizeSum := 0
-
-	for _, charset := range *charsetsUsed {
-		charSizeSum += len(charset)
-	}
-	// combos is charsize ^ length, entropy is ln2(combos)
-	return float64(length) * math.Log2(float64(charSizeSum)), nil
-}

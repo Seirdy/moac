@@ -13,6 +13,22 @@ import (
 	"git.sr.ht/~seirdy/moac/v2/entropy"
 )
 
+// GenPW generates a random password using characters from the charsets enumerated by charsetsEnumerated.
+// At least one element of each charset is used.
+// If entropyWanted is 0, the generated password has at least 256 bits of entropy;
+// otherwise, it has entropyWanted bits of entropy.
+// minLen and maxLen are ignored when set to zero; otherwise, they set lower/upper
+// bounds on password character count and override entropyWanted if necessary.
+// GenPW will *not* strip any characters from given charsets that may be undesirable
+// (newlines, control characters, etc.), and does not preserve grapheme clusters.
+func GenPW(charsetsWanted charsets.CharsetCollection, entropyWanted float64, minLen, maxLen int) (string, error) {
+	if entropyWanted == 0 {
+		return genpwFromGivenCharsets(charsetsWanted, moac.DefaultEntropy, minLen, maxLen)
+	}
+
+	return genpwFromGivenCharsets(charsetsWanted, entropyWanted, minLen, maxLen)
+}
+
 // ErrInvalidLenBounds represents bad minLen/maxLen values.
 var ErrInvalidLenBounds = errors.New("bad length bounds")
 
@@ -47,6 +63,7 @@ func computeSpecialIndexes(pwLength, charsetCount int) []int {
 	for i := 0; i < charsetCount; i++ {
 		newInt := randInt(pwLength)
 
+		// must be unique
 		for indexOf(res[0:i], newInt) >= 0 {
 			newInt = randInt(pwLength)
 		}
@@ -76,8 +93,16 @@ func genpwFromGivenCharsets(
 		charsToPickFrom.WriteString(charset.String())
 		charsetSlice = append(charsetSlice, charset)
 
-		if _, nonCustomCharset := entropy.Charsets[charset.Name()]; !pwUsesCustomCharset && !nonCustomCharset {
-			pwUsesCustomCharset = true
+		if pwUsesCustomCharset {
+			continue
+		}
+
+		for _, dc := range charsets.DefaultCharsets {
+			if charset.String() == dc.String() {
+				pwUsesCustomCharset = true
+
+				break
+			}
 		}
 	}
 
@@ -138,62 +163,4 @@ func randomlyInsertRunesTillStrong(maxLen int, pwRunes *[]rune, entropyWanted fl
 
 		addRuneAtRandLoc(pwRunes, runesToPickFrom)
 	}
-}
-
-// BuildCharsets creates the charsets to use when generating passwords.
-// It de-duplicates custom charsets and ensures that there is no overlap
-// between different charsets.
-// It replaces "ascii" and "latin" aliases with their individual
-// components, and checks each charset named in charsetsNamed against
-// entropy.Constants. Named charsets that don't correspond to entries
-// in entropy.Constants are treated as elements of a new custom charset.
-func BuildCharsets(charsetsEnumerated []string) (cs charsets.CharsetCollection) {
-	for _, charsetName := range charsetsEnumerated {
-		switch charsetName {
-		case "ascii":
-			cs.Add(charsets.Lowercase, charsets.Uppercase, charsets.Numbers, charsets.Symbols)
-		case "latin":
-			cs.Add(charsets.Latin1, charsets.LatinExtendedA, charsets.LatinExtendedB, charsets.IPAExtensions)
-		default:
-			found := false
-
-			for _, defaultCharset := range charsets.DefaultCharsets {
-				if charsetName == defaultCharset.Name() {
-					cs.Add(defaultCharset)
-
-					found = true
-
-					break
-				}
-			}
-
-			if !found {
-				cs.Add(charsets.CustomCharset([]rune(charsetName)))
-			}
-		}
-	}
-
-	return cs
-}
-
-// GenPW generates a random password using characters from the charsets enumerated by charsetsEnumerated.
-// At least one element of each charset is used.
-// Available charsets are "lowercase", "uppercase", "numbers", "symbols", "latin1",
-// latinExtendedA", "latinExtendedB", and "ipaExtensions". "latin" is also available:
-// it's equivalent to specifying "latin1 latinExtendedA latinExtendedB ipaExtensions".
-// Anything else will be treated as a string containing runes of a new custom charset
-// to use.
-// If entropyWanted is 0, the generated password has at least 256 bits of entropy;
-// otherwise, it has entropyWanted bits of entropy.
-// minLen and maxLen are ignored when set to zero; otherwise, they set lower/upper
-// bounds on password character count and override entropyWanted if necessary.
-// GenPW will *not* strip any characters from given charsets that may be undesirable
-// (newlines, control characters, etc.), and does not preserve grapheme clusters.
-func GenPW(charsetsEnumerated []string, entropyWanted float64, minLen, maxLen int) (string, error) {
-	charsetsGiven := BuildCharsets(charsetsEnumerated)
-	if entropyWanted == 0 {
-		return genpwFromGivenCharsets(charsetsGiven, moac.DefaultEntropy, minLen, maxLen)
-	}
-
-	return genpwFromGivenCharsets(charsetsGiven, entropyWanted, minLen, maxLen)
 }
