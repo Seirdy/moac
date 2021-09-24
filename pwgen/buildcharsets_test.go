@@ -1,16 +1,15 @@
 package pwgen_test
 
 import (
-	"fmt"
 	"testing"
 
+	"git.sr.ht/~seirdy/moac/v2/charsets"
 	"git.sr.ht/~seirdy/moac/v2/entropy"
-	"git.sr.ht/~seirdy/moac/v2/internal/slicing"
 	"git.sr.ht/~seirdy/moac/v2/pwgen"
 )
 
 type buildCharsetsTestCase struct {
-	charsetsExpected map[string][]rune
+	charsetsExpected charsets.CharsetCollection
 	name             string
 	charsetsNamed    []string
 }
@@ -31,20 +30,20 @@ func buildCharsetsTables() []buildCharsetsTestCase { //nolint:funlen // single s
 				"000000000000000000000000000000",
 				"898",
 			},
-			charsetsExpected: map[string][]rune{
-				"symbols":        []rune("!\"#%&'()*+,-./:;<=>?@[\\]^_`{|}~$-"),
-				"10":             []rune("1234"),
-				"11":             []rune("0"),
-				"lowercase":      []rune("abcdefghijklmnopqrstuvwxyz"),
-				"latinExtendedA": []rune("ĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſ"),
-				"uppercase":      []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-				"numbers":        []rune("1234567"),
-				"14":             []rune("89"),
-				"latinExtendedB": []rune("ƀƁƂƃƄƅƆƇƈƉƊƋƌƍƎƏƐƑƒƓƔƕƖƗƘƙƚƛƜƝƞƟƠơƢƣƤƥƦƧƨƩƪƫƬƭƮƯưƱƲƳƴƵƶƷƸƹƺƻƼƽƾƿǀǁǂǃǄǅǆǇǈǉǊǋǌǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǝǞǟǠǡǢǣǤǥǦǧǨǩǪǫǬǭǮǯǰǱǲǳǴǵǶǷǸǹǺǻǼǽǾǿȀȁȂȃȄȅȆȇȈȉȊȋȌȍȎȏȐȑȒȓȔȕȖȗȘșȚțȜȝȞȟȠȡȢȣȤȥȦȧȨȩȪȫȬȭȮȯȰȱȲȳȴȵȶȷȸȹȺȻȼȽȾȿɀɁɂɃɄɅɆɇɈɉɊɋɌɍɎɏ"),
-				"5":              []rune("🧛"),
-				"ipaExtensions":  []rune("ɐɑɒɓɔɕɖɗɘəɚɛɜɝɞɟɠɡɢɣɤɥɦɧɨɩɪɫɬɭɮɯɰɱɲɳɴɵɶɷɸɹɺɻɼɽɾɿʀʁʂʃʄʅʆʇʈʉʊʋʌʍʎʏʐʑʒʓʔʕʖʗʘʙʚʛʜʝʞʟʠʡʢʣʤʥʦʧʨʩʪʫʬʭʮʯ"),
-				"latin1":         []rune("¡¢£¤¥¦§¨©ª«¬®¯°±²³´μ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ"),
-			},
+			charsetsExpected: stringsToCharsetCollection([]string{
+				"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+				"abcdefghijklmnopqrstuvwxyz",
+				"567",
+				"!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+				"¡¢£¤¥¦§¨©ª«¬®¯°±²³´¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿμ",
+				"ĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſ",
+				"ƀƁƂƃƄƅƆƇƈƉƊƋƌƍƎƏƐƑƒƓƔƕƖƗƘƙƚƛƜƝƞƟƠơƢƣƤƥƦƧƨƩƪƫƬƭƮƯưƱƲƳƴƵƶƷƸƹƺƻƼƽƾƿǀǁǂǃǄǅǆǇǈǉǊǋǌǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǝǞǟǠǡǢǣǤǥǦǧǨǩǪǫǬǭǮǯǰǱǲǳǴǵǶǷǸǹǺǻǼǽǾǿȀȁȂȃȄȅȆȇȈȉȊȋȌȍȎȏȐȑȒȓȔȕȖȗȘșȚțȜȝȞȟȠȡȢȣȤȥȦȧȨȩȪȫȬȭȮȯȰȱȲȳȴȵȶȷȸȹȺȻȼȽȾȿɀɁɂɃɄɅɆɇɈɉɊɋɌɍɎɏ",
+				"ɐɑɒɓɔɕɖɗɘəɚɛɜɝɞɟɠɡɢɣɤɥɦɧɨɩɪɫɬɭɮɯɰɱɲɳɴɵɶɷɸɹɺɻɼɽɾɿʀʁʂʃʄʅʆʇʈʉʊʋʌʍʎʏʐʑʒʓʔʕʖʗʘʙʚʛʜʝʞʟʠʡʢʣʤʥʦʧʨʩʪʫʬʭʮʯ",
+				"🧛",
+				"0",
+				"1234",
+				"89",
+			}),
 		},
 		{
 			name: "empty entries",
@@ -59,14 +58,14 @@ func buildCharsetsTables() []buildCharsetsTestCase { //nolint:funlen // single s
 				"0",
 				"89",
 			},
-			charsetsExpected: map[string][]rune{
-				"uppercase": []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-				"symbols":   []rune("!\"#%&'()*+,-./:;<=>?@[\\]^_`{|}~$-"),
-				"4":         []rune("0"),
-				"lowercase": []rune("abcdefghijklmnopqrstuvwxyz"),
-				"numbers":   []rune("1234567"),
-				"11":        []rune("89"),
-			},
+			charsetsExpected: stringsToCharsetCollection([]string{
+				"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+				"abcdefghijklmnopqrstuvwxyz",
+				"1234567",
+				"!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+				"0",
+				"89",
+			}),
 		},
 		{
 			name: "unprintable gibberish",
@@ -74,12 +73,12 @@ func buildCharsetsTables() []buildCharsetsTestCase { //nolint:funlen // single s
 				string(entropy.Charsets["uppercase"]) + string(entropy.Charsets["lowercase"]),
 				"lowercase", "numbers", `"O4UÞjÖÿ.ßòºÒ&Û¨5ü4äMî3îÌ`,
 			},
-			charsetsExpected: map[string][]rune{
-				"lowercase": []rune("abcdefghiklmnopqrstuvwxyz"),
-				"numbers":   []rune("0126789"),
-				"3":         []rune(`"&.345MOUj¨ºÌÒÖÛÞßäîòüÿ`),
-				"0":         []rune("ABCDEFGHIJKLNPQRSTVWXYZabcdefghiklmnopqrstuvwxyz"),
-			},
+			charsetsExpected: stringsToCharsetCollection([]string{
+				"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+				"abcdefghiklmnopqrstuvwxyz",
+				"0123456789",
+				`"&.j¨ºÌÒÖÛÞßäîòüÿ`,
+			}),
 		},
 		{
 			name: "subset and composite",
@@ -87,11 +86,7 @@ func buildCharsetsTables() []buildCharsetsTestCase { //nolint:funlen // single s
 				string(entropy.Charsets["uppercase"]) + string(entropy.Charsets["lowercase"]),
 				"lowercase", "numbers",
 			},
-			charsetsExpected: map[string][]rune{
-				"lowercase": []rune("abcdefghijklmnopqrstuvwxyz"),
-				"numbers":   []rune("0123456789"),
-				"0":         []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"),
-			},
+			charsetsExpected: []charsets.Charset{charsets.Lowercase, charsets.Uppercase, charsets.Numbers},
 		},
 		{
 			// say a user specifies a custom charset that shadows *almost* an entire previous charset, save for a single element
@@ -101,43 +96,46 @@ func buildCharsetsTables() []buildCharsetsTestCase { //nolint:funlen // single s
 				"lowercase", "numbers",
 				"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxy",
 			},
-			charsetsExpected: map[string][]rune{
-				"lowercase": entropy.Charsets["lowercase"],
-				"numbers":   []rune("0123456789"),
-				"0":         entropy.Charsets["uppercase"],
-			},
+			charsetsExpected: []charsets.Charset{charsets.Lowercase, charsets.Uppercase, charsets.Numbers},
 		},
 	}
 }
 
-func formerNotFoundInLatter(former, latter map[string][]rune) [][]rune {
-	formerSlice := slicing.MapToSlice(former)
-	latterSlice := slicing.MapToSlice(latter)
-	missing := [][]rune{}
+func formerNotFoundInLatter(former, latter charsets.CharsetCollection) (missing charsets.CharsetCollection) {
+	// for each charset in former: add to missing if it isn't in latter
+	for _, f := range former {
+		isMissing := true
 
-	for _, v := range formerSlice {
-		if !slicing.SliceContainsRuneSlice(latterSlice, v) {
-			missing = append(missing, v)
+		for _, l := range latter {
+			if f.String() == l.String() {
+				isMissing = false
+
+				break
+			}
+		}
+
+		if isMissing {
+			missing = append(missing, f)
 		}
 	}
 
 	return missing
 }
 
-func expectedMatchesActual(t *testing.T, expected, actual map[string][]rune) {
+func expectedMatchesActual(t *testing.T, expected, actual charsets.CharsetCollection) {
 	t.Helper()
 
 	var errStr string
 
 	errStrFirstHalf, pass := handleMissingCharsets(
-		formerNotFoundInLatter(expected, actual), "missing expected entries")
+		formerNotFoundInLatter(expected, actual), "missing expected entries:   ")
 
 	if !pass {
 		errStr += "\n" + errStrFirstHalf
 	}
 
 	errStrSecondHalf, passSecondHalf := handleMissingCharsets(
-		formerNotFoundInLatter(actual, expected), "contains unexpected entries")
+		formerNotFoundInLatter(actual, expected), "contains unexpected entries:")
 
 	if !passSecondHalf {
 		pass = false
@@ -148,19 +146,23 @@ func expectedMatchesActual(t *testing.T, expected, actual map[string][]rune) {
 		return
 	}
 
-	errStr = fmt.Sprintf("generated charsets don't match expected: %s:\n", errStr)
-	for key, val := range actual {
-		errStr += fmt.Sprintf("\n"+`"%s": []rune("%s"),`, key, string(val))
+	errStr = "generated charsets don't match expected:" + errStr + "\nactually got:"
+	for _, actualCharset := range actual {
+		errStr += "\n\"" + actualCharset.String() + `"`
+	}
+
+	if len(actual) == 0 {
+		errStr = "built empty charset collection: " + errStr
 	}
 
 	t.Error(errStr)
 }
 
-func handleMissingCharsets(missing [][]rune, errType string) (errStr string, pass bool) {
+func handleMissingCharsets(missing charsets.CharsetCollection, errType string) (errStr string, pass bool) {
 	if len(missing) > 0 {
-		errStr = "actual charset " + errType + ": ["
+		errStr = "actual charset " + errType + " ["
 		for _, missingCharset := range missing {
-			errStr += `"` + string(missingCharset) + `", `
+			errStr += `"` + missingCharset.String() + `", `
 		}
 
 		errStr += "]"
@@ -178,9 +180,18 @@ func TestBuildCharsets(t *testing.T) {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
-			// map order isn't deterministic, so repeat each test case a few times
 			charsetsActual := pwgen.BuildCharsets(testCase.charsetsNamed)
 			expectedMatchesActual(t, testCase.charsetsExpected, charsetsActual)
 		})
 	}
+}
+
+func stringsToCharsetCollection(s []string) (cs charsets.CharsetCollection) {
+	cs = make([]charsets.Charset, len(s))
+
+	for i, ccContents := range s {
+		cs[i] = charsets.CustomCharset([]rune(ccContents))
+	}
+
+	return cs
 }

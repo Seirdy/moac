@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"git.sr.ht/~seirdy/moac/v2"
+	"git.sr.ht/~seirdy/moac/v2/charsets"
 	"git.sr.ht/~seirdy/moac/v2/entropy"
 )
 
@@ -57,11 +58,11 @@ func computeSpecialIndexes(pwLength, charsetCount int) []int {
 }
 
 func genpwFromGivenCharsets(
-	charsetsGiven map[string][]rune, entropyWanted float64, minLen, maxLen int,
+	charsetsGiven charsets.CharsetCollection, entropyWanted float64, minLen, maxLen int,
 ) (pw string, err error) {
 	var (
 		charsToPickFrom, pwBuilder strings.Builder
-		charsetSlice               = make([][]rune, 0, len(charsetsGiven))
+		charsetSlice               charsets.CharsetCollection = make([]charsets.Charset, 0, len(charsetsGiven))
 		pwUsesCustomCharset        bool
 	)
 
@@ -71,11 +72,11 @@ func genpwFromGivenCharsets(
 		)
 	}
 
-	for name, charset := range charsetsGiven {
-		charsToPickFrom.WriteString(string(charset))
+	for _, charset := range charsetsGiven {
+		charsToPickFrom.WriteString(charset.String())
 		charsetSlice = append(charsetSlice, charset)
 
-		if _, nonCustomCharset := entropy.Charsets[name]; !pwUsesCustomCharset && !nonCustomCharset {
+		if _, nonCustomCharset := entropy.Charsets[charset.Name()]; !pwUsesCustomCharset && !nonCustomCharset {
 			pwUsesCustomCharset = true
 		}
 	}
@@ -106,13 +107,15 @@ func genpwFromGivenCharsets(
 }
 
 func buildFixedLengthPw(
-	pwBuilder *strings.Builder, pwLength int, specialIndexes []int, runesToPickFrom []rune, charsetSlice [][]rune,
+	pwBuilder *strings.Builder,
+	pwLength int, specialIndexes []int,
+	runesToPickFrom []rune, cs charsets.CharsetCollection,
 ) []rune {
 	currentLength := 0
 
 	for specialI := 0; currentLength < pwLength; currentLength++ {
 		if i := indexOf(specialIndexes, currentLength); i >= 0 {
-			addRuneToEnd(pwBuilder, charsetSlice[i]) // one of each charset @ a special index
+			addRuneToEnd(pwBuilder, cs[i].Runes()) // one of each charset @ a special index
 			specialI++
 		} else {
 			addRuneToEnd(pwBuilder, runesToPickFrom)
@@ -137,12 +140,6 @@ func randomlyInsertRunesTillStrong(maxLen int, pwRunes *[]rune, entropyWanted fl
 	}
 }
 
-func mapMultiCopy(dest, src map[string][]rune, fields []string) {
-	for _, field := range fields {
-		dest[field] = src[field]
-	}
-}
-
 // BuildCharsets creates the charsets to use when generating passwords.
 // It de-duplicates custom charsets and ensures that there is no overlap
 // between different charsets.
@@ -150,67 +147,33 @@ func mapMultiCopy(dest, src map[string][]rune, fields []string) {
 // components, and checks each charset named in charsetsNamed against
 // entropy.Constants. Named charsets that don't correspond to entries
 // in entropy.Constants are treated as elements of a new custom charset.
-func BuildCharsets(charsetsEnumerated []string) map[string][]rune {
-	charsetsGiven := make(map[string][]rune, len(charsetsEnumerated))
-
-	for i, charset := range charsetsEnumerated {
-		charsetRunes, found := entropy.Charsets[charset]
-
-		switch {
-		case found:
-			charsetsGiven[charset] = charsetRunes
-		case charset == "ascii":
-			mapMultiCopy(
-				charsetsGiven, entropy.Charsets, []string{"lowercase", "uppercase", "numbers", "symbols"},
-			)
-		case charset == "latin":
-			mapMultiCopy(
-				charsetsGiven, entropy.Charsets, []string{"latin1", "latinExtendedA", "latinExtendedB", "ipaExtensions"},
-			)
+func BuildCharsets(charsetsEnumerated []string) (cs charsets.CharsetCollection) {
+	for _, charsetName := range charsetsEnumerated {
+		switch charsetName {
+		case "ascii":
+			cs.Add(charsets.Lowercase, charsets.Uppercase, charsets.Numbers, charsets.Symbols)
+		case "latin":
+			cs.Add(charsets.Latin1, charsets.LatinExtendedA, charsets.LatinExtendedB, charsets.IPAExtensions)
 		default:
-			newCharset := []rune(charset)
-			addAndSubsetCharset(charsetsGiven, &newCharset, fmt.Sprint(i))
+			found := false
+
+			for _, defaultCharset := range charsets.DefaultCharsets {
+				if charsetName == defaultCharset.Name() {
+					cs.Add(defaultCharset)
+
+					found = true
+
+					break
+				}
+			}
+
+			if !found {
+				cs.Add(charsets.CustomCharset([]rune(charsetName)))
+			}
 		}
 	}
 
-	return charsetsGiven
-}
-
-// addAndSubsetCharset adds newCharset to charsetsGiven and de-duplicates them.
-// It only adds the new charset if it wouldn't be redundant after de-duplication.
-func addAndSubsetCharset(existingCharsets map[string][]rune, newCharset *[]rune, newCharsetName string) {
-	addNewCharset := true
-
-	dedupedCharset := dedupeRunes(*newCharset)
-
-	for j, givenCharset := range existingCharsets {
-		var overlap []rune
-		existingCharsets[j], overlap = removeLatterFromFormer(givenCharset, dedupedCharset)
-
-		if len(existingCharsets[j]) == 0 {
-			delete(existingCharsets, j)
-
-			continue
-		}
-
-		// password will be too predictable if we remove the majority of an existing charset
-		if len(overlap) > len(existingCharsets[j]) {
-			existingCharsets[j] = append(existingCharsets[j], overlap...)
-			dedupedCharset, _ = removeLatterFromFormer(dedupedCharset, givenCharset)
-			newExistingCharset := existingCharsets[j]
-			sortRunes(&newExistingCharset)
-		}
-
-		if len(dedupedCharset) == 0 {
-			addNewCharset = false
-
-			break
-		}
-	}
-
-	if addNewCharset {
-		existingCharsets[newCharsetName] = dedupedCharset
-	}
+	return cs
 }
 
 // GenPW generates a random password using characters from the charsets enumerated by charsetsEnumerated.

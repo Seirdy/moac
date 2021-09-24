@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"log"
 	"math/big"
-	"sort"
 	"strings"
 )
 
@@ -40,51 +39,4 @@ func indexOf(src []int, e int) int {
 	}
 
 	return -1
-}
-
-func removeIndex(s []rune, index int) []rune {
-	ret := append(make([]rune, 0), s[:index]...)
-
-	return append(ret, s[index+1:]...)
-}
-
-func sortRunes(runes *[]rune) {
-	sort.Slice(*runes, func(i, j int) bool { return (*runes)[i] < (*runes)[j] })
-}
-
-func dedupeRunes(runes []rune) []rune {
-	sortRunes(&runes)
-
-	keys := make(map[rune]bool)
-	list := []rune{}
-
-	for _, entry := range runes {
-		if _, value := keys[entry]; !value {
-			keys[entry] = true
-
-			list = append(list, entry)
-		}
-	}
-
-	return list
-}
-
-// removeLatterFromFormer removes one of each of latter's elements from former and returns the result.
-func removeLatterFromFormer(former, latter []rune) (res, overlap []rune) {
-	overlap = make([]rune, 0)
-	res = make([]rune, len(former))
-	copy(res, former)
-
-	for _, latterItem := range latter {
-		for i := 0; i < len(res); i++ {
-			if res[i] == latterItem {
-				// overlap is initialized with length zero, but makezero can't tell.
-				overlap = append(overlap, res[i]) //nolint:makezero // false-positive
-				res = removeIndex(res, i)
-				i--
-			}
-		}
-	}
-
-	return res, overlap
 }

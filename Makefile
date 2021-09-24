@@ -10,7 +10,7 @@ SHARED_SRC = Makefile *.go entropy/*.go internal/*/*.go
 MOAC_SRC = cmd/moac/*.go
 MOAC_PWGEN_SRC = pwgen/*.go cmd/moac-pwgen/*.go
 SRC = $(SHARED_SRC) $(MOAC_EXCLUSIVE_SRC) $(MOAC_PWGEN_EXCLUSIVE_SRC)
-COVERPKG = .,./entropy,./pwgen,./internal/slicing
+COVERPKG = .,./entropy,./pwgen,./charsets,./internal/bounds
 
 # go's own envvars
 CGO_ENABLED ?= 0

@@ -12,6 +12,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
+	"git.sr.ht/~seirdy/moac/v2/charsets"
 	"git.sr.ht/~seirdy/moac/v2/entropy"
 	"git.sr.ht/~seirdy/moac/v2/pwgen"
 )
@@ -84,7 +85,7 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "世界🧛"},
 		},
 		{
-			group:          testGroupInfo{name: "ascii"},
+			group:          testGroupInfo{name: "ascii", tooLongAllowed: 10.417},
 			charsetsWanted: []string{"ascii"},
 		},
 		{
@@ -92,7 +93,7 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 			charsetsWanted: []string{"latin"},
 		},
 		{
-			group: testGroupInfo{name: "nonprintable gibberish", tooLongAllowed: 24},
+			group: testGroupInfo{name: "nonprintable gibberish", tooLongAllowed: 23},
 			charsetsWanted: []string{
 				"uppercase", "numbers", "lowercase", `"O4UÞjÖÿ.ßòºÒ&Û¨5ü4äMî3îÌ`,
 			},
@@ -189,19 +190,19 @@ func latterUsesElemFromFormer(former, latter []rune) int {
 	return -1
 }
 
-func pwUsesEachCharsetSinglePass(charsets map[string][]rune, password []rune) (map[string][]rune, bool) {
+func pwUsesEachCharsetSinglePass(cs charsets.CharsetCollection, password []rune) (charsets.CharsetCollection, bool) {
 	var (
-		unusedCharsets = make(map[string][]rune)
-		pwCopy         = make([]rune, len(password))
-		pass           = true
+		unusedCharsets charsets.CharsetCollection = make([]charsets.Charset, 0)
+		pwCopy                                    = make([]rune, len(password))
+		pass                                      = true
 	)
 
 	copy(pwCopy, password)
 
-	for i := range charsets {
-		pwCharIndex := latterUsesElemFromFormer(charsets[i], pwCopy)
+	for _, charset := range cs {
+		pwCharIndex := latterUsesElemFromFormer(charset.Runes(), pwCopy)
 		if pwCharIndex == -1 {
-			unusedCharsets[i] = charsets[i]
+			unusedCharsets = append(unusedCharsets, charset)
 			pass = false
 
 			continue
@@ -213,8 +214,8 @@ func pwUsesEachCharsetSinglePass(charsets map[string][]rune, password []rune) (m
 	return unusedCharsets, pass
 }
 
-func pwUsesEachCharset(charsets map[string][]rune, password []rune) error {
-	if unusedCharsets, validPW := pwUsesEachCharsetSinglePass(charsets, password); !validPW {
+func pwUsesEachCharset(cs charsets.CharsetCollection, password []rune) error {
+	if unusedCharsets, validPW := pwUsesEachCharsetSinglePass(cs, password); !validPW {
 		if unusedCharset2, validPW2 := pwUsesEachCharsetSinglePass(unusedCharsets, password); !validPW2 {
 			return errors.New(pwUsesEachCharsetErrStr(string(password), unusedCharset2))
 		}
@@ -223,11 +224,11 @@ func pwUsesEachCharset(charsets map[string][]rune, password []rune) error {
 	return nil
 }
 
-func pwUsesEachCharsetErrStr(password string, unusedCharsets map[string][]rune) string {
+func pwUsesEachCharsetErrStr(password string, unusedCharsets charsets.CharsetCollection) string {
 	var unusedCharsetsStr string
 
 	for _, unusedCharset := range unusedCharsets {
-		unusedCharsetsStr += string(unusedCharset)
+		unusedCharsetsStr += unusedCharset.String()
 		unusedCharsetsStr += "\n"
 	}
 
@@ -239,10 +240,10 @@ func pwUsesEachCharsetErrStr(password string, unusedCharsets map[string][]rune) 
 	return errorStr
 }
 
-func pwOnlyUsesAllowedRunes(charsets map[string][]rune, password *[]rune) (rune, bool) {
+func pwOnlyUsesAllowedRunes(cs charsets.CharsetCollection, password *[]rune) (rune, bool) {
 	var allowedChars string
-	for _, charset := range charsets {
-		allowedChars += string(charset)
+	for _, charset := range cs {
+		allowedChars += charset.String()
 	}
 
 	allowedRunes := []rune(allowedChars)
@@ -291,7 +292,7 @@ func unexpectedErr(actualErr, expectedErr error) bool {
 	return errorIsExpected && !errors.Is(actualErr, expectedErr)
 }
 
-func pwCorrectLength(pwRunes []rune, minLen, maxLen int, entropyWanted float64, charsets map[string][]rune) error {
+func pwCorrectLength(pwRunes []rune, minLen, maxLen int, entropyWanted float64, cs charsets.CharsetCollection) error {
 	pwLen := len(pwRunes)
 
 	if maxLen > 0 && pwLen > maxLen {
@@ -305,7 +306,7 @@ func pwCorrectLength(pwRunes []rune, minLen, maxLen int, entropyWanted float64, 
 
 	if pwLen > minLen && entropyWanted > 0 {
 		truncatedPass := pwRunes[:len(pwRunes)-1]
-		_, truncatedUsesEachCharset := pwUsesEachCharsetSinglePass(charsets, truncatedPass)
+		_, truncatedUsesEachCharset := pwUsesEachCharsetSinglePass(cs, truncatedPass)
 
 		truncatedEntropy, err := entropy.Entropy(string(truncatedPass))
 		if err != nil {
@@ -326,8 +327,9 @@ func pwCorrectLength(pwRunes []rune, minLen, maxLen int, entropyWanted float64, 
 	return nil
 }
 
-func validateTestCase(test *pwgenTestCase, charsets map[string][]rune) error {
+func validateTestCase(test *pwgenTestCase, cs charsets.CharsetCollection) error {
 	password, err := pwgen.GenPW(test.charsetsWanted, test.entropyWanted, test.minLen, test.maxLen)
+
 	if unexpectedErr(err, test.expectedErr) {
 		return fmt.Errorf("GenPW() errored: %w", err)
 	}
@@ -338,12 +340,12 @@ func validateTestCase(test *pwgenTestCase, charsets map[string][]rune) error {
 
 	pwRunes := []rune(password)
 	if err == nil {
-		if errUsesEachCharset := pwUsesEachCharset(charsets, pwRunes); errUsesEachCharset != nil {
+		if errUsesEachCharset := pwUsesEachCharset(cs, pwRunes); errUsesEachCharset != nil {
 			return errUsesEachCharset
 		}
 	}
 
-	if invalidRune, validPW := pwOnlyUsesAllowedRunes(charsets, &pwRunes); !validPW {
+	if invalidRune, validPW := pwOnlyUsesAllowedRunes(cs, &pwRunes); !validPW {
 		return fmt.Errorf("GenPW() = %s; used invalid character \"%v\"", password, string(invalidRune))
 	}
 
@@ -353,7 +355,7 @@ func validateTestCase(test *pwgenTestCase, charsets map[string][]rune) error {
 
 	// skip this test if we expected the password to be generated successfully
 	if err := pwCorrectLength(
-		pwRunes, test.minLen, test.maxLen, test.entropyWanted, charsets,
+		pwRunes, test.minLen, test.maxLen, test.entropyWanted, cs,
 	); test.expectedErr == nil && err != nil {
 		return fmt.Errorf("bad password length in test %v: %w", test.name, err)
 	}
@@ -432,10 +434,10 @@ func runTestCaseGroup(
 
 	for _, testCase := range testCaseGroup {
 		testCase := testCase
-		charsets := pwgen.BuildCharsets(testCase.charsetsWanted)
+		cs := pwgen.BuildCharsets(testCase.charsetsWanted)
 
 		for j := 0; j < loops; j++ {
-			err := validateTestCase(&testCase, charsets)
+			err := validateTestCase(&testCase, cs)
 			if err != nil {
 				if !errors.Is(err, ErrTooLong) || overageIsAllowed {
 					t.Errorf(err.Error())
