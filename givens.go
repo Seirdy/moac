@@ -76,7 +76,7 @@ func (givens *Givens) populateDefaults() {
 	}
 }
 
-func setBottleneck(computedValues [2]float64, given *float64) {
+func setBottleneck(given *float64, computedValues ...float64) {
 	for _, computedValue := range computedValues {
 		if *given == 0 || (computedValue > 0 && computedValue < *given) {
 			*given = computedValue
@@ -88,21 +88,18 @@ func (givens *Givens) calculatePower() {
 	var (
 		powerFromComputationSpeed = givens.GuessesPerSecond * givens.EnergyPerGuess
 		powerFromEnergy           = givens.Energy / givens.Time
-		// loop over an array for this since its length will grow in the future
-		computedPowers = [2]float64{powerFromComputationSpeed, powerFromEnergy}
 	)
 
-	setBottleneck(computedPowers, &givens.Power)
+	setBottleneck(&givens.Power, powerFromComputationSpeed, powerFromEnergy)
 }
 
 func (givens *Givens) calculateEnergy() {
 	var (
-		energyFromMass   = givens.Mass * C * C
-		energyFromPower  = givens.Power * givens.Time
-		computedEnergies = [2]float64{energyFromMass, energyFromPower}
+		energyFromMass  = givens.Mass * C * C
+		energyFromPower = givens.Power * givens.Time
 	)
 
-	setBottleneck(computedEnergies, &givens.Energy)
+	setBottleneck(&givens.Energy, energyFromMass, energyFromPower)
 }
 
 // Errors for missing physical values that are required to compute desired values.
@@ -131,15 +128,14 @@ func (givens *Givens) Populate() error {
 	}
 
 	if givens.Password != "" {
-		computedEntropy, err := entropy.Entropy(givens.Password)
-		if err != nil {
-			log.Panicf("error measuring generated password entropy: %v", err)
-		}
+		computedEntropy := entropy.Entropy(givens.Password)
 
 		if givens.Entropy == 0 || givens.Entropy > computedEntropy {
 			givens.Entropy = computedEntropy
 		}
 	}
+
+	givens.calculatePower()
 
 	var bremermannGPS float64
 
@@ -147,10 +143,8 @@ func (givens *Givens) Populate() error {
 		bremermannGPS = Bremermann * givens.Mass
 	}
 
-	givens.calculatePower()
-
 	powerGPS := givens.Power / givens.EnergyPerGuess
-	setBottleneck([2]float64{bremermannGPS, powerGPS}, &givens.GuessesPerSecond)
+	setBottleneck(&givens.GuessesPerSecond, bremermannGPS, powerGPS)
 
 	givens.calculateEnergy()
 

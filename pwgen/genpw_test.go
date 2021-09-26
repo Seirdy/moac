@@ -263,11 +263,7 @@ func pwOnlyUsesAllowedRunes(cs charsets.CharsetCollection, password *[]rune) (ru
 }
 
 func pwLongEnough(password string, minLen, maxLen int, entropyWanted float64) (float64, error) {
-	entropyCalculated, err := entropy.Entropy(password)
-	if err != nil {
-		return entropyCalculated, fmt.Errorf("error calculating entropy: %w", err)
-	}
-
+	entropyCalculated := entropy.Entropy(password)
 	pwLen := utf8.RuneCountInString(password)
 
 	if pwLen < minLen {
@@ -308,10 +304,7 @@ func pwCorrectLength(pwRunes []rune, minLen, maxLen int, entropyWanted float64, 
 		truncatedPass := pwRunes[:len(pwRunes)-1]
 		_, truncatedUsesEachCharset := pwUsesEachCharsetSinglePass(cs, truncatedPass)
 
-		truncatedEntropy, err := entropy.Entropy(string(truncatedPass))
-		if err != nil {
-			return fmt.Errorf("error calculating entropy: %w", err)
-		}
+		truncatedEntropy := entropy.Entropy(string(truncatedPass))
 
 		if truncatedEntropy >= entropyWanted && truncatedUsesEachCharset {
 			return fmt.Errorf(

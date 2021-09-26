@@ -113,10 +113,7 @@ func getEntropy(givens *moac.Givens) float64 {
 		os.Exit(1)
 	}
 
-	computedEntropy, err := entropy.Entropy(givens.Password)
-	cli.ExitOnErr(err, "")
-
-	return computedEntropy
+	return entropy.Entropy(givens.Password)
 }
 
 func readPwInteractive(password *string) {

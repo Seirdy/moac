@@ -4,7 +4,6 @@ package pwgen
 import (
 	"errors"
 	"fmt"
-	"log"
 	"math"
 	"strings"
 
@@ -152,12 +151,7 @@ func buildFixedLengthPw(
 
 func randomlyInsertRunesTillStrong(maxLen int, pwRunes *[]rune, entropyWanted float64, runesToPickFrom []rune) {
 	for maxLen == 0 || len(*pwRunes) < maxLen {
-		computedEntropy, err := entropy.Entropy(string(*pwRunes))
-		if err != nil {
-			log.Panicf("failed to determine if password entropy is high enough: %v", err)
-		}
-
-		if entropyWanted <= computedEntropy {
+		if entropyWanted <= entropy.Entropy(string(*pwRunes)) {
 			break
 		}
 
