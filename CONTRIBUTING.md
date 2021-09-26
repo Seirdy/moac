@@ -42,7 +42,9 @@ The linters are very opinionated. If you find this annoying, you can send your p
 
 Everything possible should be covered by tests. If a branch handling an error should be impossible to reach and is therefore uncovered, replace it with a panic. Any uncovered line that isn't a panic is in need of a test.
 
-If you want live test feedback while hacking and find the tests to be too slow (they typically take under 3s by default on my low-end notebook), set the environment variable `LOOPS` to something below `64`. I like to set it to `16` for live sub-second feedback but leave it at the default `64` in my pre-commit hook. Test-cases run multiple times because of the non-determinism inherent to random password generation. Tests are a bit slow since `GenPW()`'s tests have thousands of test-cases generated from lists of possible parameters.
+If you want live test feedback while hacking and find the tests to be too slow (they typically take under 3s by default on my low-end notebook), set the environment variable `LOOPS` to something below `64`; running `make test-quick` will set it to `10`. Test-cases for password generation run multiple times because of the non-determinism inherent to random password generation. Tests are a bit slow since `GenPW()`'s tests have thousands of test-cases generated from lists of possible parameters.
+
+If you notice that a change causes a big slowdown in `make test`, run `make test-prof` to generate a `cpu.prof` file. Inspect that file with `go tool pprof cpu.prof`.
 
 Other ways to help
 ------------------

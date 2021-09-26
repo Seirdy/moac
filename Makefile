@@ -50,7 +50,7 @@ DEFAULT_GO_LDFLAGS = -w -X git.sr.ht/~seirdy/moac/internal/version.version="$(VE
 GO_LDFLAGS += $(DEFAULT_GO_LDFLAGS)
 BUILDMODE ?= default
 GO_BUILDFLAGS += -trimpath -mod=readonly -buildmode=$(BUILDMODE) -ldflags '$(GO_LDFLAGS)'
-TESTFLAGS ?= # -msan, -race, coverage, etc.
+TESTFLAGS += # -msan, -race, coverage, etc.
 
 # used internally
 CMD = build
@@ -83,15 +83,28 @@ build: $(BINS)
 	rm -f $(BINS)
 
 clean: .clean-bins clean-san-bins
-	$(GO) clean -testcache
-	rm -rf doc/*.1 ./coverage.out $(DIST)
+	$(GO) clean -testcache ./...
+	rm -rf doc/*.1 ./coverage.out *.prof *.test $(DIST)
 
 test:
 	@$(MAKE) CMD="test" GO_BUILDFLAGS="$(GO_BUILDFLAGS)" ARGS="$(TESTFLAGS) ./..." .base
 
-test-cov:
-	@$(MAKE) TESTFLAGS="-coverpkg=$(COVERPKG) -coverprofile=coverage.out" test
+test-quick:
+	@LOOPS=10 $(MAKE) test
+
+coverage.out:
+	@TESTFLAGS="$(TESTFLAGS) -coverpkg=$(COVERPKG) -coverprofile=coverage.out" $(MAKE) test
 	$(GO) tool cover -func=coverage.out
+
+test-cov: coverage.out
+
+cpu.prof:
+	@$(MAKE) CMD="test" GO_BUILDFLAGS="$(GO_BUILDFLAGS)" ARGS="-cpuprofile=cpu.prof ./pwgen" .base
+
+test-prof: cpu.prof
+
+test-prof-long:
+	@LOOPS=512 $(MAKE) test-prof
 
 fmt:
 	$(FIELDALIGNMENT) -fix ./...
