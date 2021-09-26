@@ -163,11 +163,11 @@ func (givens *Givens) Populate() error {
 // can be brute-forced with certainty.
 func (givens *Givens) BruteForceability() (float64, error) {
 	if err := givens.Populate(); err != nil {
-		return 0, fmt.Errorf("BruteForceability: %w", err)
+		return 0, fmt.Errorf("can't compute BruteForceability: %w", err)
 	}
 
 	if givens.Entropy+givens.Time == 0 {
-		return 0, fmt.Errorf("BruteForceability: cannot compute entropy: %w", ErrMissingPE)
+		return 0, fmt.Errorf("can't compute BruteForceability: cannot compute entropy: %w", ErrMissingPE)
 	}
 
 	computedBruteForceability := computeBruteForceability(givens)
@@ -184,7 +184,7 @@ func (givens *Givens) BruteForceability() (float64, error) {
 // quantum computers that use Grover's Algorithm.
 func (givens *Givens) BruteForceabilityQuantum() (float64, error) {
 	if err := givens.Populate(); err != nil {
-		return 0, fmt.Errorf("BruteForceabilityQuantum: %w", err)
+		return 0, fmt.Errorf("can't calculate BruteForceabilityQuantum: %w", err)
 	}
 
 	givensQuantum := givens
@@ -214,7 +214,7 @@ func computeBruteForceability(givens *Givens) float64 {
 // Passwords need an entropy greater than this to have a chance of not being guessed.
 func (givens *Givens) MinEntropy() (entropyNeeded float64, err error) {
 	if err := givens.Populate(); err != nil {
-		return 0, fmt.Errorf("MinEntropy: %w", err)
+		return 0, fmt.Errorf("can't compute MinEntropy: %w", err)
 	}
 
 	energyBound := math.Log2(givens.Energy / givens.EnergyPerGuess)

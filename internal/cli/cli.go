@@ -6,6 +6,9 @@ import (
 	"os"
 )
 
+// FloatFmt defines how many digits of a float to print.
+const FloatFmt = "%.3g\n"
+
 // ExitOnErr exits the program with status 1 with a message in the presence of an error.
 func ExitOnErr(err error, extraLine string) {
 	if err != nil {

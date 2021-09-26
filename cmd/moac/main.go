@@ -167,18 +167,18 @@ func main() {
 
 	args := os.Args[optind:]
 	if len(args) == 0 {
-		fmt.Printf("%.3g\n", getBruteForceability(givens, quantum))
+		fmt.Printf(cli.FloatFmt, getBruteForceability(givens, quantum))
 		os.Exit(0)
 	}
 
 	cmd := args[0]
 	switch cmd {
 	case "strength":
-		fmt.Printf("%.3g\n", getBruteForceability(givens, quantum))
+		fmt.Printf(cli.FloatFmt, getBruteForceability(givens, quantum))
 	case "entropy":
-		fmt.Printf("%.3g\n", getEntropy(givens))
+		fmt.Printf(cli.FloatFmt, getEntropy(givens))
 	case "entropy-limit":
-		fmt.Printf("%.3g\n", getMinEntropy(givens, quantum))
+		fmt.Printf(cli.FloatFmt, getMinEntropy(givens, quantum))
 	default:
 		fmt.Fprintf(os.Stderr, "moac: unknown command %v\n%s", cmd, usage)
 		os.Exit(1)

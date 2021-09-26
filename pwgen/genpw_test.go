@@ -273,7 +273,7 @@ func pwLongEnough(password string, minLen, maxLen int, entropyWanted float64) (f
 	if entropyCalculated < entropyWanted {
 		if pwLen < maxLen {
 			return entropyCalculated, fmt.Errorf(
-				"GenPW() = %s; entropy was %.3g, wanted %.3g, password length below max",
+				"generated pw %s has entropy %.3g; wanted %.3g; password length below max",
 				password, entropyCalculated, entropyWanted,
 			)
 		}
@@ -325,11 +325,11 @@ func validateTestCase(test *pwgenTestCase, cs charsets.CharsetCollection) error 
 	password, err := pwgen.GenPW(charsetsWanted, test.entropyWanted, test.minLen, test.maxLen)
 
 	if unexpectedErr(err, test.expectedErr) {
-		return fmt.Errorf("GenPW() errored: %w", err)
+		return fmt.Errorf("error in GenPW(): %w", err)
 	}
 
 	if err == nil && test.expectedErr != nil {
-		return fmt.Errorf("Expected error %w from GenPW, got nil", test.expectedErr)
+		return fmt.Errorf("expected error %w from GenPW, got nil", test.expectedErr)
 	}
 
 	pwRunes := []rune(password)
@@ -340,11 +340,11 @@ func validateTestCase(test *pwgenTestCase, cs charsets.CharsetCollection) error 
 	}
 
 	if invalidRune, validPW := pwOnlyUsesAllowedRunes(cs, &pwRunes); !validPW {
-		return fmt.Errorf("GenPW() = %s; used invalid character \"%v\"", password, string(invalidRune))
+		return fmt.Errorf("generated password %s used invalid character \"%v\"", password, string(invalidRune))
 	}
 
 	if unexpectedErr(err, test.expectedErr) {
-		return fmt.Errorf("Error calculating entropy: %w", err)
+		return fmt.Errorf("error calculating entropy: %w", err)
 	}
 
 	// skip this test if we expected the password to be generated successfully
@@ -422,6 +422,25 @@ func TestGenPw(t *testing.T) {
 	}
 }
 
+func runTestCase(
+	t *testing.T,
+	cs charsets.CharsetCollection, testCase *pwgenTestCase, tooLongCount *int, overageIsAllowed bool,
+) {
+	t.Helper()
+
+	err := validateTestCase(testCase, cs)
+	if err != nil {
+		if !errors.Is(err, ErrTooLong) || overageIsAllowed {
+			t.Errorf(err.Error())
+		}
+
+		if *tooLongCount%3 == 0 && *tooLongCount < 15 { // don't spam output with >15 errors
+			t.Log(err)
+		}
+		*tooLongCount++
+	}
+}
+
 func runTestCaseGroup(
 	t *testing.T, testCaseGroup []pwgenTestCase, tooLongCount *int, overageIsAllowed bool, loops int) {
 	t.Helper()
@@ -431,17 +450,7 @@ func runTestCaseGroup(
 		cs := charsets.ParseCharsets(testCase.charsetsWanted)
 
 		for j := 0; j < loops; j++ {
-			err := validateTestCase(&testCase, cs)
-			if err != nil {
-				if !errors.Is(err, ErrTooLong) || overageIsAllowed {
-					t.Errorf(err.Error())
-				}
-
-				if *tooLongCount < 15 { // don't spam output with >15 errors
-					log.Println(err)
-				}
-				*tooLongCount++
-			}
+			runTestCase(t, cs, &testCase, tooLongCount, overageIsAllowed)
 		}
 	}
 }
