@@ -119,7 +119,7 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 			},
 		},
 		{
-			group: testGroupInfo{name: "complex custom charsets", tooLongAllowed: 0.3},
+			group: testGroupInfo{name: "complex custom charsets", tooLongAllowed: 0.21},
 			charsetsWanted: []string{
 				"uppercase", "numbers", "lowercase",
 				"𓂸",
@@ -387,33 +387,36 @@ func TestGenPw(t *testing.T) {
 	for name, testCaseGroup := range testCaseGroups { //nolint:paralleltest // false-positive
 		groupInfo, group := name, testCaseGroup
 
+		allowedPercentWithOverage := groupInfo.tooLongAllowed
+		if allowedPercentWithOverage > 0 {
+			// with a low number of iterations, the percent overage is less
+			// accurate so we need to be a bit more generous. The current
+			// percent-overages are optimized for 100 loops and above, so become
+			// more lenient while moving away from it.
+			scaleFactor := 1 + math.Log(100/float64(loops))
+
+			switch {
+			case loops < 4:
+				allowedPercentWithOverage = 100
+			case loops < 10:
+				allowedPercentWithOverage = (50 + groupInfo.tooLongAllowed) / 2
+			case loops < 100:
+				allowedPercentWithOverage = min(groupInfo.tooLongAllowed*scaleFactor, 33)
+			default:
+			}
+		}
+
 		t.Run(groupInfo.name, func(t *testing.T) {
 			t.Parallel()
 
 			tooLongCount := 0
-			runTestCaseGroup(t, group, &tooLongCount, groupInfo.tooLongAllowed == 0, loops)
+			runTestCaseGroup(t, group, &tooLongCount, allowedPercentWithOverage, loops)
 			log.Print(
 				"number of too-long passwords for charset " +
 					groupInfo.name +
 					fmt.Sprintf(" %d/%d", tooLongCount, iterations),
 			)
 
-			var allowedPercentWithOverage float64
-			if groupInfo.tooLongAllowed > 0 {
-				// with a low number of iterations, the percent overage is less
-				//	accurate so we need to be a bit more generous.
-				scaleFactor := 1 + math.Log(100/float64(loops))
-				switch {
-				case loops < 4:
-					allowedPercentWithOverage = 100
-				case loops < 10:
-					allowedPercentWithOverage = (50 + groupInfo.tooLongAllowed) / 2
-				case loops < 100:
-					allowedPercentWithOverage = min(groupInfo.tooLongAllowed*scaleFactor, 33)
-				default:
-					allowedPercentWithOverage = groupInfo.tooLongAllowed
-				}
-			}
 			if percent := float64(tooLongCount) / float64(iterations) * 100; percent > allowedPercentWithOverage {
 				t.Errorf("%d out of %d passwords (%.3g%%) in charset group %s were too long; acceptable threshold is %.3g%%",
 					tooLongCount, iterations, percent, groupInfo.name, allowedPercentWithOverage)
@@ -422,27 +425,8 @@ func TestGenPw(t *testing.T) {
 	}
 }
 
-func runTestCase(
-	t *testing.T,
-	cs charsets.CharsetCollection, testCase *pwgenTestCase, tooLongCount *int, overageIsAllowed bool,
-) {
-	t.Helper()
-
-	err := validateTestCase(testCase, cs)
-	if err != nil {
-		if !errors.Is(err, ErrTooLong) || overageIsAllowed {
-			t.Errorf(err.Error())
-		}
-
-		if *tooLongCount%3 == 0 && *tooLongCount < 15 { // don't spam output with >15 errors
-			t.Log(err)
-		}
-		*tooLongCount++
-	}
-}
-
 func runTestCaseGroup(
-	t *testing.T, testCaseGroup []pwgenTestCase, tooLongCount *int, overageIsAllowed bool, loops int) {
+	t *testing.T, testCaseGroup []pwgenTestCase, tooLongCount *int, overageAllowed float64, loops int) {
 	t.Helper()
 
 	for _, testCase := range testCaseGroup {
@@ -450,7 +434,26 @@ func runTestCaseGroup(
 		cs := charsets.ParseCharsets(testCase.charsetsWanted)
 
 		for j := 0; j < loops; j++ {
-			runTestCase(t, cs, &testCase, tooLongCount, overageIsAllowed)
+			runTestCase(t, cs, &testCase, tooLongCount, overageAllowed)
 		}
+	}
+}
+
+func runTestCase(
+	t *testing.T,
+	cs charsets.CharsetCollection, testCase *pwgenTestCase, tooLongCount *int, overageAllowed float64,
+) {
+	t.Helper()
+
+	err := validateTestCase(testCase, cs)
+	if err != nil {
+		if !errors.Is(err, ErrTooLong) || overageAllowed == 0 {
+			t.Errorf(err.Error())
+		}
+
+		if *tooLongCount%3 == 0 && *tooLongCount < 15 { // don't spam output with >15 errors
+			t.Log(err)
+		}
+		*tooLongCount++
 	}
 }
