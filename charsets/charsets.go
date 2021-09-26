@@ -3,6 +3,7 @@ package charsets
 
 import (
 	"sort"
+	"strings"
 )
 
 // Charset is the interface implemented by any charset used to build passwords.
@@ -71,6 +72,15 @@ func (cs *CharsetCollection) Add(newCharsets ...Charset) {
 	}
 }
 
+// AddDefault is equivalent to Add, but skips sorting/deduplication.
+// This makes adding default charsets a bit faster, since those are already sorted/deduplicated.
+func (cs *CharsetCollection) AddDefault(newCharsets ...DefaultCharset) {
+	for _, c := range newCharsets {
+		cc := CustomCharset(c.Runes())
+		cs.addSingle(cc)
+	}
+}
+
 func (cs *CharsetCollection) addSingle(c CustomCharset) {
 	for i := range *cs {
 		moveOverlapToSmaller(&(*cs)[i], &c)
@@ -93,15 +103,15 @@ func ParseCharsets(charsetNames []string) (cs CharsetCollection) {
 	for _, charsetName := range charsetNames {
 		switch charsetName {
 		case "ascii":
-			cs.Add(Lowercase, Uppercase, Numbers, Symbols)
+			cs.AddDefault(Lowercase, Uppercase, Numbers, Symbols)
 		case "latin":
-			cs.Add(Latin1, LatinExtendedA, LatinExtendedB, IPAExtensions)
+			cs.AddDefault(Latin1, LatinExtendedA, LatinExtendedB, IPAExtensions)
 		default:
 			found := false
 
 			for _, defaultCharset := range DefaultCharsets {
 				if charsetName == defaultCharset.Name() {
-					cs.Add(defaultCharset)
+					cs.AddDefault(defaultCharset)
 
 					found = true
 
@@ -118,38 +128,48 @@ func ParseCharsets(charsetNames []string) (cs CharsetCollection) {
 	return cs
 }
 
-// moveOverlapToSmaller moves all runes common to c1 and c2 to whichever has fewer unique runes.
-func moveOverlapToSmaller(c1 *Charset, c2 *CustomCharset) { //nolint:gocritic // c1 is ptr bc it's modified
-	c1c := newCustomCharset(*c1)
+//nolint:gocritic // c1 is ptr bc it's modified
+func moveOverlapToSmaller(c1 *Charset, c2 *CustomCharset) {
+	c1c := CustomCharset((*c1).Runes())
 	overlap := separateOverlap(&c1c, c2)
 
-	if len(c1c) <= len(*c2) {
+	switch {
+	case len(c1c) == 0:
+		*c1 = overlap
+	case len(*c2) == 0:
+		*c2 = overlap
+		*c1 = c1c
+	case len(overlap) == 0:
+		c2.sortContents()
+	case len(c1c) <= len(*c2):
 		c1c = append(c1c, overlap...)
 		c1c.sortContents()
 
 		*c1 = c1c
+	default:
+		*c2 = append(*c2, overlap...)
+		c2.sortContents()
 
-		return
+		*c1 = c1c
+	}
+}
+
+func separateOverlap(c1, c2 *CustomCharset) CustomCharset {
+	var ostr strings.Builder
+
+	if len(*c1) < len(*c2) {
+		ostr.Grow(len(*c1))
+	} else {
+		ostr.Grow(len(*c2))
 	}
 
-	*c1 = c1c
-
-	*c2 = append(*c2, overlap...)
-	c2.sortContents()
-}
-
-func newCustomCharset(c Charset) (fc CustomCharset) {
-	return CustomCharset(c.Runes())
-}
-
-func separateOverlap(c1, c2 *CustomCharset) (overlap CustomCharset) {
 	for i := 0; i < len(*c1); i++ {
 		for j := 0; j < len(*c2); j++ {
 			if (*c1)[i] != (*c2)[j] {
 				continue
 			}
 
-			overlap = append(overlap, (*c1)[i])
+			ostr.WriteRune((*c1)[i])
 			*c1 = append((*c1)[:i], (*c1)[i+1:]...)
 			*c2 = append((*c2)[:j], (*c2)[j+1:]...)
 			i--
@@ -158,5 +178,5 @@ func separateOverlap(c1, c2 *CustomCharset) (overlap CustomCharset) {
 		}
 	}
 
-	return overlap
+	return []rune(ostr.String())
 }
