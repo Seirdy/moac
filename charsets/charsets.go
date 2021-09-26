@@ -3,7 +3,6 @@ package charsets
 
 import (
 	"sort"
-	"strings"
 )
 
 // Charset is the interface implemented by any charset used to build passwords.
@@ -82,8 +81,8 @@ func (cs *CharsetCollection) AddDefault(newCharsets ...DefaultCharset) {
 }
 
 func (cs *CharsetCollection) addSingle(c CustomCharset) {
-	for i := range *cs {
-		moveOverlapToSmaller(&(*cs)[i], &c)
+	for i := 0; i < len(*cs) && len(c) > 0; i++ {
+		minimizeRedundancyInLatter(&(*cs)[i], &c)
 	}
 
 	if len(c) > 0 {
@@ -129,54 +128,38 @@ func ParseCharsets(charsetNames []string) (cs CharsetCollection) {
 }
 
 //nolint:gocritic // c1 is ptr bc it's modified
-func moveOverlapToSmaller(c1 *Charset, c2 *CustomCharset) {
+func minimizeRedundancyInLatter(c1 *Charset, c2 *CustomCharset) {
 	c1c := CustomCharset((*c1).Runes())
-	overlap := separateOverlap(&c1c, c2)
+	moveOverlapToSmaller(&c1c, c2)
 
-	switch {
-	case len(c1c) == 0:
-		*c1 = overlap
-	case len(*c2) == 0:
-		*c2 = overlap
-		*c1 = c1c
-	case len(overlap) == 0:
-		c2.sortContents()
-	case len(c1c) <= len(*c2):
-		c1c = append(c1c, overlap...)
-		c1c.sortContents()
+	if len(c1c) == 0 {
+		*c1, *c2 = *c2, c1c
 
-		*c1 = c1c
-	default:
-		*c2 = append(*c2, overlap...)
-		c2.sortContents()
-
-		*c1 = c1c
+		return
 	}
+
+	*c1 = c1c
 }
 
-func separateOverlap(c1, c2 *CustomCharset) CustomCharset {
-	var ostr strings.Builder
+func moveOverlapToSmaller(c1, c2 *CustomCharset) {
+	deleteFromMe := c1
+	preserveMe := c2
 
 	if len(*c1) < len(*c2) {
-		ostr.Grow(len(*c1))
-	} else {
-		ostr.Grow(len(*c2))
+		preserveMe = c1
+		deleteFromMe = c2
 	}
 
-	for i := 0; i < len(*c1); i++ {
-		for j := 0; j < len(*c2); j++ {
-			if (*c1)[i] != (*c2)[j] {
+	for i := 0; i < len(*deleteFromMe); i++ {
+		for j := 0; j < len(*preserveMe); j++ {
+			if (*deleteFromMe)[i] != (*preserveMe)[j] {
 				continue
 			}
 
-			ostr.WriteRune((*c1)[i])
-			*c1 = append((*c1)[:i], (*c1)[i+1:]...)
-			*c2 = append((*c2)[:j], (*c2)[j+1:]...)
+			*deleteFromMe = append((*deleteFromMe)[:i], (*deleteFromMe)[i+1:]...)
 			i--
 
 			break
 		}
 	}
-
-	return []rune(ostr.String())
 }
