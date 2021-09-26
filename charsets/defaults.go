@@ -56,7 +56,7 @@ func (dc DefaultCharset) Runes() []rune {
 
 // DefaultCharsets contains pre-built named charsets.
 // This makes identifying a charset by name (e.g. as a CLI argument) much easier.
-var DefaultCharsets CharsetCollection = CharsetCollection{
+var DefaultCharsets = []DefaultCharset{
 	Lowercase, Uppercase, Numbers, Symbols,
 	Latin1, LatinExtendedA, LatinExtendedB, IPAExtensions,
 }

@@ -10,7 +10,6 @@ import (
 type Charset interface {
 	String() string
 	Runes() []rune
-	Name() string
 }
 
 // CustomCharset is a charset constructed from an existing rune array.
@@ -30,14 +29,6 @@ func (cc CustomCharset) Runes() []rune {
 
 func (cc CustomCharset) String() string {
 	return string(cc)
-}
-
-// Name is a dummy function for CustomCharsets, since custom charsets don't need name aliases.
-// This is because custom charsets are given as a string containing the
-// desired runes; we don't have to look them up by name to see what
-// runes to fill them with.
-func (cc CustomCharset) Name() string {
-	return cc.String()
 }
 
 func (cc *CustomCharset) sortContents() {
@@ -65,19 +56,6 @@ func (cc *CustomCharset) dedupe() {
 // CharsetCollection holds a list of charsets, and can bulk-convert them to strings, runes, and names.
 type CharsetCollection []Charset
 
-func (cs *CharsetCollection) addSingle(c CustomCharset) {
-	c.sortContents()
-	c.dedupe()
-
-	for i := range *cs {
-		moveOverlapToSmaller(&(*cs)[i], &c)
-	}
-
-	if len(c) > 0 {
-		*cs = append(*cs, c)
-	}
-}
-
 // Add adds a charset to a CharsetCollection after de-duplicating its contents and the existing entries.
 // All newCharsets are first individually deduplicated/sorted first.
 // Whether an existing charset or the new entry gets extra deduplication
@@ -85,7 +63,21 @@ func (cs *CharsetCollection) addSingle(c CustomCharset) {
 // maximize charset sizes while eliminating any redundancies.
 func (cs *CharsetCollection) Add(newCharsets ...Charset) {
 	for _, c := range newCharsets {
-		cs.addSingle(CustomCharset(c.Runes()))
+		cc := CustomCharset(c.Runes())
+		cc.sortContents()
+		cc.dedupe()
+
+		cs.addSingle(cc)
+	}
+}
+
+func (cs *CharsetCollection) addSingle(c CustomCharset) {
+	for i := range *cs {
+		moveOverlapToSmaller(&(*cs)[i], &c)
+	}
+
+	if len(c) > 0 {
+		*cs = append(*cs, c)
 	}
 }
 
