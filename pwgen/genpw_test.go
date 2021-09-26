@@ -85,7 +85,7 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "世界🧛"},
 		},
 		{
-			group:          testGroupInfo{name: "ascii", tooLongAllowed: 10.417},
+			group:          testGroupInfo{name: "ascii"},
 			charsetsWanted: []string{"ascii"},
 		},
 		{

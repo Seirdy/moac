@@ -34,8 +34,8 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 				Temperature: 1900,
 				Password:    "ȣMǚHǨȎ#ŕģ=ʬƦQoţ}tʂŦȃťŇ+ħHǰĸȵʣɐɼŋĬŧǺʀǜǬɰ'ʮ0ʡěɱ6ȫŭ",
 			},
-			expectedBF:  6.653e-70,
-			expectedBFQ: 1.401e-4,
+			expectedBF:  7.288e-70,
+			expectedBFQ: 1.467e-4,
 			expectedME:  204.2,
 		},
 		{ // same as above but without custom temp
@@ -45,8 +45,8 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 				Time:     1.45e17,
 				Password: "ȣMǚHǨȎ#ŕģ=ʬƦQoţ}tʂŦȃťŇ+ħHǰĸȵʣɐɼŋĬŧǺʀǜǬɰ'ʮ0ʡěɱ6ȫŭ",
 			},
-			expectedBF:  4.682e-67,
-			expectedBFQ: 0.0986,
+			expectedBF:  5.129e-67,
+			expectedBFQ: 0.1032,
 			expectedME:  213.7,
 		},
 		{
