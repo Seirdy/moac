@@ -1,5 +1,3 @@
-.POSIX:
-
 # built binary names
 MOAC_BIN = moac
 MOAC_PWGEN_BIN = moac-pwgen
@@ -9,31 +7,29 @@ BINS= $(MOAC_BIN) $(MOAC_PWGEN_BIN)
 SHARED_SRC = Makefile *.go entropy/*.go internal/*/*.go
 MOAC_SRC = cmd/moac/*.go
 MOAC_PWGEN_SRC = pwgen/*.go cmd/moac-pwgen/*.go
-SRC = $(SHARED_SRC) $(MOAC_EXCLUSIVE_SRC) $(MOAC_PWGEN_EXCLUSIVE_SRC)
+SRC = $(SHARED_SRC) $(MOAC_SRC) $(MOAC_PWGEN_SRC)
 COVERPKG = .,./entropy,./pwgen,./charsets,./internal/bounds
 
-# go's own envvars
-CGO_ENABLED ?= 0
-GOPATH ?= `$(GO) env GOPATH`
-GOBIN ?= $(GOPATH)/bin
-GOOS ?= `$(GO) env GOOS`
-GOARCH ?= `$(GO) env GOARCH`
-CGO_CFLAGS +=  $(CFLAGS)
-
 # paths to executables this Makefile will use
-GO ?= go
-GOLANGCI_LINT ?= $(GOBIN)/golangci-lint
-GOKART ?= $(GOBIN)/gokart
-CHECKMAKE ?= $(GOBIN)/checkmake
-GOFUMPT ?= $(GOBIN)/gofumpt
-FIELDALIGNMENT ?= $(GOBIN)/fieldalignment
+GO = go
+CGO_ENABLED ?= 0
+GOPATH != $(GO) env GOPATH
+GOBIN ?= $(GOPATH)/bin
+GOOS != $(GO) env GOOS
+GOARCH != $(GO) env GOARCH
+
+GOLANGCI_LINT = $(GOBIN)/golangci-lint
+GOKART = $(GOBIN)/gokart
+CHECKMAKE = $(GOBIN)/checkmake
+GOFUMPT = $(GOBIN)/gofumpt
+FIELDALIGNMENT = $(GOBIN)/fieldalignment
 
 # change this on freebsd/openbsd
-SHA256 ?= sha256sum
+SHA256 = sha256sum
 
 # version identifier to embed in binaries
-TAG = `git describe --abbrev=0 --tags`
-REVISION = `git rev-parse --short HEAD`
+TAG != git describe --abbrev=0 --tags
+REVISION != git rev-parse --short HEAD
 VERSION = $(TAG)-$(REVISION)
 
 # install destinations
@@ -47,10 +43,10 @@ ZSHCOMPDIR ?= $(DATAROOTDIR)/zsh/site-functions
 LINKMODE = internal
 # extldflags is ignored unless you use one of the cgo options at the bottom
 DEFAULT_GO_LDFLAGS = -w -X git.sr.ht/~seirdy/moac/internal/version.version="$(VERSION)" -linkmode=$(LINKMODE) -extldflags \"$(LDFLAGS)\"
-GO_LDFLAGS += $(DEFAULT_GO_LDFLAGS)
-BUILDMODE ?= default
-GO_BUILDFLAGS += -trimpath -mod=readonly -buildmode=$(BUILDMODE) -ldflags '$(GO_LDFLAGS)'
-TESTFLAGS += # -msan, -race, coverage, etc.
+GO_LDFLAGS = $(DEFAULT_GO_LDFLAGS)
+BUILDMODE = default
+GO_BUILDFLAGS = -trimpath -mod=readonly -buildmode=$(BUILDMODE) -ldflags '$(GO_LDFLAGS)'
+TESTFLAGS = # -msan, -race, coverage, etc.
 
 # used internally
 CMD = build
@@ -93,7 +89,7 @@ test-quick:
 	@LOOPS=10 $(MAKE) test
 
 coverage.out:
-	@TESTFLAGS="$(TESTFLAGS) -coverpkg=$(COVERPKG) -coverprofile=coverage.out" $(MAKE) test
+	@$(MAKE) TESTFLAGS="$(TESTFLAGS) -coverpkg=$(COVERPKG) -coverprofile=coverage.out" test
 	$(GO) tool cover -func=coverage.out
 
 test-cov: coverage.out
@@ -154,9 +150,9 @@ RELNAME = moac-$(VERSION)-$(PLATFORM_ID)
 # allow excluding the git version from the archive name
 # this lets the archive name be deterministic, which is useful in CI
 # because sourcehut artifact names are interpreted literally.
-ARCHIVE_PREFIX ?= moac-$(VERSION) # override ARCHIVE_PREFIX in CI
-ARCHIVE_NAME ?= $(ARCHIVE_PREFIX)-$(PLATFORM_ID)
-DIST ?= dist
+ARCHIVE_PREFIX = moac-$(VERSION) # override ARCHIVE_PREFIX in CI
+ARCHIVE_NAME = $(ARCHIVE_PREFIX)-$(PLATFORM_ID)
+DIST = dist
 DIST_LOCATION=$(DIST)/$(RELNAME)
 
 dist:
@@ -171,16 +167,16 @@ dist-reprod:
 	$(MAKE) GO_LDFLAGS='-buildid= $(DEFAULT_GO_LDFLAGS)' .clean-bins dist
 
 dist-multiarch:
-	@GOARCH=amd64 $(MAKE) dist-reprod
-	@GOARCH=arm64 $(MAKE) dist-reprod
-	@GOARCH=arm $(MAKE) dist-reprod
-	@GOARCH=386 $(MAKE) dist-reprod
+	@$(MAKE) GOARCH=amd64 dist-reprod
+	@$(MAKE) GOARCH=arm64 dist-reprod
+	@$(MAKE) GOARCH=arm dist-reprod
+	@$(MAKE) GOARCH=386 dist-reprod
 
 # This builds for Linux and FreeBSD, but not OpenBSD; OpenBSD bins should
 # be built with CGO which makes reproducible cross-compilation a bit messy
 dist-linux-freebsd:
-	@GOOS=linux $(MAKE) dist-multiarch
-	@GOOS=freebsd $(MAKE) dist-multiarch
+	@$(MAKE) GOOS=linux dist-multiarch
+	@$(MAKE) GOOS=freebsd dist-multiarch
 
 
 # =================================================================================
@@ -196,10 +192,11 @@ dist-linux-freebsd:
 # just a template that I use for all my Go projects.
 
 # if building with CGO, turn on some hardening
-CC = clang
-CCLD = lld
-CFLAGS += -O2 -fno-semantic-interposition -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -fexceptions -fstack-protector-all -m64 -fasynchronous-unwind-tables -fstack-clash-protection -fcf-protection=full -ffunction-sections -fdata-sections -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
-LDFLAGS += -Wl,-z,relro,-z,now,-z,noexecstack,--as-needed,-E,--gc-sections
+CC ?= clang
+CCLD ?= lld
+shared_flags = -O2 -fno-semantic-interposition -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -fexceptions -fstack-protector-all -m64 -fasynchronous-unwind-tables -fstack-clash-protection -fcf-protection=full -ffunction-sections -fdata-sections
+CFLAGS += $(shared_flags) -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
+LDFLAGS += $(shared_flags) -Wl,-z,relro,-z,now,-z,noexecstack,--as-needed,-E,--gc-sections
 # on openbsd, set this to "exe" or nothing
 BUILDMODE_CGO = pie
 
@@ -210,10 +207,12 @@ EXTRA_SANITIZERS ?= cfi
 CFI = -flto=thin -fsanitize=$(EXTRA_SANITIZERS)
 CFLAGS_CFI = $(CFLAGS) $(CFI) -fvisibility=hidden -fpic -fpie
 LDFLAGS_CFI = $(LDFLAGS) $(CFI) -pie
+CGO_CFLAGS != $(GO) env CGO_CFLAGS
+CGO_CFLAGS += $(CFLAGS)
 
 # shared across regular, msan, and race CGO builds/tests
 .build-cgo-base:
-	@CC="$(CC)" CCLD="$(CCLD)" CFLAGS="$(CFLAGS_CFI)" LDFLAGS="$(LDFLAGS)" CGO_CFLAGS="$(CFLAGS_CFI)" $(MAKE) CGO_ENABLED=1 LINKMODE=external $(CMD)
+	CC="$(CC)" CCLD="$(CCLD)" CFLAGS="$(CFLAGS_CFI)" LDFLAGS="$(LDFLAGS)" CGO_CFLAGS="$(CFLAGS_CFI)" $(MAKE) CGO_ENABLED=1 LINKMODE=external $(CMD)
 
 build-cgo:
 	@$(MAKE) BUILDMODE=$(BUILDMODE_CGO) CFLAGS="$(CFLAGS_CFI)" LDFLAGS="$(LDFLAGS_CFI)" .build-cgo-base
