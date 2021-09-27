@@ -1,0 +1,6 @@
+---
+# https://github.com/Gusto/committer
+tasks:
+  - name: precommit
+    command: make lint test -j2
+    files: '\.go|Makefile|committer.yml|\.sh'

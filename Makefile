@@ -8,6 +8,7 @@ SHARED_SRC = Makefile *.go entropy/*.go internal/*/*.go
 MOAC_SRC = cmd/moac/*.go
 MOAC_PWGEN_SRC = pwgen/*.go cmd/moac-pwgen/*.go
 SRC = $(SHARED_SRC) $(MOAC_SRC) $(MOAC_PWGEN_SRC)
+SH_SRC = .builds/*.sh
 COVERPKG = .,./entropy,./pwgen,./charsets,./internal/bounds
 
 # paths to executables this Makefile will use
@@ -21,8 +22,10 @@ GOARCH != $(GO) env GOARCH
 GOLANGCI_LINT = $(GOBIN)/golangci-lint
 GOKART = $(GOBIN)/gokart
 CHECKMAKE = $(GOBIN)/checkmake
+CONSISTENT = $(GOBIN)/go-consistent
 GOFUMPT = $(GOBIN)/gofumpt
 FIELDALIGNMENT = $(GOBIN)/fieldalignment
+SHFMT = $(GOBIN)/shfmt
 
 # change this on freebsd/openbsd
 SHA256 = sha256sum
@@ -58,10 +61,14 @@ golangci-lint: $(SRC)
 	$(GOLANGCI_LINT) run
 gokart-lint: $(SRC)
 	$(GOKART) scan -g ./...
+go-consistent: $(SRC)
+	$(CONSISTENT) -pedantic ./...
 checkmake: Makefile
 	$(CHECKMAKE) Makefile
+shfmt-lint: $(SH_SRC)
+	$(SHFMT) -p -s -d $(SH_SRC)
 
-lint: golangci-lint gokart-lint checkmake
+lint: shfmt-lint go-consistent checkmake gokart-lint golangci-lint
 
 # every task in this makefile except "clean" just calls .base with different vars
 # instead of invoking "$(GO)" directly
@@ -105,6 +112,7 @@ test-prof-long:
 fmt:
 	$(FIELDALIGNMENT) -fix ./...
 	$(GOFUMPT) -s -w .
+	$(SHFMT) -p -s -w $(SH_SRC)
 
 pre-commit: fmt lint test
 

@@ -26,17 +26,9 @@ Preferred location: <https://lists.sr.ht/~seirdy/moac>. Send emails and patches 
 
 Contributions don't need to follow these standards to be useful. If a useful patch doesn't pass the below checks, I might clean it up myself.
 
-This project uses `gofumpt` and `fieldalignment` for formatting; it uses `golangci-lint`, `gokart`, and `checkmake` for linting. You can install all of them to your `GOBIN` like so:
+This project uses `gofumpt`, `fieldalignment`, `shfmt`, and `mdfmt -stxHeaders` for formatting; it uses `golangci-lint`, `gokart`, `go-consistent`, `shfmt` (again), and `checkmake` for linting. You can install all of them to your `GOBIN` by running `.builds/install-linters.sh`
 
-```sh
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-go install github.com/praetorian-inc/gokart@latest
-go install github.com/mrtazz/checkmake/cmd/checkmake@latest
-go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
-go install github.com/mvdan/gofumpt@latest
-```
-
-Run `make fmt` to format code, `make lint` to run the linters, and `make test` to run unit tests. `make pre-commit` runs all three.
+Run `make fmt` to format code, `make lint` to run the linters (except `mdfmt`), and `make test` to run unit tests. `make pre-commit` runs all three. I recommend using [committer](https://github.com/Gusto/committer) to auto-run pre-commit checks; just add `committer` to your hooks.
 
 The linters are very opinionated. If you find this annoying, you can send your patch anyway; I'll clean it up if it looks useful.
 
@@ -45,6 +37,8 @@ Everything possible should be covered by tests. If a branch handling an error sh
 If you want live test feedback while hacking and find the tests to be too slow (they typically take under 3s by default on my low-end notebook), set the environment variable `LOOPS` to something below `64`; running `make test-quick` will set it to `10`. Test-cases for password generation run multiple times because of the non-determinism inherent to random password generation. Tests are a bit slow since `GenPW()`'s tests have thousands of test-cases generated from lists of possible parameters.
 
 If you notice that a change causes a big slowdown in `make test`, run `make test-prof` to generate a `cpu.prof` file. Inspect that file with `go tool pprof cpu.prof`.
+
+`make test-san` will run two very slow tests: one with race-condition detection, the second with the memory sanitizer. This requires Clang to be installed with a complete compiler-rt.
 
 Other ways to help
 ------------------
