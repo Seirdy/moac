@@ -28,7 +28,7 @@ Check the [refs](https://git.sr.ht/~seirdy/moac/refs/) for changelogs; select a 
 ### Build dependencies
 
 - Go toolchain
-- `make` (tested with GNU Make, `bmake`, and OpenBSD Make)
+- `make` (tested with GNU Make 4.x, `bmake`, and OpenBSD Make; should be fairly portable).
 - `scdoc` (for building man pages)
 - `git` (optional; for embedding the version number in the binary)
 
@@ -55,7 +55,7 @@ If the user supplies both mass and energy, the given energy will be replaced wit
 
 If the user supplies both a password and a password entropy, the given entropy will be replaced with the calculated entropy of the provided password if the calculated entropy is lower. If the user does not supply entropy or the physical values necessary to calculate it, the default entropy is `256` (the key length of AES-256).
 
-Time and energy are the two bottlenecks to computation; the final result will be based on whichever is a greater bottleneck. Unless the lower bound of the energy per guess is orders of magnitude below the Landauer limit, energy should always be a greater bottleneck.
+Time and energy are the two bottlenecks to computation; the final result will be based on whichever is a greater bottleneck. Unless the lower bound of the energy per guess is orders of magnitude below the Landauer limit or a non-default "power" is provided, energy should always be a greater bottleneck.
 
 When physical quantities are not given, default physical quantities are the mass of the visible universe and the power required to achieve Bremermann's limit at the energy efficiency given by the Landauer limit.
 
