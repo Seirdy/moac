@@ -164,14 +164,13 @@ func main() {
 	}
 
 	givens.Password = strings.TrimSuffix(givens.Password, "\n")
-
 	args := os.Args[optind:]
-	if len(args) == 0 {
-		fmt.Printf(cli.FloatFmt, getBruteForceability(givens, quantum))
-		os.Exit(0)
+	cmd := "strength"
+
+	if len(args) > 0 {
+		cmd = args[0]
 	}
 
-	cmd := args[0]
 	switch cmd {
 	case "strength":
 		fmt.Printf(cli.FloatFmt, getBruteForceability(givens, quantum))

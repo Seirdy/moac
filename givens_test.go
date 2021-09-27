@@ -62,7 +62,7 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 		{
 			name: "only energy",
 			given: moac.Givens{
-				Energy: 4e52,
+				Energy: 4.0e52,
 			},
 			expectedBF:  0.0134,
 			expectedBFQ: 4.55e36,
@@ -71,7 +71,7 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 		{
 			name: "impossibly high temp",
 			given: moac.Givens{
-				Energy:      4e52,
+				Energy:      4.0e52,
 				Temperature: 1.5e32,
 			},
 			expectedErrBF: bounds.ErrImpossiblyHigh,
@@ -80,8 +80,8 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 		{
 			name: "negativeTemp",
 			given: moac.Givens{
-				Energy:      4e52,
-				Temperature: -1e-10,
+				Energy:      4.0e52,
+				Temperature: -1.0e-10,
 			},
 			expectedErrBF: bounds.ErrImpossibleNegative,
 			expectedErrME: bounds.ErrImpossibleNegative,

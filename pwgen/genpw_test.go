@@ -419,7 +419,8 @@ func TestGenPw(t *testing.T) {
 
 			if percent := float64(tooLongCount) / float64(iterations) * 100; percent > allowedPercentWithOverage {
 				t.Errorf("%d out of %d passwords (%.3g%%) in charset group %s were too long; acceptable threshold is %.3g%%",
-					tooLongCount, iterations, percent, groupInfo.name, allowedPercentWithOverage)
+					tooLongCount, iterations, percent, groupInfo.name, allowedPercentWithOverage,
+				)
 			}
 		})
 	}
