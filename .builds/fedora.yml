@@ -20,7 +20,7 @@ environment:
   PATH: /home/build/go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   # fewer loops since we're running sanitizers, which slow things down.
   # run more loops in the openbsd manifest since that doesn't use sanitizers
-  LOOPS: 128
+  LOOPS: 48
 sources:
   - https://git.sr.ht/~seirdy/moac
 tasks:
