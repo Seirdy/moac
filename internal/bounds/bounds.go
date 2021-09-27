@@ -24,11 +24,22 @@ var (
 // Temperatures must be above zero and cannot surpass the Planck Temperature.
 func ValidateTemperature(temp float64) error {
 	if temp <= 0 {
-		return fmt.Errorf("bad temperature: %w", ErrImpossibleNegative)
+		return fmt.Errorf("temperature too low: %w", ErrImpossibleNegative)
 	}
 
 	if temp > PlanckTemp {
 		return fmt.Errorf("temperature above Planck Temperature: %w", ErrImpossiblyHigh)
+	}
+
+	return nil
+}
+
+// NonNegative validates that all the given values are at or above 0.
+func NonNegative(vs ...float64) error {
+	for _, v := range vs {
+		if v < 0 {
+			return fmt.Errorf("physical value too low: %w", ErrImpossibleNegative)
+		}
 	}
 
 	return nil

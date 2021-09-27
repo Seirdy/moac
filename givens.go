@@ -112,7 +112,12 @@ var (
 // validate ensures that the values in Givens aren't physically impossible.
 func (givens *Givens) validate() error {
 	if err := bounds.ValidateTemperature(givens.Temperature); err != nil {
-		return fmt.Errorf("invalid physical value: %w", err)
+		return fmt.Errorf("invalid temperature: %w", err)
+	}
+
+	if err := bounds.NonNegative(
+		givens.Energy, givens.Mass, givens.Power, givens.Time); err != nil {
+		return fmt.Errorf("physical values can't be negative: %w", err)
 	}
 
 	return nil
