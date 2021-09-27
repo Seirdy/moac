@@ -322,7 +322,13 @@ func pwCorrectLength(pwRunes []rune, minLen, maxLen int, entropyWanted float64, 
 
 func validateTestCase(test *pwgenTestCase, cs charsets.CharsetCollection) error {
 	charsetsWanted := charsets.ParseCharsets(test.charsetsWanted)
-	password, err := pwgen.GenPW(charsetsWanted, test.entropyWanted, test.minLen, test.maxLen)
+	pwr := pwgen.PwRequirements{
+		CharsetsWanted: charsetsWanted,
+		TargetEntropy:  test.entropyWanted,
+		MinLen:         test.minLen,
+		MaxLen:         test.maxLen,
+	}
+	password, err := pwgen.GenPW(pwr)
 
 	if unexpectedErr(err, test.expectedErr) {
 		return fmt.Errorf("error in GenPW(): %w", err)

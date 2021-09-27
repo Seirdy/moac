@@ -37,8 +37,8 @@ OPTIONS:
 )
 
 func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
-	opts *[]getopt.Option,
-) (givens *moac.Givens, quantum bool, minLen, maxLen int) {
+	opts *[]getopt.Option, pwr *pwgen.PwRequirements,
+) (givens *moac.Givens, quantum bool) {
 	var (
 		givensValue moac.Givens
 		minLen64    int64
@@ -82,7 +82,10 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 		}
 	}
 
-	return &givensValue, quantum, int(minLen64), int(maxLen64)
+	pwr.MinLen = int(minLen64)
+	pwr.MaxLen = int(maxLen64)
+
+	return &givensValue, quantum
 }
 
 func warnOnBadCharacters(badCharsets []string) {
@@ -106,23 +109,32 @@ func main() {
 	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:l:L:")
 	cli.ExitOnErr(err, usage)
 
-	givens, quantum, minLen, maxLen := parseOpts(&opts)
+	var pwr pwgen.PwRequirements
+	givens, quantum := parseOpts(&opts, &pwr)
 	args := os.Args[optind:]
 	// If the only user-supplied given is entropy, then just use that
 	// entropy level and skip calculating the strength of a brute-force attack.
-	entropyLimit := givens.Entropy
+	pwr.TargetEntropy = givens.Entropy
 
 	if givens.Energy+givens.Mass+givens.Power+givens.Time != 0 {
 		if quantum {
-			entropyLimit, err = givens.MinEntropyQuantum()
+			pwr.TargetEntropy, err = givens.MinEntropyQuantum()
 		} else {
-			entropyLimit, err = givens.MinEntropy()
+			pwr.TargetEntropy, err = givens.MinEntropy()
 		}
 
 		cli.ExitOnErr(err, "")
 	}
 
-	var charsetNames, badCharsets []string
+	pwr.CharsetsWanted = charsets.ParseCharsets(setCharsetNames(args))
+	pw, err := pwgen.GenPW(pwr)
+	cli.ExitOnErr(err, "")
+
+	fmt.Print(pw)
+}
+
+func setCharsetNames(args []string) (charsetNames []string) {
+	var badCharsets []string
 
 	if len(args) > 0 {
 		charsetNames, badCharsets = sanitize.FilterStrings(args)
@@ -131,8 +143,5 @@ func main() {
 		charsetNames = []string{"ascii"}
 	}
 
-	pw, err := pwgen.GenPW(charsets.ParseCharsets(charsetNames), entropyLimit, minLen, maxLen)
-	cli.ExitOnErr(err, "")
-
-	fmt.Print(pw)
+	return charsetNames
 }

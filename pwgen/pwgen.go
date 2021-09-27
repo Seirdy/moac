@@ -12,6 +12,14 @@ import (
 	"git.sr.ht/~seirdy/moac/v2/entropy"
 )
 
+// PwRequirements holds the parameters used for password generation.
+// These include charsets to pick from and target strength.
+type PwRequirements struct {
+	CharsetsWanted charsets.CharsetCollection
+	TargetEntropy  float64
+	MinLen, MaxLen int
+}
+
 // GenPW generates a random password using characters from the charsets enumerated by charsetsEnumerated.
 // At least one element of each charset is used.
 // If entropyWanted is 0, the generated password has at least 256 bits of entropy;
@@ -20,12 +28,16 @@ import (
 // bounds on password character count and override entropyWanted if necessary.
 // GenPW will *not* strip any characters from given charsets that may be undesirable
 // (newlines, control characters, etc.), and does not preserve grapheme clusters.
-func GenPW(charsetsWanted charsets.CharsetCollection, entropyWanted float64, minLen, maxLen int) (string, error) {
-	if entropyWanted == 0 {
-		return genpwFromGivenCharsets(charsetsWanted, moac.DefaultEntropy, minLen, maxLen)
+func GenPW(pwr PwRequirements) (string, error) {
+	if pwr.TargetEntropy == 0 {
+		return genpwFromGivenCharsets(PwRequirements{
+			CharsetsWanted: pwr.CharsetsWanted,
+			TargetEntropy:  moac.DefaultEntropy,
+			MinLen:         pwr.MinLen, MaxLen: pwr.MaxLen,
+		})
 	}
 
-	return genpwFromGivenCharsets(charsetsWanted, entropyWanted, minLen, maxLen)
+	return genpwFromGivenCharsets(pwr)
 }
 
 // ErrInvalidLenBounds represents bad minLen/maxLen values.
@@ -73,22 +85,20 @@ func computeSpecialIndexes(pwLength, charsetCount int) []int {
 	return res
 }
 
-func genpwFromGivenCharsets(
-	charsetsGiven charsets.CharsetCollection, entropyWanted float64, minLen, maxLen int,
-) (pw string, err error) {
+func genpwFromGivenCharsets(pwr PwRequirements) (pw string, err error) {
 	var (
 		charsToPickFrom, pwBuilder strings.Builder
-		charsetSlice               charsets.CharsetCollection = make([]charsets.Charset, 0, len(charsetsGiven))
+		charsetSlice               charsets.CharsetCollection = make([]charsets.Charset, 0, len(pwr.CharsetsWanted))
 		pwUsesCustomCharset        bool
 	)
 
-	if maxLen > 0 && maxLen < len(charsetsGiven) {
+	if pwr.MaxLen > 0 && pwr.MaxLen < len(pwr.CharsetsWanted) {
 		return pwBuilder.String(), fmt.Errorf(
 			"%w: maxLen too short to use all available charsets", ErrInvalidLenBounds,
 		)
 	}
 
-	for _, charset := range charsetsGiven {
+	for _, charset := range pwr.CharsetsWanted {
 		charsToPickFrom.WriteString(charset.String())
 		charsetSlice = append(charsetSlice, charset)
 
@@ -108,23 +118,23 @@ func genpwFromGivenCharsets(
 	runesToPickFrom := []rune(charsToPickFrom.String())
 	// figure out the minimum acceptable length of the password
 	// and fill that up before measuring entropy.
-	pwLength, err := computePasswordLength(len(runesToPickFrom), entropyWanted, minLen, maxLen)
+	pwLength, err := computePasswordLength(len(runesToPickFrom), pwr.TargetEntropy, pwr.MinLen, pwr.MaxLen)
 	if err != nil {
 		return pwBuilder.String(), fmt.Errorf("can't generate password: %w", err)
 	}
 
-	if pwLength < len(charsetsGiven) {
-		pwLength = len(charsetsGiven) // we know this is below maxLen
+	if pwLength < len(pwr.CharsetsWanted) {
+		pwLength = len(pwr.CharsetsWanted) // we know this is below maxLen
 	}
 
 	pwBuilder.Grow(pwLength + 1)
 
-	specialIndexes := computeSpecialIndexes(pwLength, len(charsetsGiven))
+	specialIndexes := computeSpecialIndexes(pwLength, len(pwr.CharsetsWanted))
 	pwRunes := buildFixedLengthPw(&pwBuilder, pwLength, specialIndexes, runesToPickFrom, charsetSlice)
 
 	// keep inserting chars at random locations until the pw is long enough
 	if pwUsesCustomCharset {
-		randomlyInsertRunesTillStrong(maxLen, &pwRunes, entropyWanted, runesToPickFrom)
+		randomlyInsertRunesTillStrong(pwr.MaxLen, &pwRunes, pwr.TargetEntropy, runesToPickFrom)
 	}
 
 	return string(pwRunes), nil
