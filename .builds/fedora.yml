@@ -17,10 +17,11 @@ packages:
   - scdoc
   - tar
 environment:
-  PATH: /home/build/go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  PATH: /usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  MAKEFLAGS: --no-print-directory
   # fewer loops since we're running sanitizers, which slow things down.
   # run more loops in the openbsd manifest since that doesn't use sanitizers
-  LOOPS: 48
+  LOOPS: 64
 sources:
   - https://git.sr.ht/~seirdy/moac
 tasks:
@@ -32,8 +33,8 @@ tasks:
       make test-san --no-print-directory
   - build-san: |
       cd moac
-      make EXTRA_SANITIZERS=cfi build-san --no-print-directory
-      tar czf ~/moac-linux-sanitizers.tar.gz ./moac-msan ./moac-pwgen-msan ./moac-race ./moac-pwgen-race
+      make build-san --no-print-directory
+      tar czf ~/moac-linux-sanitizers.tar.gz ./moac-*
   - dist: |
       go clean -cache
       cd moac
