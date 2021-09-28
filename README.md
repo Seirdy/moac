@@ -18,7 +18,7 @@ My original intent when making this tool was to illustrate how easy it is to mak
 Project Status
 --------------
 
-MOAC is actively developed as of September 2021.
+MOAC is actively developed as of September 2021. There is one sole developer behind all final decisions and responsibilities. The current roadmap is visible on the [ticket tracker](https://todo.sr.ht/~seirdy/MOAC).
 
 Installation
 ------------
@@ -182,9 +182,7 @@ Caveat: the limits of the speed of light in the face of an expanding universe ma
 Contributing
 ------------
 
-Development is mostly happening in the v2 branch, which contains breaking changes.
-
-See `CONTRIBUTING.md` in the repository root for contribution guidelines.
+See [`CONTRIBUTING.md`](https://git.sr.ht/~seirdy/moac/tree/master/CONTRIBUTING.md) in the repository root for contribution guidelines.
 
 Alternatives
 ------------
