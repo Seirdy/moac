@@ -23,6 +23,7 @@ GOLANGCI_LINT = $(GOBIN)/golangci-lint
 GOKART = $(GOBIN)/gokart
 CHECKMAKE = $(GOBIN)/checkmake
 CONSISTENT = $(GOBIN)/go-consistent
+NANCY = $(GOBIN)/nancy
 GOFUMPT = $(GOBIN)/gofumpt
 FIELDALIGNMENT = $(GOBIN)/fieldalignment
 SHFMT = $(GOBIN)/shfmt
@@ -67,8 +68,10 @@ checkmake: Makefile
 	$(CHECKMAKE) Makefile
 shfmt-lint: $(SH_SRC)
 	$(SHFMT) -p -s -d $(SH_SRC)
+nancy: $(SRC)
+	$(GO) list -json  -m all | $(NANCY) sleuth --skip-update-check --loud
 
-lint: shfmt-lint go-consistent checkmake gokart-lint golangci-lint
+lint: shfmt-lint go-consistent checkmake gokart-lint golangci-lint nancy
 
 # every task in this makefile except "clean" just calls .base with different vars
 # instead of invoking "$(GO)" directly

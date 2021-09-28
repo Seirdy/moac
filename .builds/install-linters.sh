@@ -8,7 +8,8 @@ linters='github.com/golangci/golangci-lint/cmd/golangci-lint@master
 github.com/praetorian-inc/gokart@latest
 github.com/mrtazz/checkmake/cmd/checkmake@latest
 github.com/quasilyte/go-consistent@latest
-mvdan.cc/sh/v3/cmd/shfmt@latest'
+mvdan.cc/sh/v3/cmd/shfmt@latest
+github.com/sonatype-nexus-community/nancy@latest'
 
 formatters='mvdan.cc/gofumpt@latest
 golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
