@@ -1,0 +1,5 @@
+# Actual CI is done on builds.sr.ht, and manifests for that are in .builds
+# This file is just for dependency scanning.
+---
+include:
+- template: Security/Dependency-Scanning.gitlab-ci.yml
