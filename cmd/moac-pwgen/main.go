@@ -10,7 +10,6 @@ import (
 	"git.sr.ht/~seirdy/moac/v2/charsets"
 	"git.sr.ht/~seirdy/moac/v2/internal/cli"
 	"git.sr.ht/~seirdy/moac/v2/internal/sanitize"
-	"git.sr.ht/~seirdy/moac/v2/internal/version"
 	"git.sr.ht/~seirdy/moac/v2/pwgen"
 	"git.sr.ht/~sircmpwn/getopt"
 )
@@ -33,7 +32,7 @@ OPTIONS:
   -l <length>	minimum generated password length; can override (increase) -s
   -L <length>	maximum generated password length; can override (decrease) -s
 `
-	helpText = "moac-pwgen - generate passwords with the described strength" + usage
+	helpText = "moac-pwgen - generate passwords with the described strength\n" + usage
 )
 
 func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
@@ -49,10 +48,10 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 	for _, opt := range *opts {
 		switch opt.Option {
 		case 'h':
-			fmt.Println(helpText)
+			fmt.Fprint(os.Stderr, helpText)
 			os.Exit(0)
 		case 'v':
-			fmt.Println(version.GetVersion())
+			fmt.Println(cli.GetVersion())
 			os.Exit(0)
 		case 'q':
 			quantum = true
@@ -106,8 +105,14 @@ func warnOnBadCharacters(badCharsets []string) {
 }
 
 func main() {
+	os.Exit(main1())
+}
+
+func main1() int {
 	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:l:L:")
-	cli.ExitOnErr(err, usage)
+	if !cli.DisplayErr(err, usage) {
+		return 1
+	}
 
 	var pwr pwgen.PwRequirements
 	givens, quantum := parseOpts(&opts, &pwr)
@@ -122,15 +127,22 @@ func main() {
 		} else {
 			pwr.TargetEntropy, err = givens.MinEntropy()
 		}
+	}
 
-		cli.ExitOnErr(err, "")
+	if !cli.DisplayErr(err, "") {
+		return 1
 	}
 
 	pwr.CharsetsWanted = charsets.ParseCharsets(setCharsetNames(args))
 	pw, err := pwgen.GenPW(pwr)
-	cli.ExitOnErr(err, "")
+
+	if !cli.DisplayErr(err, "") {
+		return 1
+	}
 
 	fmt.Print(pw)
+
+	return 0
 }
 
 func setCharsetNames(args []string) (charsetNames []string) {

@@ -9,10 +9,13 @@ import (
 // FloatFmt defines how many digits of a float to print.
 const FloatFmt = "%.3g\n"
 
-// ExitOnErr exits the program with status 1 with a message in the presence of an error.
-func ExitOnErr(err error, extraLine string) {
+// DisplayErr prints an error to stdout and returns true if it's nil.
+func DisplayErr(err error, extraLine string) bool {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "moac: %s\n%s", err.Error(), extraLine)
-		os.Exit(1)
+
+		return false
 	}
+
+	return true
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"git.sr.ht/~seirdy/moac/v2"
 	"git.sr.ht/~seirdy/moac/v2/entropy"
 	"git.sr.ht/~seirdy/moac/v2/internal/cli"
-	"git.sr.ht/~seirdy/moac/v2/internal/version"
 	"git.sr.ht/~sircmpwn/getopt"
 	"golang.org/x/term"
 )
@@ -39,7 +39,7 @@ COMMANDS:
   entropy	Calculate the entropy of the given password
   entropy-limit	Calculate the minimum entropy for a brute-force attack failure.
 `
-	helpText = "moac - analyze password strength with physical limits" + usage
+	helpText = "moac - analyze password strength with physical limits\n" + usage
 )
 
 func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
@@ -55,10 +55,10 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 	for _, opt := range *opts {
 		switch opt.Option {
 		case 'h':
-			fmt.Println(helpText)
+			fmt.Fprint(os.Stderr, helpText)
 			os.Exit(0)
 		case 'v':
-			fmt.Println(version.GetVersion())
+			fmt.Println(cli.GetVersion())
 			os.Exit(0)
 		case 'q':
 			quantum = true
@@ -83,7 +83,7 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 		}
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "invalid value for -%c: %s\n%s", opt.Option, opt.Value, helpText)
+			fmt.Fprintf(os.Stderr, "invalid value for -%c: %s\n%s", opt.Option, opt.Value, usage)
 			os.Exit(1)
 		}
 	}
@@ -91,76 +91,61 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 	return &givens, quantum, readPassword
 }
 
-func getBruteForceability(givens *moac.Givens, quantum bool) (likelihood float64) {
-	var err error
-
-	if quantum {
-		likelihood, err = givens.BruteForceabilityQuantum()
-	} else {
-		likelihood, err = givens.BruteForceability()
-	}
-
-	if err != nil {
-		cli.ExitOnErr(err, "")
-	}
-
-	return likelihood
-}
-
-func getEntropy(givens *moac.Givens) float64 {
-	if givens.Password == "" {
-		fmt.Fprintf(os.Stderr, "moac: cannot compute entropy: missing password\n")
-		os.Exit(1)
-	}
-
-	return entropy.Entropy(givens.Password)
-}
-
-func readPwInteractive(password *string) {
+func readPwInteractive() (pw string, err error) {
 	fmt.Print("Enter password: ")
 
 	bytepw, err := term.ReadPassword(int(syscall.Stdin)) //nolint:unconvert // needed for some platforms
 
 	fmt.Println()
 
-	cli.ExitOnErr(err, "failed to read password")
-
-	*password = string(bytepw)
-}
-
-func readPwStdin(password *string) {
-	stdinBytes, err := ioutil.ReadAll(os.Stdin)
-	cli.ExitOnErr(err, "")
-
-	*password = string(stdinBytes)
-}
-
-func getMinEntropy(givens *moac.Givens, quantum bool) float64 {
-	var (
-		minEntropy float64
-		err        error
-	)
-
-	if quantum {
-		minEntropy, err = givens.MinEntropyQuantum()
-	} else {
-		minEntropy, err = givens.MinEntropy()
+	if err != nil {
+		return pw, fmt.Errorf("failed to read pw interactively: %w", err)
 	}
 
-	cli.ExitOnErr(err, "")
+	pw = string(bytepw)
 
-	return minEntropy
+	return pw, nil
+}
+
+func readPwStdin() (pw string, err error) {
+	stdinBytes, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		return pw, fmt.Errorf("faild to read pw from stdin: %w", err)
+	}
+
+	return string(stdinBytes), nil
 }
 
 func main() {
+	os.Exit(main1())
+}
+
+func main1() int {
+	output, err := getOutput()
+	if cli.DisplayErr(err, "") {
+		fmt.Printf(cli.FloatFmt, output)
+
+		return 0
+	}
+
+	return 1
+}
+
+func getOutput() (output float64, err error) {
 	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:p:")
-	cli.ExitOnErr(err, usage)
+	if err != nil {
+		return output, fmt.Errorf("%w\n%s", err, usage)
+	}
 
 	givens, quantum, readPassword := parseOpts(&opts)
 	if readPassword {
-		readPwInteractive(&givens.Password)
+		givens.Password, err = readPwInteractive()
 	} else if givens.Password == "-" {
-		readPwStdin(&givens.Password)
+		givens.Password, err = readPwStdin()
+	}
+
+	if err != nil {
+		return output, err
 	}
 
 	givens.Password = strings.TrimSuffix(givens.Password, "\n")
@@ -171,15 +156,34 @@ func main() {
 		cmd = args[0]
 	}
 
+	return runCmd(cmd, quantum, givens)
+}
+
+func runCmd(cmd string, quantum bool, givens *moac.Givens) (output float64, err error) {
 	switch cmd {
 	case "strength":
-		fmt.Printf(cli.FloatFmt, getBruteForceability(givens, quantum))
+		if quantum {
+			output, err = givens.BruteForceabilityQuantum()
+		} else {
+			output, err = givens.BruteForceability()
+		}
 	case "entropy":
-		fmt.Printf(cli.FloatFmt, getEntropy(givens))
+		if givens.Password == "" {
+			err = fmt.Errorf("%w: missing password", moac.ErrMissingValue)
+		}
+
+		output = entropy.Entropy(givens.Password)
 	case "entropy-limit":
-		fmt.Printf(cli.FloatFmt, getMinEntropy(givens, quantum))
+		if quantum {
+			output, err = givens.MinEntropyQuantum()
+		} else {
+			output, err = givens.MinEntropy()
+		}
 	default:
-		fmt.Fprintf(os.Stderr, "moac: unknown command %v\n%s", cmd, usage)
-		os.Exit(1)
+		err = fmt.Errorf("%w: unknown command %v", errBadCmdline, cmd)
 	}
+
+	return output, err
 }
+
+var errBadCmdline = errors.New("bad arguments")

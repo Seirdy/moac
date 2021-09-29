@@ -45,7 +45,7 @@ ZSHCOMPDIR ?= $(DATAROOTDIR)/zsh/site-functions
 
 # general build flags
 # extldflags is ignored unless you use one of the cgo options at the bottom
-DEFAULT_GO_LDFLAGS = -w -X git.sr.ht/~seirdy/moac/internal/version.version="$(VERSION)"
+DEFAULT_GO_LDFLAGS = -w -X git.sr.ht/~seirdy/moac/internal/cli.version="$(VERSION)"
 GO_LDFLAGS ?= $(DEFAULT_GO_LDFLAGS) -linkmode=internal
 BUILDMODE = default
 GO_BUILDFLAGS += -trimpath -mod=readonly -buildmode=$(BUILDMODE) -ldflags '$(GO_LDFLAGS)'

@@ -232,8 +232,9 @@ linters-settings:
         arguments:
           - fmt.Printf
           - fmt.Print
-          - fmt.Fprintf
           - fmt.Println
+          - fmt.Fprintf
+          - fmt.Fprint
           - password.WriteRune
           - filteredCharset.WriteRune
           - charsToPickFrom.WriteString

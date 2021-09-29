@@ -1,5 +1,4 @@
-// Package version implements a customizable version for the MOAC binaries.
-package version
+package cli
 
 import (
 	"runtime/debug"
