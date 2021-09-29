@@ -129,7 +129,7 @@ func (givens *Givens) Populate() error {
 	givens.populateDefaults()
 
 	if err := givens.validate(); err != nil {
-		return fmt.Errorf("cannot work with given values: %w", err)
+		return fmt.Errorf("invalid givens: %w", err)
 	}
 
 	if givens.Password != "" {
@@ -172,7 +172,7 @@ func (givens *Givens) BruteForceability() (float64, error) {
 	}
 
 	if givens.Entropy+givens.Time == 0 {
-		return 0, fmt.Errorf("can't compute BruteForceability: cannot compute entropy: %w", ErrMissingPE)
+		return 0, fmt.Errorf("missing entropy: %w", ErrMissingPE)
 	}
 
 	computedBruteForceability := computeBruteForceability(givens)

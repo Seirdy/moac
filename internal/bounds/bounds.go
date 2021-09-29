@@ -17,7 +17,7 @@ var (
 	// understanding of physics allows or accounts for.
 	ErrImpossiblyHigh = errors.New("value is physically impossibly large")
 	// ErrImpossibleNegative indicates that a value that must be above zero was too low.
-	ErrImpossibleNegative = errors.New("value must be above 0")
+	ErrImpossibleNegative = errors.New("is below 0")
 )
 
 // ValidateTemperature ensures that a given temperature is physically possible.
@@ -38,7 +38,7 @@ func ValidateTemperature(temp float64) error {
 func NonNegative(vs ...float64) error {
 	for _, v := range vs {
 		if v < 0 {
-			return fmt.Errorf("physical value too low: %w", ErrImpossibleNegative)
+			return fmt.Errorf("bad value %.3g %w", v, ErrImpossibleNegative)
 		}
 	}
 
