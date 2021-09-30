@@ -4,6 +4,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 )
 
 // FloatFmt defines how many digits of a float to print.
@@ -18,4 +19,18 @@ func DisplayErr(err error, extraLine string) bool {
 	}
 
 	return true
+}
+
+// version can be set at link time to override debug.BuildInfo.Main.Version,
+// which is "(devel)" when building from within the module. See
+// golang.org/issue/29814 and golang.org/issue/29228.
+var version string
+
+// GetVersion fetches the version of the MOAC binaries, configurable at link-time.
+func GetVersion() string {
+	if info, ok := debug.ReadBuildInfo(); ok && version == "" {
+		return info.Main.Version
+	}
+
+	return version
 }
