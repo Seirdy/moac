@@ -1,0 +1,7 @@
+moac-pwgen -h
+! stderr 'unknown option'
+stderr '^moac-pwgen - generate passwords with the described strength$'
+stderr 'Display this help message' # definitely includes our help text
+
+moac-pwgen -v
+stdout '^(v2\.[0-9]*\.[0-9]*-[0-9a-z]*|\(devel\))$'

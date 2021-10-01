@@ -1,0 +1,74 @@
+# default charsets should be ASCII
+moac-pwgen
+! stderr '.'
+stdin stdout
+exec tr -dc '\40-\176'
+stdin stdout
+exec wc -m
+! stderr '.'
+stdout 40
+
+moac-pwgen
+stdin stdout
+exec wc -m
+! stderr '.'
+stdout 40
+
+moac-pwgen latin
+! stderr '.'
+stdin stdout
+exec tr -dc '\40-\176'
+stdin stdout
+exec wc -m
+! stderr '.'
+stdout 0
+
+moac-pwgen latin1
+! stderr '.'
+stdin stdout
+exec tr -dc '\240-\377'
+stdin stdout
+exec wc -m
+! stderr '.'
+stdout [1-9][0-9]
+
+# examples from the README
+
+# README example 1
+
+# for some reason, "wc -m" behaves like "wc -c" in testscript
+# so we gotta match the password against 45 dots.
+moac-pwgen -qm 5.97e24 -t 1.45e17 -T 1900 ascii latin
+! stderr '.'
+stdout '^.............................................$'
+
+moac-pwgen -qm 5.97e24 -t 1.45e17 -g 1.818e-20 ascii latin
+! stderr '.'
+stdout '^.............................................$'
+
+# trim bad characters
+moac-pwgen -t 1.45e17 -P 3.828e26 -T 1.5e7 '"O4UÞjÖÿ.ßòºÒ' '&Û'
+stderr 'warning: charsets "O4UÞjÖÿ.ßòºÒ, &Û contained invalid codepoints, removing them'
+stdout '^...................................................$'
+
+# test energy, mass, entropy equivalence
+moac-pwgen -e 8.25e69
+! stderr '.'
+stdout '^...............................................$'
+
+moac-pwgen -s 307
+! stderr '.'
+stdout '^...............................................$'
+
+moac-pwgen -m 9.179e52
+! stderr '.'
+stdout '^...............................................$'
+
+# test min-len, max-len work correctly
+moac-pwgen -l 20 -L 20
+! stderr '.'
+stdout '^....................$'
+
+moac-pwgen -L 8 ascii latin
+! stderr '.'
+stdout '^........$'

@@ -1,0 +1,16 @@
+# examples from the README
+
+
+! moac-pwgen -z
+stderr 'unknown option -z'
+! stdout '.'
+
+! moac-pwgen -P z
+stderr 'invalid value for -P: z'
+! moac-pwgen -t z
+stderr 'invalid value for -t: z'
+! stdout '.'
+
+! moac-pwgen -L 3 ascii latin
+stderr 'moac: bad length bounds: maxLen too short to use all available charsets'
+! stdout '.'
