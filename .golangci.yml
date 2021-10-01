@@ -20,8 +20,8 @@ issues:
       path: cmd/
     - linters: [goerr113]
       path: pwgen/buildcharsets_test.go
-    # allow very long strings to surpass max line length unbroken
-    # if they get their own line
+      # allow very long strings to surpass max line length unbroken
+      # if they get their own line
     - linters: [lll]
       source: '^\s*(\[\]rune\()?"......................*"(\))?,?$'
     - linters: [gochecknoglobals]
@@ -29,13 +29,20 @@ issues:
       path: charsets/defaults.go
       source: '^var DefaultCharsets'
     - linters: [revive]
-      text: '(add-constant: (avoid magic numbers like|string literal "")|cyclomatic: function parseOpts)'
+      text:
+        '(add-constant: (avoid magic numbers like|string literal "")|cyclomatic: function parseOpts|deep-exit: calls to log.Panicf? only in main)'
     - linters: [revive]
       path: _test.go
       text: '^add-constant: '
     - linters: [revive]
       path: cmd/
       text: '^flag-parameter: '
+      # parseOpts length is soley determined by cli flag count.
+    - linters: [revive]
+      path: cmd/
+      text:
+        '^function-length: maximum number of statements per function exceeded'
+      source: 'func parseOpts'
   exclude-use-default: false
   max-issues-per-linter: 0
 linters:
@@ -178,7 +185,7 @@ linters-settings:
       - name: context-as-argument
       - name: context-keys-type
       # - name: cyclomatic # redundant with the cyclomatic linter
-      # - name: deep-exit
+      - name: deep-exit
       - name: defer
       - name: dot-imports
       - name: duplicated-imports

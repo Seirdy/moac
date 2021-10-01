@@ -10,7 +10,7 @@ MOAC_SRC = cmd/moac/*.go
 MOAC_PWGEN_SRC = pwgen/*.go cmd/moac-pwgen/*.go
 SRC = Makefile $(GOFILES)
 SH_SRC = .builds/*.sh
-COVERPKG = .,./entropy,./pwgen,./charsets,./internal/bounds
+COVERPKG = ./...
 
 # paths to executables this Makefile will use
 CGO_ENABLED ?= 0

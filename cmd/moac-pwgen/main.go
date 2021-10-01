@@ -37,7 +37,7 @@ OPTIONS:
 
 func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
 	opts *[]getopt.Option, pwr *pwgen.PwRequirements,
-) (givens moac.Givens, quantum bool, err error) {
+) (givens moac.Givens, quantum, exitEarly bool, err error) {
 	var (
 		minLen64 int64
 		maxLen64 int64
@@ -47,10 +47,12 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 		switch opt.Option {
 		case 'h':
 			fmt.Fprint(os.Stderr, helpText)
-			os.Exit(0)
+
+			exitEarly = true
 		case 'v':
 			fmt.Println(cli.GetVersion())
-			os.Exit(0)
+
+			exitEarly = true
 		case 'q':
 			quantum = true
 		case 'e':
@@ -78,12 +80,16 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 
 			break
 		}
+
+		if exitEarly {
+			break
+		}
 	}
 
 	pwr.MinLen = int(minLen64)
 	pwr.MaxLen = int(maxLen64)
 
-	return givens, quantum, err
+	return givens, quantum, exitEarly, err
 }
 
 func warnOnBadCharacters(badCharsets []string) {
@@ -114,10 +120,14 @@ func main1() int {
 	}
 
 	var pwr pwgen.PwRequirements
-	givens, quantum, err := parseOpts(&opts, &pwr)
+	givens, quantum, exitEarly, err := parseOpts(&opts, &pwr)
 
 	if !cli.DisplayErr(err, "") {
 		return 1
+	}
+
+	if exitEarly {
+		return 0
 	}
 
 	args := os.Args[optind:]

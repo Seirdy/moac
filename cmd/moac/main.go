@@ -43,19 +43,21 @@ COMMANDS:
 
 func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
 	opts *[]getopt.Option,
-) (givens moac.Givens, quantum, readPassword bool, err error) {
+) (givens moac.Givens, quantum, exitEarly bool, err error) {
 	for _, opt := range *opts {
 		switch opt.Option {
 		case 'h':
 			fmt.Fprint(os.Stderr, helpText)
-			os.Exit(0)
+
+			exitEarly = true
 		case 'v':
 			fmt.Println(cli.GetVersion())
-			os.Exit(0)
+
+			exitEarly = true
 		case 'q':
 			quantum = true
 		case 'r':
-			readPassword = true
+			givens.Password, err = readPwInteractive()
 		case 'e':
 			givens.Energy, err = strconv.ParseFloat(opt.Value, 64)
 		case 's':
@@ -79,9 +81,13 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 
 			break
 		}
+
+		if exitEarly {
+			break
+		}
 	}
 
-	return givens, quantum, readPassword, err
+	return givens, quantum, exitEarly, err
 }
 
 func readPwInteractive() (pw string, err error) {
@@ -114,7 +120,11 @@ func main() {
 }
 
 func main1() int {
-	output, err := getOutput()
+	output, exitEarly, err := getOutput()
+	if exitEarly {
+		return 0
+	}
+
 	if cli.DisplayErr(err, "") {
 		fmt.Printf(cli.FloatFmt, output)
 
@@ -124,25 +134,27 @@ func main1() int {
 	return 1
 }
 
-func getOutput() (output float64, err error) {
+func getOutput() (output float64, exitEarly bool, err error) {
 	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:p:")
 	if err != nil {
-		return output, fmt.Errorf("%w\n%s", err, usage)
+		return output, exitEarly, fmt.Errorf("%w\n%s", err, usage)
 	}
 
-	givens, quantum, readPassword, err := parseOpts(&opts)
+	givens, quantum, exitEarly, err := parseOpts(&opts)
 	if err != nil {
-		return output, fmt.Errorf("moac: %w", err)
+		return output, exitEarly, fmt.Errorf("moac: %w", err)
 	}
 
-	if readPassword {
-		givens.Password, err = readPwInteractive()
-	} else if givens.Password == "-" {
+	if exitEarly {
+		return output, exitEarly, nil
+	}
+
+	if givens.Password == "-" {
 		givens.Password, err = readPwStdin()
 	}
 
 	if err != nil {
-		return output, err
+		return output, exitEarly, err
 	}
 
 	givens.Password = strings.TrimSuffix(givens.Password, "\n")
@@ -153,7 +165,9 @@ func getOutput() (output float64, err error) {
 		cmd = args[0]
 	}
 
-	return runCmd(cmd, quantum, &givens)
+	output, err = runCmd(cmd, quantum, &givens)
+
+	return output, exitEarly, err
 }
 
 func runCmd(cmd string, quantum bool, givens *moac.Givens) (output float64, err error) {
