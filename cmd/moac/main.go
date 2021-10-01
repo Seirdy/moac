@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -44,14 +43,7 @@ COMMANDS:
 
 func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
 	opts *[]getopt.Option,
-) (*moac.Givens, bool, bool) {
-	var (
-		givens       moac.Givens
-		quantum      bool
-		readPassword bool
-		err          error
-	)
-
+) (givens moac.Givens, quantum, readPassword bool, err error) {
 	for _, opt := range *opts {
 		switch opt.Option {
 		case 'h':
@@ -83,12 +75,13 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 		}
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "invalid value for -%c: %s\n%s", opt.Option, opt.Value, usage)
-			os.Exit(1)
+			err = fmt.Errorf("%w: invalid value for -%c: %s\n%s", cli.ErrBadCmdline, opt.Option, opt.Value, usage)
+
+			break
 		}
 	}
 
-	return &givens, quantum, readPassword
+	return givens, quantum, readPassword, err
 }
 
 func readPwInteractive() (pw string, err error) {
@@ -137,7 +130,11 @@ func getOutput() (output float64, err error) {
 		return output, fmt.Errorf("%w\n%s", err, usage)
 	}
 
-	givens, quantum, readPassword := parseOpts(&opts)
+	givens, quantum, readPassword, err := parseOpts(&opts)
+	if err != nil {
+		return output, fmt.Errorf("moac: %w", err)
+	}
+
 	if readPassword {
 		givens.Password, err = readPwInteractive()
 	} else if givens.Password == "-" {
@@ -156,7 +153,7 @@ func getOutput() (output float64, err error) {
 		cmd = args[0]
 	}
 
-	return runCmd(cmd, quantum, givens)
+	return runCmd(cmd, quantum, &givens)
 }
 
 func runCmd(cmd string, quantum bool, givens *moac.Givens) (output float64, err error) {
@@ -180,10 +177,8 @@ func runCmd(cmd string, quantum bool, givens *moac.Givens) (output float64, err 
 			output, err = givens.MinEntropy()
 		}
 	default:
-		err = fmt.Errorf("%w: unknown command %v", errBadCmdline, cmd)
+		err = fmt.Errorf("%w: unknown command %v", cli.ErrBadCmdline, cmd)
 	}
 
 	return output, err
 }
-
-var errBadCmdline = errors.New("bad arguments")

@@ -2,6 +2,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime/debug"
@@ -21,10 +22,15 @@ func DisplayErr(err error, extraLine string) bool {
 	return true
 }
 
-// version can be set at link time to override debug.BuildInfo.Main.Version,
-// which is "(devel)" when building from within the module. See
-// golang.org/issue/29814 and golang.org/issue/29228.
-var version string
+var (
+	// version can be set at link time to override debug.BuildInfo.Main.Version,
+	// which is "(devel)" when building from within the module. See
+	// golang.org/issue/29814 and golang.org/issue/29228.
+	version string
+
+	// ErrBadCmdline indicates an invalid argument has been passed via the CLI.
+	ErrBadCmdline = errors.New("bad arguments")
+)
 
 // GetVersion fetches the version of the MOAC binaries, configurable at link-time.
 func GetVersion() string {

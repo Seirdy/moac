@@ -37,12 +37,10 @@ OPTIONS:
 
 func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
 	opts *[]getopt.Option, pwr *pwgen.PwRequirements,
-) (givens *moac.Givens, quantum bool) {
+) (givens moac.Givens, quantum bool, err error) {
 	var (
-		givensValue moac.Givens
-		minLen64    int64
-		maxLen64    int64
-		err         error
+		minLen64 int64
+		maxLen64 int64
 	)
 
 	for _, opt := range *opts {
@@ -56,19 +54,19 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 		case 'q':
 			quantum = true
 		case 'e':
-			givensValue.Energy, err = strconv.ParseFloat(opt.Value, 64)
+			givens.Energy, err = strconv.ParseFloat(opt.Value, 64)
 		case 's':
-			givensValue.Entropy, err = strconv.ParseFloat(opt.Value, 32)
+			givens.Entropy, err = strconv.ParseFloat(opt.Value, 32)
 		case 'm':
-			givensValue.Mass, err = strconv.ParseFloat(opt.Value, 64)
+			givens.Mass, err = strconv.ParseFloat(opt.Value, 64)
 		case 'g':
-			givensValue.EnergyPerGuess, err = strconv.ParseFloat(opt.Value, 64)
+			givens.EnergyPerGuess, err = strconv.ParseFloat(opt.Value, 64)
 		case 'P':
-			givensValue.Power, err = strconv.ParseFloat(opt.Value, 64)
+			givens.Power, err = strconv.ParseFloat(opt.Value, 64)
 		case 'T':
-			givensValue.Temperature, err = strconv.ParseFloat(opt.Value, 64)
+			givens.Temperature, err = strconv.ParseFloat(opt.Value, 64)
 		case 't':
-			givensValue.Time, err = strconv.ParseFloat(opt.Value, 64)
+			givens.Time, err = strconv.ParseFloat(opt.Value, 64)
 		case 'l':
 			minLen64, err = strconv.ParseInt(opt.Value, 10, 32)
 		case 'L':
@@ -76,15 +74,16 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 		}
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "invalid value for -%c: %s\n%s", opt.Option, opt.Value, helpText)
-			os.Exit(1)
+			err = fmt.Errorf("%w: invalid value for -%c: %s\n%s", cli.ErrBadCmdline, opt.Option, opt.Value, usage)
+
+			break
 		}
 	}
 
 	pwr.MinLen = int(minLen64)
 	pwr.MaxLen = int(maxLen64)
 
-	return &givensValue, quantum
+	return givens, quantum, err
 }
 
 func warnOnBadCharacters(badCharsets []string) {
@@ -115,7 +114,12 @@ func main1() int {
 	}
 
 	var pwr pwgen.PwRequirements
-	givens, quantum := parseOpts(&opts, &pwr)
+	givens, quantum, err := parseOpts(&opts, &pwr)
+
+	if !cli.DisplayErr(err, "") {
+		return 1
+	}
+
 	args := os.Args[optind:]
 	// If the only user-supplied given is entropy, then just use that
 	// entropy level and skip calculating the strength of a brute-force attack.

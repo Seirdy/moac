@@ -119,7 +119,7 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 			},
 		},
 		{
-			group: testGroupInfo{name: "complex custom charsets", tooLongAllowed: 0.25},
+			group: testGroupInfo{name: "complex custom charsets", tooLongAllowed: 0.3},
 			charsetsWanted: []string{
 				"uppercase", "numbers", "lowercase",
 				"𓂸",
