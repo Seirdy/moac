@@ -1,0 +1,27 @@
+! moac
+stderr 'moac:.*missing.*entropy'
+! stdout '.'
+
+! moac -z
+stderr 'moac:.*unknown option -z'
+! stdout '.'
+
+! moac -P z
+stderr 'invalid value for -P: z'
+! stdout '.'
+
+! moac -t z
+stderr 'invalid value for -t: z'
+! stdout '.'
+
+! moac entropy
+stderr 'moac: not enough given values: missing password'
+! stdout '.'
+
+! moac ascii
+stderr 'moac: bad arguments: unknown command ascii'
+! stdout '.'
+
+! moac -m -8
+stderr 'moac.*BruteForceability.*negative'
+! stdout '.'

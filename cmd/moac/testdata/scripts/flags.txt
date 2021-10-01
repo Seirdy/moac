@@ -1,0 +1,7 @@
+moac -h
+! stderr 'unknown option'
+stderr '^moac - analyze password strength with physical limits$'
+stderr 'Display this help message' # definitely includes our help text
+
+moac -v
+stdout '^(v2\.[0-9]*\.[0-9]*-[0-9a-z]*|\(devel\))$'

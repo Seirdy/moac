@@ -1,0 +1,52 @@
+# examples from the README
+
+# README example 1
+
+moac -qm 5.97e24 -t 1.45e17 -T 1900 entropy-limit
+! stderr '.'
+stdout '^408$'
+
+moac -qm 5.97e24 -t 1.45e17 -g 1.818e-20 entropy-limit
+! stderr '.'
+stdout '^408$'
+
+# test sample password as arg and stdin
+moac -p 'ɮʠðʋsĳóʣ[5ȍìŒŞȨRɸÒ¨ůİȤ&ǒŘĥėǺʞĚʥ¼ɖƅ~ɛ\{ƸÝ4Ǎ6ő&Æ' entropy
+stdout '^427$'
+
+exec printf 'ɮʠðʋsĳóʣ[5ȍìŒŞȨRɸÒ¨ůİȤ&ǒŘĥėǺʞĚʥ¼ɖƅ~ɛ\\{ƸÝ4Ǎ6ő&Æ'
+stdin stdout
+moac -p - entropy
+stdout '^427$'
+
+# ensure we're trimming trailing newlines
+exec printf 'ɮʠðʋsĳóʣ[5ȍìŒŞȨRɸÒ¨ůİȤ&ǒŘĥėǺʞĚʥ¼ɖƅ~ɛ\\{ƸÝ4Ǎ6ő&Æ\n'
+stdin stdout
+moac -p - entropy
+stdout '^427$'
+
+# README example 2
+moac entropy-limit
+stdout '^307$'
+
+moac -e 8.25e69 entropy-limit
+stdout '^307$'
+
+moac -q entropy-limit
+stdout '^615$'
+
+# dyson sphere around the sun; tests temperature, time
+moac -t 1.45e17 -P 3.828e26 -T 1.5e7 entropy-limit
+stdout '^198$'
+
+moac -qt 1.45e17 -P 3.828e26 -T 1.5e7 entropy-limit
+stdout '^396$'
+
+moac -t 1.45e17 -P 3.828e26 -T 1.5e7 -s 198 strength
+stdout '^0\.962$'
+
+moac -t 1.45e17 -P 3.828e26 -T 1.5e7 -qs 198 strength
+stdout '^6\.1e\+29$'
+
+moac -t 1.45e17 -P 3.828e26 -T 1.5e7 -qs 396 strength
+stdout '^0\.962$'
