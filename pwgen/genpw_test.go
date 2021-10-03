@@ -9,6 +9,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 	"unicode/utf8"
 
@@ -138,8 +139,9 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 	return pwgenCharsets, minMaxLengths, entropiesWanted
 }
 
-func buildGoodTestCases(loops int) (testCases map[testGroupInfo][]pwgenTestCase, iterationsPerCharset int) {
-	pwgenCharsets, minMaxLengths, entropiesWanted := goodTestData()
+func calculateIteration(
+	pwgenCharsets []pwgenCharset, minMaxLengths []minMaxLen, entropiesWanted []float64, loops int,
+) (iterationsPerCharset int) {
 	iterationsPerCharset = len(minMaxLengths) * len(entropiesWanted) * loops
 
 	log.Printf(
@@ -150,23 +152,24 @@ func buildGoodTestCases(loops int) (testCases map[testGroupInfo][]pwgenTestCase,
 		iterationsPerCharset,
 	)
 
+	return iterationsPerCharset
+}
+
+func buildGoodTestCases(loops int) (testCases map[testGroupInfo][]pwgenTestCase, iterationsPerCharset int) {
+	pwgenCharsets, minMaxLengths, entropiesWanted := goodTestData()
+	iterationsPerCharset = calculateIteration(pwgenCharsets, minMaxLengths, entropiesWanted, loops)
+
 	testCases = make(map[testGroupInfo][]pwgenTestCase, len(pwgenCharsets))
 
 	var caseIndex int
 
 	for _, entropyWanted := range entropiesWanted {
-		for _, minMaxLengths := range minMaxLengths {
-			for _, pwgenCharset := range pwgenCharsets {
-				newCase := pwgenTestCase{
-					expectedErr: nil, name: pwgenCharset.group.name, charsetsWanted: pwgenCharset.charsetsWanted,
-					entropyWanted: entropyWanted, minLen: minMaxLengths.minLen, maxLen: minMaxLengths.maxLen,
-				}
-				if minMaxLengths.maxLen > 0 && minMaxLengths.maxLen < len(charsets.ParseCharsets(pwgenCharset.charsetsWanted)) {
-					newCase.expectedErr = pwgen.ErrInvalidLenBounds
-				}
+		for _, mml := range minMaxLengths {
+			for _, charset := range pwgenCharsets {
+				newCase := buildTestCase(charset, mml, entropyWanted)
 
-				testCases[pwgenCharset.group] = append(
-					testCases[pwgenCharset.group],
+				testCases[charset.group] = append(
+					testCases[charset.group],
 					newCase,
 				)
 				caseIndex++
@@ -175,6 +178,19 @@ func buildGoodTestCases(loops int) (testCases map[testGroupInfo][]pwgenTestCase,
 	}
 
 	return testCases, iterationsPerCharset
+}
+
+func buildTestCase(charset pwgenCharset, mml minMaxLen, entropyWanted float64) pwgenTestCase {
+	newCase := pwgenTestCase{
+		expectedErr: nil, name: charset.group.name, charsetsWanted: charset.charsetsWanted,
+		entropyWanted: entropyWanted, minLen: mml.minLen, maxLen: mml.maxLen,
+	}
+
+	if mml.maxLen > 0 && mml.maxLen < len(charsets.ParseCharsets(charset.charsetsWanted)) {
+		newCase.expectedErr = pwgen.ErrInvalidLenBounds
+	}
+
+	return newCase
 }
 
 // second param should include at least one element of the first param.
@@ -240,20 +256,21 @@ func pwUsesEachCharsetErrStr(password string, unusedCharsets charsets.CharsetCol
 	return errorStr
 }
 
-func pwOnlyUsesAllowedRunes(cs charsets.CharsetCollection, password *[]rune) (rune, bool) {
-	var allowedChars string
+func pwOnlyUsesCharsets(cs charsets.CharsetCollection, password []rune) (rune, bool) {
+	var charsToPickFrom strings.Builder
 	for _, charset := range cs {
-		allowedChars += charset.String()
+		charsToPickFrom.WriteString(charset.String())
 	}
 
-	allowedRunes := []rune(allowedChars)
-	charSpace := len(allowedRunes)
+	return pwUsesAllowedRunes(password, []rune(charsToPickFrom.String()))
+}
 
-	for _, pwChar := range *password {
+func pwUsesAllowedRunes(password, allowedRunes []rune) (rune, bool) {
+	for _, pwChar := range password {
 		for i, char := range allowedRunes {
 			if pwChar == char {
 				break
-			} else if i == charSpace-1 {
+			} else if i == len(allowedRunes)-1 {
 				return pwChar, false
 			}
 		}
@@ -321,9 +338,8 @@ func pwCorrectLength(pwRunes []rune, minLen, maxLen int, entropyWanted float64, 
 }
 
 func validateTestCase(test *pwgenTestCase, cs charsets.CharsetCollection) error {
-	charsetsWanted := charsets.ParseCharsets(test.charsetsWanted)
 	pwr := pwgen.PwRequirements{
-		CharsetsWanted: charsetsWanted,
+		CharsetsWanted: charsets.ParseCharsets(test.charsetsWanted),
 		TargetEntropy:  test.entropyWanted,
 		MinLen:         test.minLen,
 		MaxLen:         test.maxLen,
@@ -339,18 +355,12 @@ func validateTestCase(test *pwgenTestCase, cs charsets.CharsetCollection) error 
 	}
 
 	pwRunes := []rune(password)
-	if err == nil {
-		if errUsesEachCharset := pwUsesEachCharset(cs, pwRunes); errUsesEachCharset != nil {
-			return errUsesEachCharset
-		}
+	if errUsesEachCharset := pwUsesEachCharset(cs, pwRunes); errUsesEachCharset != nil && err == nil {
+		return errUsesEachCharset
 	}
 
-	if invalidRune, validPW := pwOnlyUsesAllowedRunes(cs, &pwRunes); !validPW {
+	if invalidRune, validPW := pwOnlyUsesCharsets(cs, pwRunes); !validPW {
 		return fmt.Errorf("generated password %s used invalid character \"%v\"", password, string(invalidRune))
-	}
-
-	if unexpectedErr(err, test.expectedErr) {
-		return fmt.Errorf("error calculating entropy: %w", err)
 	}
 
 	// skip this test if we expected the password to be generated successfully
