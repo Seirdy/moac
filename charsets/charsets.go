@@ -106,25 +106,29 @@ func ParseCharsets(charsetNames []string) (cs CharsetCollection) {
 		case "latin":
 			cs.AddDefault(Latin1, LatinExtendedA, LatinExtendedB, IPAExtensions)
 		default:
-			found := false
-
-			for _, defaultCharset := range DefaultCharsets {
-				if charsetName == defaultCharset.Name() {
-					cs.AddDefault(defaultCharset)
-
-					found = true
-
-					break
-				}
-			}
-
-			if !found {
-				cs.Add(CustomCharset([]rune(charsetName)))
-			}
+			parseCharset(&cs, charsetName)
 		}
 	}
 
 	return cs
+}
+
+func parseCharset(cs *CharsetCollection, charsetName string) {
+	found := false
+
+	for _, defaultCharset := range DefaultCharsets {
+		if charsetName == defaultCharset.Name() {
+			cs.AddDefault(defaultCharset)
+
+			found = true
+
+			break
+		}
+	}
+
+	if !found {
+		cs.Add(CustomCharset([]rune(charsetName)))
+	}
 }
 
 //nolint:gocritic // c1 is ptr bc it's modified
