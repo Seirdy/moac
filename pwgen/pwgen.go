@@ -29,6 +29,12 @@ type PwRequirements struct {
 // GenPW will *not* strip any characters from given charsets that may be undesirable
 // (newlines, control characters, etc.), and does not preserve grapheme clusters.
 func GenPW(pwr PwRequirements) (string, error) {
+	if pwr.MaxLen > 0 && pwr.MaxLen < len(pwr.CharsetsWanted) {
+		return "", fmt.Errorf(
+			"%w: maxLen too short to use all available charsets", ErrInvalidLenBounds,
+		)
+	}
+
 	if pwr.TargetEntropy == 0 {
 		return genpwFromGivenCharsets(PwRequirements{
 			CharsetsWanted: pwr.CharsetsWanted,
@@ -88,30 +94,14 @@ func computeSpecialIndexes(pwLength, charsetCount int) []int {
 func genpwFromGivenCharsets(pwr PwRequirements) (pw string, err error) {
 	var (
 		charsToPickFrom, pwBuilder strings.Builder
-		charsetSlice               charsets.CharsetCollection = make([]charsets.Charset, 0, len(pwr.CharsetsWanted))
 		pwUsesCustomCharset        bool
 	)
 
-	if pwr.MaxLen > 0 && pwr.MaxLen < len(pwr.CharsetsWanted) {
-		return pwBuilder.String(), fmt.Errorf(
-			"%w: maxLen too short to use all available charsets", ErrInvalidLenBounds,
-		)
-	}
-
 	for _, charset := range pwr.CharsetsWanted {
 		charsToPickFrom.WriteString(charset.String())
-		charsetSlice = append(charsetSlice, charset)
 
-		if pwUsesCustomCharset {
-			continue
-		}
-
-		for _, dc := range charsets.DefaultCharsets {
-			if charset.String() == dc.String() {
-				pwUsesCustomCharset = true
-
-				break
-			}
+		if !pwUsesCustomCharset {
+			pwUsesCustomCharset = charsets.IsDefault(charset)
 		}
 	}
 
@@ -130,7 +120,7 @@ func genpwFromGivenCharsets(pwr PwRequirements) (pw string, err error) {
 	pwBuilder.Grow(pwLength + 1)
 
 	specialIndexes := computeSpecialIndexes(pwLength, len(pwr.CharsetsWanted))
-	pwRunes := buildFixedLengthPw(&pwBuilder, pwLength, specialIndexes, runesToPickFrom, charsetSlice)
+	pwRunes := buildFixedLengthPw(&pwBuilder, pwLength, specialIndexes, runesToPickFrom, pwr.CharsetsWanted)
 
 	// keep inserting chars at random locations until the pw is long enough
 	if pwUsesCustomCharset {

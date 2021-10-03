@@ -60,3 +60,14 @@ var DefaultCharsets = []DefaultCharset{
 	Lowercase, Uppercase, Numbers, Symbols,
 	Latin1, LatinExtendedA, LatinExtendedB, IPAExtensions,
 }
+
+// IsDefault returns true if the charset c is represented in DefaultCharsets.
+func IsDefault(c Charset) bool {
+	for _, dc := range DefaultCharsets {
+		if c.String() == dc.String() {
+			return true
+		}
+	}
+
+	return false
+}
