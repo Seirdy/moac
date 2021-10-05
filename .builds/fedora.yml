@@ -21,7 +21,7 @@ environment:
   MAKEFLAGS: --no-print-directory
   # fewer loops since we're running sanitizers, which slow things down.
   # run more loops in the openbsd manifest since that doesn't use sanitizers
-  LOOPS: 64
+  LOOPS: 48
 sources:
   - https://git.sr.ht/~seirdy/moac
 tasks:

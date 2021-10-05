@@ -8,10 +8,6 @@ issues:
       path: _test.go
       source: "`.*ß.*`"
       text: "ST1018" # we want unicode control chars in there.
-    - linters: [paralleltest]
-      path: _test.go
-      # not all tests need to be parallelized
-      text: 'missing the call to method parallel'
     - linters: [exhaustivestruct]
       path: _test.go
     - linters: [goerr113]
@@ -122,7 +118,7 @@ linters:
     - goerr113
     - ireturn
     - nilnil
-    - paralleltest
+    # - paralleltest # not always relevant
     # - scopelint # deprecated
     # - tenv # only for go117+
     # - maligned # deprecated
@@ -130,8 +126,8 @@ linters:
     # - interfacer # deprecated
 linters-settings:
   cyclop:
-    max-complexity: 10
-    package-average: 6.5
+    max-complexity: 9
+    package-average: 5
   dupl:
     threshold: 40
   errcheck:
@@ -178,7 +174,7 @@ linters-settings:
       - name: bool-literal-in-expr
       - name: call-to-gc
       - name: cognitive-complexity
-        arguments: [13]
+        arguments: [10]
       - name: confusing-naming
       - name: confusing-results
       - name: constant-logical-expr
@@ -202,7 +198,7 @@ linters-settings:
       - name: function-result-limit
         arguments: [4]
       - name: function-length
-        arguments: [24,0]
+        arguments: [23, 0]
       - name: get-return
       - name: identical-branches
       - name: if-return
