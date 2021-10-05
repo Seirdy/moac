@@ -162,6 +162,7 @@ doc: doc/moac.1 doc/moac-pwgen.1
 
 # final install jobs include these two targets
 INSTALL_SHARE = install-man install-completion
+INSTALL_ALL = install-bin $(INSTALL_SHARE) # just to make packaging easier
 
 install-bin: build
 	mkdir -p $(DESTDIR)$(BINDIR)
@@ -181,7 +182,7 @@ install-completion:
 .PHONY: install-bin install-bin-strip install-man install-completion
 
 # Install the project
-install: install-bin $(INSTALL_SHARE)
+install: $(INSTALL_ALL)
 .PHONY: install
 
 # Install the project with stripped binaries
