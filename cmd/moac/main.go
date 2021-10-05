@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
-	"strings"
 	"syscall"
 
 	"git.sr.ht/~seirdy/moac/v2"
@@ -179,7 +178,11 @@ func processPassword(oldPw string) (newPw string, err error) {
 		newPw, err = readPwStdin()
 	}
 
-	return strings.TrimSuffix(newPw, "\n"), err
+	for len(newPw) > 0 && newPw[len(newPw)-1] == '\n' {
+		newPw = newPw[:len(newPw)-1]
+	}
+
+	return newPw, err
 }
 
 func runCmdClassical( //nolint:dupl // this duplication is worth keeping flat switches imo

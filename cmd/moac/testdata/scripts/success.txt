@@ -20,7 +20,7 @@ moac -p - entropy
 stdout '^427$'
 
 # ensure we're trimming trailing newlines
-exec printf 'ɮʠðʋsĳóʣ[5ȍìŒŞȨRɸÒ¨ůİȤ&ǒŘĥėǺʞĚʥ¼ɖƅ~ɛ\\{ƸÝ4Ǎ6ő&Æ\n'
+exec printf 'ɮʠðʋsĳóʣ[5ȍìŒŞȨRɸÒ¨ůİȤ&ǒŘĥėǺʞĚʥ¼ɖƅ~ɛ\\{ƸÝ4Ǎ6ő&Æ\n\n'
 stdin stdout
 moac -p - entropy
 stdout '^427$'
