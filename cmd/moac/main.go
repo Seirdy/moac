@@ -41,6 +41,13 @@ COMMANDS:
 	helpText = "moac - analyze password strength with physical limits\n" + usage
 )
 
+// Any changes to the below const values would be a breaking change.
+const (
+	strengthCmd   = "strength"
+	entropyCmd    = "entropy"
+	minEntropyCmd = "entropy-limit"
+)
+
 func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
 	opts *[]getopt.Option,
 ) (givens moac.Givens, quantum, exitEarly bool, err error) {
@@ -101,9 +108,7 @@ func readPwInteractive() (pw string, err error) {
 		return pw, fmt.Errorf("failed to read pw interactively: %w", err)
 	}
 
-	pw = string(bytepw)
-
-	return pw, nil
+	return string(bytepw), nil
 }
 
 func readPwStdin() (pw string, err error) {
@@ -141,58 +146,74 @@ func getOutput() (output float64, exitEarly bool, err error) {
 	}
 
 	givens, quantum, exitEarly, err := parseOpts(&opts)
+	if err != nil || exitEarly {
+		return output, exitEarly, err
+	}
+
+	givens.Password, err = processPassword(givens.Password)
 	if err != nil {
 		return output, exitEarly, fmt.Errorf("moac: %w", err)
 	}
 
-	if exitEarly {
-		return output, exitEarly, nil
+	cmd := strengthCmd
+
+	if len(os.Args) > optind {
+		cmd = os.Args[optind]
 	}
 
-	if givens.Password == "-" {
-		givens.Password, err = readPwStdin()
+	switch {
+	case cmd == entropyCmd: // entropy is independent of Grover search feasibility.
+		output, err = getEntropy(givens.Password)
+	case quantum:
+		output, err = runCmdQuantum(cmd, &givens)
+	default:
+		output, err = runCmdClassical(cmd, &givens)
 	}
-
-	if err != nil {
-		return output, exitEarly, err
-	}
-
-	givens.Password = strings.TrimSuffix(givens.Password, "\n")
-	args := os.Args[optind:]
-	cmd := "strength"
-
-	if len(args) > 0 {
-		cmd = args[0]
-	}
-
-	output, err = runCmd(cmd, quantum, &givens)
 
 	return output, exitEarly, err
 }
 
-func runCmd(cmd string, quantum bool, givens *moac.Givens) (output float64, err error) {
-	switch cmd {
-	case "strength":
-		if quantum {
-			output, err = givens.BruteForceabilityQuantum()
-		} else {
-			output, err = givens.BruteForceability()
-		}
-	case "entropy":
-		if givens.Password == "" {
-			err = fmt.Errorf("%w: missing password", moac.ErrMissingValue)
-		}
+func processPassword(oldPw string) (newPw string, err error) {
+	newPw = oldPw
+	if newPw == "-" {
+		newPw, err = readPwStdin()
+	}
 
-		output = entropy.Entropy(givens.Password)
-	case "entropy-limit":
-		if quantum {
-			output, err = givens.MinEntropyQuantum()
-		} else {
-			output, err = givens.MinEntropy()
-		}
+	return strings.TrimSuffix(newPw, "\n"), err
+}
+
+func runCmdClassical( //nolint:dupl // this duplication is worth keeping flat switches imo
+	cmd string, givens *moac.Givens) (output float64, err error) {
+	switch cmd {
+	case strengthCmd:
+		output, err = givens.BruteForceability()
+	case minEntropyCmd:
+		output, err = givens.MinEntropy()
 	default:
 		err = fmt.Errorf("%w: unknown command %v", cli.ErrBadCmdline, cmd)
 	}
 
 	return output, err
+}
+
+func runCmdQuantum( //nolint:dupl // see above
+	cmd string, givens *moac.Givens) (output float64, err error) {
+	switch cmd {
+	case strengthCmd:
+		output, err = givens.BruteForceabilityQuantum()
+	case minEntropyCmd:
+		output, err = givens.MinEntropyQuantum()
+	default:
+		err = fmt.Errorf("%w: unknown command %v", cli.ErrBadCmdline, cmd)
+	}
+
+	return output, err
+}
+
+func getEntropy(password string) (res float64, err error) {
+	if password == "" {
+		err = fmt.Errorf("%w: missing password", moac.ErrMissingValue)
+	}
+
+	return entropy.Entropy(password), err
 }
