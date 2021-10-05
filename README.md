@@ -18,7 +18,7 @@ My original intent when making this tool was to illustrate how easy it is to mak
 Project Status
 --------------
 
-MOAC is actively developed as of September 2021. There is one sole developer behind all final decisions and responsibilities. The current roadmap is visible on the [ticket tracker](https://todo.sr.ht/~seirdy/MOAC).
+MOAC is actively developed as of October 2021. There is one sole developer behind all final decisions and responsibilities. The current roadmap is visible on the [ticket tracker](https://todo.sr.ht/~seirdy/MOAC).
 
 Installation
 ------------
