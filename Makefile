@@ -239,7 +239,7 @@ dist-multiarch:
 dist-full:
 	@$(MAKE) GOOS=linux dist-multiarch
 	@$(MAKE) GOOS=freebsd dist-multiarch
-.PHONY: dist-linux-freebsd
+.PHONY: dist-full
 
 
 # =================================================================================
