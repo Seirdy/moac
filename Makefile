@@ -27,6 +27,7 @@ NANCY = $(GOBIN)/nancy
 GOFUMPT = $(GOBIN)/gofumpt
 FIELDALIGNMENT = $(GOBIN)/fieldalignment
 SHFMT = $(GOBIN)/shfmt
+ARCHLINT = $(GOBIN)/go-arch-lint
 
 # change this on freebsd/openbsd
 SHA256 = sha256sum
@@ -69,14 +70,17 @@ checkmake: Makefile
 shfmt-lint: $(SH_SRC)
 	$(SHFMT) -p -s -d $(SH_SRC)
 nancy: $(SRC)
-	go list -json  -m all | $(NANCY) sleuth --skip-update-check --loud
+	go list -json -mod=readonly -m all | $(NANCY) sleuth --skip-update-check --loud
+archlint: $(SRC)
+	go mod vendor
+	$(ARCHLINT) check
 
-.PHONY: golangci-lint gokart-lint go-consistent checkmake shfmt-lint nancy
+.PHONY: golangci-lint gokart-lint go-consistent checkmake shfmt-lint nancy archlint
 
 # run all the project's linters
 #
 # see .builds/install-linters.sh for more info
-lint: shfmt-lint go-consistent checkmake gokart-lint golangci-lint nancy
+lint: shfmt-lint go-consistent checkmake gokart-lint golangci-lint nancy archlint
 .PHONY: lint
 
 # Format all go/shell files

@@ -30,9 +30,6 @@ issues:
     - linters: [revive]
       path: _test.go
       text: '^add-constant: '
-    - linters: [revive]
-      path: cmd/
-      text: '^flag-parameter: '
       # parseOpts length is soley determined by cli flag count.
     - linters: [revive]
       path: cmd/
@@ -247,7 +244,7 @@ linters-settings:
       - name: waitgroup-by-value
 run:
   deadline: 1m
-  skip-dirs-use-default: false
+  skip-dirs-use-default: true
   skip-files: []
 
 output:

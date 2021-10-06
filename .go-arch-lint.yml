@@ -1,0 +1,72 @@
+version: 2
+workdir: ./
+allow:
+  depOnAnyVendor: false
+
+exclude:
+  - .builds
+  - completions
+  - doc
+  - vendor
+
+excludeFiles:
+  - "^.*_test\\.go$"
+
+vendors:
+  term:
+    in: golang.org/x/term
+  getopt:
+    in: git.sr.ht/~sircmpwn/getopt
+
+components:
+  moac:
+    in: .
+  charsets:
+    in: charsets
+  entropy:
+    in: entropy
+  pwgen:
+    in: pwgen
+  bounds:
+    in: internal/bounds
+  cliShared:
+    in: internal/cli
+  sanitize:
+    in: internal/sanitize
+  moac-cli:
+    in:
+      cmd/moac
+  pwgen-cli:
+    in:
+      cmd/moac-pwgen
+
+deps:
+  pwgen-cli:
+    canUse:
+      - getopt
+    mayDependOn:
+      - moac
+      - cliShared
+      - charsets
+      - sanitize
+      - pwgen
+  moac-cli:
+    canUse:
+      - getopt
+      - term
+    mayDependOn:
+      - moac
+      - cliShared
+      - entropy
+  moac:
+    mayDependOn:
+      - entropy
+      - bounds
+  entropy:
+    mayDependOn:
+      - charsets
+  pwgen:
+    mayDependOn:
+      - moac # just needs DefaultEntropy, should be defined somewhere else
+      - charsets
+      - entropy

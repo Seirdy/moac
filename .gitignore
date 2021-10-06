@@ -1,0 +1,8 @@
+*.1
+*.tar.gz
+*.test
+/moac
+/moac-*
+coverage.out
+dist/
+vendor/

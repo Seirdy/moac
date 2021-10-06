@@ -400,7 +400,7 @@ func TestGenPw(t *testing.T) {
 	loops := getLoops()
 	testCaseGroups, iterations := buildTestCases(loops)
 
-	for name, testCaseGroup := range testCaseGroups { //nolint:paralleltest // false-positive
+	for name, testCaseGroup := range testCaseGroups {
 		groupInfo, group := name, testCaseGroup
 
 		allowedPercentWithOverage := groupInfo.tooLongAllowed
