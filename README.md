@@ -20,10 +20,14 @@ Project Status
 
 MOAC is actively developed as of October 2021. There is one sole developer behind all final decisions and responsibilities. The current roadmap is visible on the [ticket tracker](https://todo.sr.ht/~seirdy/MOAC).
 
+Starting with commit `3a109a50102d54ff4971ec0661500e8427863105`, all MOAC commits and releases are signed using the [Minisign](https://jedisct1.github.io/minisign/) pubkey `RWRj8vIX4e/JRFEf37f0inMQrKuqhJifVb/O7KifPglNttKNcoFqeElo`; signatures are stored in git notes. Releases v2.0.2 and earlier were signed with PGP key [1E892DB2A5F84479](https://seirdy.one/publickey.asc).
+
+Commits also continue to be signed with the same PGP key.
+
 Installation
 ------------
 
-Check the [refs](https://git.sr.ht/~seirdy/moac/refs/) for changelogs; select a ref to download pre-built binaries. You can verify releases using the signing key [1E892DB2A5F84479](https://seirdy.one/publickey.asc) Alternatively, build MOAC from source:
+Check the [refs](https://git.sr.ht/~seirdy/moac/refs/) for changelogs; select a ref on Sourcehut (or a GitHub/Codeberg release) to download pre-built binaries. Alternatively, build MOAC from source:
 
 ### Build dependencies
 
