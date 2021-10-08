@@ -133,11 +133,7 @@ func (givens *Givens) Populate() error {
 	}
 
 	if givens.Password != "" {
-		computedEntropy := entropy.Entropy(givens.Password)
-
-		if givens.Entropy == 0 || givens.Entropy > computedEntropy {
-			givens.Entropy = computedEntropy
-		}
+		setBottleneck(&givens.Entropy, entropy.Entropy(givens.Password))
 	}
 
 	givens.calculatePower()

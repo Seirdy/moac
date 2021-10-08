@@ -35,7 +35,7 @@ OPTIONS:
 	helpText = "moac-pwgen - generate passwords with the described strength\n" + usage
 )
 
-func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
+func parseOpts(
 	opts *[]getopt.Option, pwr *pwgen.PwRequirements,
 ) (givens moac.Givens, quantum, exitEarly bool, err error) {
 	var (
@@ -49,10 +49,12 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 			fmt.Fprint(os.Stderr, helpText)
 
 			exitEarly = true
+
 		case 'v':
 			fmt.Println(cli.GetVersion())
 
 			exitEarly = true
+
 		case 'q':
 			quantum = true
 		case 'e':

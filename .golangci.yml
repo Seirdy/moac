@@ -3,38 +3,36 @@ issues:
   exclude-rules:
     - linters: [forbidigo]
       path: cmd/
-      text: use of `fmt.Print(ln|f)?` forbidden by pattern
+      text: use of `fmt\.Print(ln|f)?` forbidden by pattern
     - linters: [stylecheck]
-      path: _test.go
+      path: _test\.go
       source: "`.*ß.*`"
       text: "ST1018" # we want unicode control chars in there.
     - linters: [exhaustivestruct]
-      path: _test.go
+      path: _test\.go
     - linters: [goerr113]
-      path: pwgen/genpw_test.go
+      path: pwgen/genpw_test\.go
     - linters: [testpackage]
       path: cmd/
     - linters: [goerr113]
-      path: pwgen/buildcharsets_test.go
+      path: pwgen/buildcharsets_test\.go
       # allow very long strings to surpass max line length unbroken
       # if they get their own line
     - linters: [lll]
       source: '^\s*(\[\]rune\()?"......................*"(\))?,?$'
     - linters: [gochecknoglobals]
       # this package is suppopsed to export global vars
-      path: charsets/defaults.go
+      path: charsets/defaults\.go
       source: '^var DefaultCharsets'
     - linters: [revive]
       text:
-        '(add-constant: (avoid magic numbers like|string literal "")|cyclomatic: function parseOpts|deep-exit: calls to log.Panicf? only in main)'
+        '(add-constant: (avoid magic numbers like|string literal "")|cyclomatic: function parseOpts|deep-exit: calls to log\.Panicf? only in main)'
     - linters: [revive]
-      path: _test.go
+      path: _test\.go
       text: '^add-constant: '
       # parseOpts length is soley determined by cli flag count.
-    - linters: [revive]
+    - linters: [funlen, cyclop]
       path: cmd/
-      text:
-        '^function-length: maximum number of statements per function exceeded'
       source: 'func parseOpts'
   exclude-use-default: false
   max-issues-per-linter: 0
@@ -67,13 +65,13 @@ linters:
     - gocyclo
     - godot
     - godox
+    - goerr113
     - gofmt
     - gofumpt
     - goheader
     - goimports
     - gomnd
     - gomoddirectives
-    - gomodguard
     - goprintffuncname
     - gosec
     - gosimple
@@ -81,12 +79,14 @@ linters:
     - ifshort
     - importas
     - ineffassign
+    - ireturn
     - lll
     - makezero
     - misspell
     - nakedret
     - nestif
     - nilerr
+    - nilnil
     - nlreturn
     - noctx
     - nolintlint
@@ -101,8 +101,8 @@ linters:
     - stylecheck
     - tagliatelle
     - testpackage
-    - tparallel
     - thelper
+    - tparallel
     - typecheck
     - unconvert
     - unparam
@@ -112,12 +112,10 @@ linters:
     - whitespace
     - wrapcheck
     - wsl
-    - goerr113
-    - ireturn
-    - nilnil
+    # - gomodguard
     # - paralleltest # not always relevant
-    # - scopelint # deprecated
     # - tenv # only for go117+
+    # - scopelint # deprecated
     # - maligned # deprecated
     # - golint # deprecated
     # - interfacer # deprecated
@@ -139,6 +137,18 @@ linters-settings:
       - performance
       - experimental
       - opinionated
+    settings:
+      captLocal:
+        paramsOnly: false
+      elseif:
+        skipBalanced: false
+      hugeParam:
+        sizeThreshold: 60
+      rangeExprCopy:
+        sizeThreshold: 128
+        skipTestFuncs: false
+      nestingReduce:
+        bodyWidth: 3
   gomnd:
     settings:
       mnd:
@@ -154,11 +164,19 @@ linters-settings:
     locale: US
   nestif:
     min-complexity: 3
+  nolintlint:
+    allow-leading-space: false
+    allow-unused: false
+    require-explanation: true
+    require-specific: true
   prealloc:
     for-loops: true
     simple: false
   predeclared:
     q: true
+  funlen:
+    lines: 80
+    statements: 23
   revive:
     confidence: 0.21
     rules:
@@ -194,8 +212,7 @@ linters-settings:
       - name: flag-parameter
       - name: function-result-limit
         arguments: [4]
-      - name: function-length
-        arguments: [23, 0]
+      # - name: function-length # redundant by funlen
       - name: get-return
       - name: identical-branches
       - name: if-return
@@ -234,7 +251,7 @@ linters-settings:
           - fmt.Fprint
           - password.WriteRune
           - filteredCharset.WriteRune
-          - charsToPickFrom.WriteString
+          - ccBuilder.WriteString
           - warningSubstring.WriteString
       - name: unnecessary-stmt
       - name: unreachable-code
@@ -242,9 +259,17 @@ linters-settings:
       - name: unused-receiver
       - name: useless-break
       - name: waitgroup-by-value
+  gosec:
+    config:
+      global:
+        audit: enabled
+  wsl:
+    force-case-trailing-whitespace: 2
+    # force-short-decl-cuddling: true
 run:
   deadline: 1m
   skip-dirs-use-default: true
+  modules-download-mode: readonly
   skip-files: []
 
 output:

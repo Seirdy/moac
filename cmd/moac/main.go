@@ -47,7 +47,7 @@ const (
 	minEntropyCmd = "entropy-limit"
 )
 
-func parseOpts( //nolint:cyclop // complexity solely determined by cli flag count
+func parseOpts(
 	opts *[]getopt.Option,
 ) (givens moac.Givens, quantum, exitEarly bool, err error) {
 	for _, opt := range *opts {
@@ -56,10 +56,12 @@ func parseOpts( //nolint:cyclop // complexity solely determined by cli flag coun
 			fmt.Fprint(os.Stderr, helpText)
 
 			exitEarly = true
+
 		case 'v':
 			fmt.Println(cli.GetVersion())
 
 			exitEarly = true
+
 		case 'q':
 			quantum = true
 		case 'r':

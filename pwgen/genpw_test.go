@@ -259,8 +259,8 @@ func pwOnlyUsesCharsets(cs charsets.CharsetCollection, password []rune) (rune, b
 	allowedRunes := cs.Combined()
 
 	for _, pwChar := range password {
-		for i, char := range allowedRunes {
-			if pwChar == char {
+		for i, allowedChar := range allowedRunes {
+			if pwChar == allowedChar {
 				break
 			} else if i == len(allowedRunes)-1 {
 				return pwChar, false
