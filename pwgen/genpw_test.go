@@ -9,7 +9,6 @@ import (
 	"math"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
 	"unicode/utf8"
 
@@ -257,15 +256,8 @@ func pwUsesEachCharsetErrStr(password string, unusedCharsets charsets.CharsetCol
 }
 
 func pwOnlyUsesCharsets(cs charsets.CharsetCollection, password []rune) (rune, bool) {
-	var charsToPickFrom strings.Builder
-	for _, charset := range cs {
-		charsToPickFrom.WriteString(charset.String())
-	}
+	allowedRunes := cs.Combined()
 
-	return pwUsesAllowedRunes(password, []rune(charsToPickFrom.String()))
-}
-
-func pwUsesAllowedRunes(password, allowedRunes []rune) (rune, bool) {
 	for _, pwChar := range password {
 		for i, char := range allowedRunes {
 			if pwChar == char {

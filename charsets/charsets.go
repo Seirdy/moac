@@ -3,6 +3,7 @@ package charsets
 
 import (
 	"sort"
+	"strings"
 )
 
 // Charset is the interface implemented by any charset used to build passwords.
@@ -90,6 +91,17 @@ func (cs *CharsetCollection) addSingle(c CustomCharset) {
 	}
 }
 
+// Combined returns a CustomCharset that combines all the charsets in a CharsetCollection.
+func (cs *CharsetCollection) Combined() CustomCharset {
+	var ccBuilder strings.Builder
+
+	for _, c := range *cs {
+		ccBuilder.WriteString(c.String())
+	}
+
+	return CustomCharset([]rune(ccBuilder.String()))
+}
+
 // ParseCharsets creates a CharsetCollection from string identifiers.
 // The strings "lowercase", "uppercase", "numbers", and "symbols" all
 // refer to their respective constants; "ascii" is an alias for all
@@ -117,13 +129,15 @@ func parseCharset(cs *CharsetCollection, charsetName string) {
 	found := false
 
 	for _, defaultCharset := range DefaultCharsets {
-		if charsetName == defaultCharset.Name() {
-			cs.AddDefault(defaultCharset)
-
-			found = true
-
-			break
+		if charsetName != defaultCharset.Name() {
+			continue
 		}
+
+		cs.AddDefault(defaultCharset)
+
+		found = true
+
+		break
 	}
 
 	if !found {

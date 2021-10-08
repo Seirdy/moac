@@ -93,22 +93,22 @@ func computeSpecialIndexes(pwLength, charsetCount int) []int {
 
 func genpwFromGivenCharsets(pwr PwRequirements) (pw string, err error) {
 	var (
-		charsToPickFrom, pwBuilder strings.Builder
-		pwUsesCustomCharset        bool
+		pwBuilder           strings.Builder
+		pwUsesCustomCharset bool
 	)
 
 	for _, charset := range pwr.CharsetsWanted {
-		charsToPickFrom.WriteString(charset.String())
+		if charsets.IsDefault(charset) {
+			pwUsesCustomCharset = true
 
-		if !pwUsesCustomCharset {
-			pwUsesCustomCharset = charsets.IsDefault(charset)
+			break
 		}
 	}
 
-	runesToPickFrom := []rune(charsToPickFrom.String())
+	combinedCharset := pwr.CharsetsWanted.Combined()
 	// figure out the minimum acceptable length of the password
 	// and fill that up before measuring entropy.
-	pwLength, err := computePasswordLength(len(runesToPickFrom), pwr.TargetEntropy, pwr.MinLen, pwr.MaxLen)
+	pwLength, err := computePasswordLength(len(combinedCharset), pwr.TargetEntropy, pwr.MinLen, pwr.MaxLen)
 	if err != nil {
 		return pwBuilder.String(), fmt.Errorf("can't generate password: %w", err)
 	}
@@ -120,41 +120,40 @@ func genpwFromGivenCharsets(pwr PwRequirements) (pw string, err error) {
 	pwBuilder.Grow(pwLength + 1)
 
 	specialIndexes := computeSpecialIndexes(pwLength, len(pwr.CharsetsWanted))
-	pwRunes := buildFixedLengthPw(&pwBuilder, pwLength, specialIndexes, runesToPickFrom, pwr.CharsetsWanted)
+	pwRunes := buildFixedLengthPw(&pwBuilder, pwLength, specialIndexes, pwr.CharsetsWanted)
 
 	// keep inserting chars at random locations until the pw is long enough
 	if pwUsesCustomCharset {
-		randomlyInsertRunesTillStrong(pwr.MaxLen, &pwRunes, pwr.TargetEntropy, runesToPickFrom)
+		randomlyInsertRunesTillStrong(pwr.MaxLen, &pwRunes, pwr.TargetEntropy, combinedCharset)
 	}
 
 	return string(pwRunes), nil
 }
 
 func buildFixedLengthPw(
-	pwBuilder *strings.Builder,
-	pwLength int, specialIndexes []int,
-	runesToPickFrom []rune, cs charsets.CharsetCollection,
+	pwBuilder *strings.Builder, pwLength int, specialIndexes []int, cs charsets.CharsetCollection,
 ) []rune {
 	currentLength := 0
+	combinedCharset := cs.Combined()
 
 	for specialI := 0; currentLength < pwLength; currentLength++ {
 		if i := indexOf(specialIndexes, currentLength); i >= 0 {
 			addRuneToEnd(pwBuilder, cs[i].Runes()) // one of each charset @ a special index
 			specialI++
 		} else {
-			addRuneToEnd(pwBuilder, runesToPickFrom)
+			addRuneToEnd(pwBuilder, combinedCharset)
 		}
 	}
 
 	return []rune(pwBuilder.String())
 }
 
-func randomlyInsertRunesTillStrong(maxLen int, pwRunes *[]rune, entropyWanted float64, runesToPickFrom []rune) {
+func randomlyInsertRunesTillStrong(maxLen int, pwRunes *[]rune, entropyWanted float64, combinedCharset []rune) {
 	for maxLen == 0 || len(*pwRunes) < maxLen {
 		if entropyWanted <= entropy.Entropy(string(*pwRunes)) {
 			break
 		}
 
-		addRuneAtRandLoc(pwRunes, runesToPickFrom)
+		addRuneAtRandLoc(pwRunes, combinedCharset)
 	}
 }
