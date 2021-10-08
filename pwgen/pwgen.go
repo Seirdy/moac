@@ -10,14 +10,35 @@ import (
 	"git.sr.ht/~seirdy/moac/v2"
 	"git.sr.ht/~seirdy/moac/v2/charsets"
 	"git.sr.ht/~seirdy/moac/v2/entropy"
+	"git.sr.ht/~seirdy/moac/v2/internal/bounds"
 )
 
 // PwRequirements holds the parameters used for password generation.
 // These include charsets to pick from and target strength.
 type PwRequirements struct {
+	// CharsetsWanted must have at least two unique characters.
 	CharsetsWanted charsets.CharsetCollection
 	TargetEntropy  float64
 	MinLen, MaxLen int
+}
+
+func (pwr *PwRequirements) validate() error {
+	if err := bounds.NonNegative(
+		pwr.TargetEntropy, float64(pwr.MinLen), float64(pwr.MaxLen)); err != nil {
+		return fmt.Errorf("lengths and entropies cannot be negative: %w", err)
+	}
+
+	if len(pwr.CharsetsWanted) == 0 || len(pwr.CharsetsWanted[0].Runes()) == 0 {
+		return fmt.Errorf("%w: need at least two characters to build a password", ErrInvalidLenBounds)
+	}
+
+	if pwr.MaxLen > 0 && pwr.MaxLen < len(pwr.CharsetsWanted) {
+		return fmt.Errorf(
+			"%w: maxLen too short to use all available charsets", ErrInvalidLenBounds,
+		)
+	}
+
+	return nil
 }
 
 // GenPW generates a random password using characters from the charsets enumerated by charsetsEnumerated.
@@ -29,10 +50,8 @@ type PwRequirements struct {
 // GenPW will *not* strip any characters from given charsets that may be undesirable
 // (newlines, control characters, etc.), and does not preserve grapheme clusters.
 func GenPW(pwr PwRequirements) (string, error) {
-	if pwr.MaxLen > 0 && pwr.MaxLen < len(pwr.CharsetsWanted) {
-		return "", fmt.Errorf(
-			"%w: maxLen too short to use all available charsets", ErrInvalidLenBounds,
-		)
+	if err := pwr.validate(); err != nil {
+		return "", fmt.Errorf("bad GenPW param: %w", err)
 	}
 
 	if pwr.TargetEntropy == 0 {
@@ -51,7 +70,7 @@ var ErrInvalidLenBounds = errors.New("bad length bounds")
 
 func computePasswordLength(charsetSize int, pwEntropy float64, minLen, maxLen int) (int, error) {
 	if maxLen > 0 && minLen > maxLen {
-		return 0, fmt.Errorf("%w: maxLen can't be less than minLen", ErrInvalidLenBounds)
+		return 0, fmt.Errorf("%w: maxLen cannot be less than minLen", ErrInvalidLenBounds)
 	}
 
 	// combinations is 2^entropy, or 2^s
@@ -110,7 +129,7 @@ func genpwFromGivenCharsets(pwr PwRequirements) (pw string, err error) {
 	// and fill that up before measuring entropy.
 	pwLength, err := computePasswordLength(len(combinedCharset), pwr.TargetEntropy, pwr.MinLen, pwr.MaxLen)
 	if err != nil {
-		return pwBuilder.String(), fmt.Errorf("can't generate password: %w", err)
+		return pwBuilder.String(), fmt.Errorf("cannot generate password: %w", err)
 	}
 
 	if pwLength < len(pwr.CharsetsWanted) {
@@ -148,12 +167,10 @@ func buildFixedLengthPw(
 	return []rune(pwBuilder.String())
 }
 
-func randomlyInsertRunesTillStrong(maxLen int, pwRunes *[]rune, entropyWanted float64, combinedCharset []rune) {
-	for maxLen == 0 || len(*pwRunes) < maxLen {
-		if entropyWanted <= entropy.Entropy(string(*pwRunes)) {
-			break
-		}
-
+func randomlyInsertRunesTillStrong(
+	maxLen int, pwRunes *[]rune, entropyWanted float64, combinedCharset []rune) {
+	for (maxLen == 0 || len(*pwRunes) < maxLen) &&
+		entropyWanted > entropy.Entropy(string(*pwRunes)) {
 		addRuneAtRandLoc(pwRunes, combinedCharset)
 	}
 }

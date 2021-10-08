@@ -12,5 +12,28 @@ stderr 'invalid value for -t: z'
 ! stdout '.'
 
 ! moac-pwgen -L 3 ascii latin
-stderr 'moac: bad length bounds: maxLen too short to use all available charsets'
+stderr 'moac: bad GenPW param: bad length bounds: maxLen too short to use all available charsets'
+! stdout '.'
+
+# empty charsets
+
+! moac-pwgen ''
+stderr 'moac: bad GenPW param: bad length bounds: need at least two characters to build a password'
+! stdout '.'
+
+! moac-pwgen '' ''
+stderr 'moac: bad GenPW param: bad length bounds: need at least two characters to build a password'
+! stdout '.'
+
+# impossible negative values
+! moac-pwgen -l 4 -L -2
+stderr 'moac: bad GenPW param: lengths and entropies cannot be negative: bad value -2 is below 0'
+! stdout '.'
+
+! moac-pwgen -l -4
+stderr 'moac: bad GenPW param: lengths and entropies cannot be negative: bad value -4 is below 0'
+! stdout '.'
+
+! moac-pwgen -l 4 -L 4 -s -128
+stderr 'moac: bad GenPW param: lengths and entropies cannot be negative: bad value -128 is below 0'
 ! stdout '.'

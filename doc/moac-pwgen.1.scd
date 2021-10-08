@@ -89,6 +89,9 @@ Any argument after *[OPTIONS]* that is not listed above is assumed to be a
 string containing characters of a charset. Generated passwords will only contain
 printable characters, excluding marks. Grapheme clusters may be split apart.
 
+*moac-pwgen* needs at least two unique characters with which to generate a
+password.
+
 # SEE ALSO
 
 *moac*(1)

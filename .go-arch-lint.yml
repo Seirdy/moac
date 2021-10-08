@@ -70,3 +70,4 @@ deps:
       - moac # just needs DefaultEntropy, should be defined somewhere else
       - charsets
       - entropy
+      - bounds
