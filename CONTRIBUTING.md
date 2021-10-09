@@ -52,7 +52,9 @@ Excluding tests, MOAC has <1k SLOC; it shouldn't be hard to grok. Here's a one-m
 Testing
 -------
 
-For the library: everything possible should be covered by tests. If a branch that handles an error should be impossible to reach and is therefore uncovered, replace it with a panic to indicate the presence of a bug. Any uncovered line that isn't a panic is in need of a test.
+For the library: everything possible should be covered by tests. If a branch that handles an error should be impossible to reach and is therefore uncovered, replace it with a panic to indicate the presence of a bug. Any uncovered line that isn't a panic or a deprecated function is in need of a test.
+
+That being said, don't write tests just for the sake of ticking off a box. Statement coverage isn't sufficient to show that most/all statements are useful and correct. One way to verify this is to check branch coverage (see [gobco](https://github.com/rillig/gobco) and mutation scores (see [go-mutesting](https://github.com/zimmski/go-mutesting)). Be aware of false positives, especially in the case of the latter.
 
 For the CLI: this uses [testscript](https://godocs.io/github.com/rogpeppe/go-internal/testscript) to test CLI behavior.
 

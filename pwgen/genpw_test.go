@@ -14,6 +14,7 @@ import (
 
 	"git.sr.ht/~seirdy/moac/v2/charsets"
 	"git.sr.ht/~seirdy/moac/v2/entropy"
+	"git.sr.ht/~seirdy/moac/v2/internal/bounds"
 	"git.sr.ht/~seirdy/moac/v2/pwgen"
 )
 
@@ -59,10 +60,31 @@ func buildBadTestCases() []pwgenTestCase {
 			expectedErr:    pwgen.ErrInvalidLenBounds,
 		},
 		{
-			name:           "bad lengths",
+			name:           "maxLen smaller than minLen",
 			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "🦖؆ص😈"},
 			maxLen:         12,
 			minLen:         18,
+			expectedErr:    pwgen.ErrInvalidLenBounds,
+		},
+		{
+			name:           "maxLen is negative",
+			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "🦖؆ص😈"},
+			maxLen:         -18,
+			minLen:         12,
+			expectedErr:    bounds.ErrImpossibleNegative,
+		},
+		{
+			name:           "minLen is negative",
+			charsetsWanted: []string{"lowercase", "uppercase", "numbers", "symbols", "latin", "🦖؆ص😈"},
+			maxLen:         18,
+			minLen:         -12,
+			expectedErr:    bounds.ErrImpossibleNegative,
+		},
+		{
+			name:           "no characters",
+			charsetsWanted: []string{""},
+			maxLen:         18,
+			minLen:         12,
 			expectedErr:    pwgen.ErrInvalidLenBounds,
 		},
 	}
@@ -164,7 +186,8 @@ func buildGoodTestCases(loops int) (testCases map[testGroupInfo][]pwgenTestCase,
 
 	for _, entropyWanted := range entropiesWanted {
 		for _, mml := range minMaxLengths {
-			for _, charset := range pwgenCharsets {
+			for i := range pwgenCharsets {
+				charset := pwgenCharsets[i]
 				newCase := buildTestCase(charset, mml, entropyWanted)
 
 				testCases[charset.group] = append(
@@ -434,12 +457,27 @@ func TestGenPw(t *testing.T) {
 	}
 }
 
+func TestGenPwHandlesSingleEmptyCharset(t *testing.T) {
+	t.Parallel()
+
+	pwr := pwgen.PwRequirements{
+		CharsetsWanted: []charsets.Charset{charsets.CustomCharset(make([]rune, 0))},
+		TargetEntropy:  128,
+	}
+
+	_, err := pwgen.GenPW(pwr)
+
+	if !errors.Is(err, pwgen.ErrInvalidLenBounds) {
+		t.Errorf("expected error %s from GenPW, got %s", pwgen.ErrInvalidLenBounds.Error(), err.Error())
+	}
+}
+
 func runTestCaseGroup(
 	t *testing.T, testCaseGroup []pwgenTestCase, tooLongCount *int, overageAllowed float64, loops int) {
 	t.Helper()
 
-	for _, testCase := range testCaseGroup {
-		testCase := testCase
+	for i := range testCaseGroup {
+		testCase := testCaseGroup[i]
 		cs := charsets.ParseCharsets(testCase.charsetsWanted)
 
 		for j := 0; j < loops; j++ {

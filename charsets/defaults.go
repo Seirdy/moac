@@ -62,6 +62,7 @@ var DefaultCharsets = []DefaultCharset{
 }
 
 // IsDefault returns true if the charset c is represented in DefaultCharsets.
+// Deprecated; will be removed in v3.
 func IsDefault(c Charset) bool {
 	for _, dc := range DefaultCharsets {
 		if c.String() == dc.String() {

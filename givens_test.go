@@ -60,6 +60,18 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 			expectedME:  307.3,
 		},
 		{
+			name: "solar dyson sphere", // test time/power being bottlenecks
+			given: moac.Givens{
+				Time:        1.45e17,
+				Power:       3.828e26,
+				Temperature: 1.5e7,
+				Entropy:     198,
+			},
+			expectedBF:  0.962,
+			expectedBFQ: 6.1e29,
+			expectedME:  198,
+		},
+		{
 			name: "only energy",
 			given: moac.Givens{
 				Energy: 4.0e52,
@@ -82,6 +94,33 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 			given: moac.Givens{
 				Energy:      4.0e52,
 				Temperature: -1.0e-10,
+			},
+			expectedErrBF: bounds.ErrImpossibleNegative,
+			expectedErrME: bounds.ErrImpossibleNegative,
+		},
+		{
+			name: "negativeMass",
+			given: moac.Givens{
+				Energy: 4.0e52,
+				Mass:   -1.0e-10,
+			},
+			expectedErrBF: bounds.ErrImpossibleNegative,
+			expectedErrME: bounds.ErrImpossibleNegative,
+		},
+		{
+			name: "negativePower",
+			given: moac.Givens{
+				Energy: 4.0e52,
+				Power:  -1.0e-10,
+			},
+			expectedErrBF: bounds.ErrImpossibleNegative,
+			expectedErrME: bounds.ErrImpossibleNegative,
+		},
+		{
+			name: "negativeTime",
+			given: moac.Givens{
+				Energy: 4.0e52,
+				Time:   -1.0e-10,
 			},
 			expectedErrBF: bounds.ErrImpossibleNegative,
 			expectedErrME: bounds.ErrImpossibleNegative,
@@ -152,9 +191,10 @@ func validateFunction(t *testing.T, testCase *givensTestCase) {
 }
 
 func TestBruteForceability(t *testing.T) {
-	for _, test := range givensTestCases() {
-		t.Run(test.name, func(t *testing.T) {
-			test := test
+	tcs := givensTestCases()
+	for i := range tcs {
+		t.Run(tcs[i].name, func(t *testing.T) {
+			test := tcs[i]
 
 			validateFunction(t, &test)
 		})
@@ -162,8 +202,10 @@ func TestBruteForceability(t *testing.T) {
 }
 
 func TestMinEntropy(t *testing.T) {
-	for _, test := range givensTestCases() {
-		t.Run(test.name, func(t *testing.T) {
+	tcs := givensTestCases()
+	for i := range tcs {
+		t.Run(tcs[i].name, func(t *testing.T) {
+			test := tcs[i]
 			me, errME := test.given.MinEntropy()
 			meq, errMEQ := test.given.MinEntropyQuantum()
 

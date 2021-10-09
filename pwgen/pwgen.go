@@ -111,18 +111,7 @@ func computeSpecialIndexes(pwLength, charsetCount int) []int {
 }
 
 func genpwFromGivenCharsets(pwr PwRequirements) (pw string, err error) {
-	var (
-		pwBuilder           strings.Builder
-		pwUsesCustomCharset bool
-	)
-
-	for _, charset := range pwr.CharsetsWanted {
-		if charsets.IsDefault(charset) {
-			pwUsesCustomCharset = true
-
-			break
-		}
-	}
+	var pwBuilder strings.Builder
 
 	combinedCharset := pwr.CharsetsWanted.Combined()
 	// figure out the minimum acceptable length of the password
@@ -142,9 +131,7 @@ func genpwFromGivenCharsets(pwr PwRequirements) (pw string, err error) {
 	pwRunes := buildFixedLengthPw(&pwBuilder, pwLength, specialIndexes, pwr.CharsetsWanted)
 
 	// keep inserting chars at random locations until the pw is long enough
-	if pwUsesCustomCharset {
-		randomlyInsertRunesTillStrong(pwr.MaxLen, &pwRunes, pwr.TargetEntropy, combinedCharset)
-	}
+	randomlyInsertRunesTillStrong(pwr.MaxLen, &pwRunes, pwr.TargetEntropy, combinedCharset)
 
 	return string(pwRunes), nil
 }
