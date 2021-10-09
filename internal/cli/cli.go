@@ -26,7 +26,7 @@ var (
 	// version can be set at link time to override debug.BuildInfo.Main.Version,
 	// which is "(devel)" when building from within the module. See
 	// golang.org/issue/29814 and golang.org/issue/29228.
-	version string
+	version = "(devel)"
 
 	// ErrBadCmdline indicates an invalid argument has been passed via the CLI.
 	ErrBadCmdline = errors.New("bad arguments")
@@ -34,7 +34,8 @@ var (
 
 // GetVersion fetches the version of the MOAC binaries, configurable at link-time.
 func GetVersion() string {
-	if info, ok := debug.ReadBuildInfo(); ok && version == "" {
+	versionUnset := version == "" || version == "(devel)"
+	if info, ok := debug.ReadBuildInfo(); ok && versionUnset {
 		return info.Main.Version
 	}
 
