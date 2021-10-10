@@ -120,6 +120,10 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 				"uppercase", "numbers", "lowercase", `"O4UÞjÖÿ.ßòºÒ&Û¨5ü4äMî3îÌ`,
 			},
 		},
+		{ // ensuring one from each charset gets picked even with otherwise-unlikely odds
+			group:          testGroupInfo{name: "four charsets", tooLongAllowed: 11},
+			charsetsWanted: []string{"uppercase", "latinExtendedA", "abc", "latinExtendedB"},
+		},
 		{
 			group: testGroupInfo{name: "tinyPassword"},
 			charsetsWanted: []string{
@@ -154,7 +158,7 @@ func goodTestData() ([]pwgenCharset, []minMaxLen, []float64) {
 			},
 		},
 	}
-	minMaxLengths := []minMaxLen{{0, 0}, {0, 32}, {0, 65537}, {80, 0}, {12, 50}, {0, 1}, {1, 1}, {12, 12}}
+	minMaxLengths := []minMaxLen{{0, 0}, {0, 32}, {0, 65537}, {80, 0}, {12, 50}, {0, 1}, {1, 1}, {12, 12}, {4, 4}}
 	entropiesWanted := []float64{0, 1, 32, 64, 256, 512}
 
 	return pwgenCharsets, minMaxLengths, entropiesWanted
@@ -449,7 +453,7 @@ func TestGenPw(t *testing.T) {
 			)
 
 			if percent := float64(tooLongCount) / float64(iterations) * 100; percent > allowedPercentWithOverage {
-				t.Errorf("%d out of %d passwords (%.3g%%) in charset group %s were too long; acceptable threshold is %.3g%%",
+				t.Errorf(`%d out of %d passwords (%.3g%%) in charset group "%s" were too long; acceptable threshold is %.3g%%`,
 					tooLongCount, iterations, percent, groupInfo.name, allowedPercentWithOverage,
 				)
 			}

@@ -72,6 +72,18 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 			expectedME:  198,
 		},
 		{
+			name: "solar dyson sphere 2: electric boogaloo",
+			given: moac.Givens{
+				Time:        1.45e17,
+				Energy:      5.55e43, // now we use Givens.calculatePower()
+				Temperature: 1.5e7,
+				Entropy:     198,
+			},
+			expectedBF:  0.962,
+			expectedBFQ: 6.1e29,
+			expectedME:  198,
+		},
+		{
 			name: "only energy",
 			given: moac.Givens{
 				Energy: 4.0e52,

@@ -13,41 +13,89 @@ import (
 )
 
 type testCase struct {
+	expectedErr  error
 	charsetsUsed charsets.CharsetCollection
 	length       int
 }
 
-func buildTestCases() []testCase {
+func buildBadTestCases() []testCase {
 	return []testCase{
 		{
-			[]charsets.Charset{charsets.Lowercase},
-			0,
+			charsetsUsed: []charsets.Charset{charsets.Lowercase},
+			length:       0,
+			expectedErr:  entropy.ErrPasswordInvalid,
 		},
 		{
-			[]charsets.Charset{
+			charsetsUsed: []charsets.Charset{
 				charsets.Lowercase, charsets.Uppercase,
 				charsets.CustomCharset([]rune("¡¢£¤¥¦§¨©ª«¬®¯°±²³´μ¶·¸¹º»")),
 			},
-			2,
+			length:      2,
+			expectedErr: entropy.ErrPasswordInvalid,
 		},
 		{
-			[]charsets.Charset{
+			charsetsUsed: []charsets.Charset{
 				charsets.Lowercase, charsets.Lowercase, charsets.Lowercase, charsets.Uppercase,
 			},
-			3,
+			length:      3, // FromCharsets does not perform any subsetting/duplication.
+			expectedErr: entropy.ErrPasswordInvalid,
 		},
 	}
 }
 
-func TestFromCharsetsErrors(t *testing.T) {
-	for i, testCase := range buildTestCases() {
+func buildGoodTestCases() []testCase {
+	return []testCase{
+		{
+			charsetsUsed: []charsets.Charset{charsets.Lowercase},
+			length:       1,
+			expectedErr:  nil,
+		},
+		{
+			charsetsUsed: []charsets.Charset{
+				charsets.Lowercase, charsets.Uppercase,
+				charsets.CustomCharset([]rune("¡¢£¤¥¦§¨©ª«¬®¯°±²³´μ¶·¸¹º»")),
+			},
+			length:      3,
+			expectedErr: nil,
+		},
+		{
+			charsetsUsed: []charsets.Charset{
+				charsets.Lowercase, charsets.Lowercase, charsets.Lowercase, charsets.Uppercase,
+			},
+			length:      4,
+			expectedErr: nil,
+		},
+	}
+}
+
+func TestBadCases(t *testing.T) {
+	t.Parallel()
+
+	tcs := append(buildBadTestCases(), buildGoodTestCases()...)
+	for i, testCase := range tcs {
 		testCase := testCase
 
 		t.Run(fmt.Sprintf("fromCharsets case %d", i), func(t *testing.T) {
+			t.Parallel()
+
 			_, err := entropy.FromCharsets(testCase.charsetsUsed, testCase.length)
-			if !errors.Is(err, entropy.ErrPasswordInvalid) {
-				t.Errorf("entropy.FromCharsets failed to error when given a password length that was too short")
-			}
+			validateTestCase(t, testCase.expectedErr, err)
 		})
+	}
+}
+
+func validateTestCase(t *testing.T, expectedErr, err error) {
+	t.Helper()
+
+	if expectedErr == nil {
+		if err == nil {
+			return
+		}
+
+		t.Errorf("entropy.FromCharsets returned unexpected error: %s", err.Error())
+	}
+
+	if !errors.Is(err, entropy.ErrPasswordInvalid) {
+		t.Errorf("entropy.FromCharsets failed to error when given a password length that was too short")
 	}
 }
