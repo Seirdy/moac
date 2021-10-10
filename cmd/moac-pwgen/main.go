@@ -164,11 +164,11 @@ func main1() int {
 func setCharsetNames(args []string) (charsetNames []string) {
 	var badCharsets []string
 
+	charsetNames = []string{"ascii"}
+
 	if len(args) > 0 {
 		charsetNames, badCharsets = sanitize.FilterStrings(args)
 		warnOnBadCharacters(badCharsets)
-	} else {
-		charsetNames = []string{"ascii"}
 	}
 
 	return charsetNames

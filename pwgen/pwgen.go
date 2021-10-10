@@ -146,9 +146,11 @@ func buildFixedLengthPw(
 		if i := indexOf(specialIndexes, currentLength); i >= 0 {
 			addRuneToEnd(pwBuilder, cs[i].Runes()) // one of each charset @ a special index
 			specialI++
-		} else {
-			addRuneToEnd(pwBuilder, combinedCharset)
+
+			continue
 		}
+
+		addRuneToEnd(pwBuilder, combinedCharset)
 	}
 
 	return []rune(pwBuilder.String())

@@ -222,12 +222,11 @@ func (givens *Givens) MinEntropy() (entropyNeeded float64, err error) {
 
 	if givens.Time > 0 {
 		timeBound := math.Log2(givens.Time * givens.GuessesPerSecond)
-		entropyNeeded = math.Min(energyBound, timeBound)
-	} else {
-		entropyNeeded = energyBound
+
+		return math.Min(energyBound, timeBound), nil
 	}
 
-	return entropyNeeded, nil
+	return energyBound, nil
 }
 
 // MinEntropyQuantum is equivalent to MinEntropy, but accounts for
