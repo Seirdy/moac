@@ -447,7 +447,7 @@ func TestGenPw(t *testing.T) {
 			t.Parallel()
 
 			tooLongCount := 0
-			runTestCaseGroup(t, group, &tooLongCount, allowedPercentWithOverage, loops)
+			runTestCaseGroup(t, group, &tooLongCount, allowedPercentWithOverage)
 			log.Print(
 				"number of too-long passwords for charset " +
 					groupInfo.name +
@@ -463,24 +463,11 @@ func TestGenPw(t *testing.T) {
 	}
 }
 
-func TestGenPwHandlesSingleEmptyCharset(t *testing.T) {
-	t.Parallel()
-
-	pwr := pwgen.PwRequirements{
-		CharsetsWanted: []charsets.Charset{charsets.CustomCharset(make([]rune, 0))},
-		TargetEntropy:  128,
-	}
-
-	_, err := pwgen.GenPW(pwr)
-
-	if !errors.Is(err, pwgen.ErrInvalidLenBounds) {
-		t.Errorf("expected error %s from GenPW, got %s", pwgen.ErrInvalidLenBounds.Error(), err.Error())
-	}
-}
-
 func runTestCaseGroup(
-	t *testing.T, testCaseGroup []pwgenTestCase, tooLongCount *int, overageAllowed float64, loops int) {
+	t *testing.T, testCaseGroup []pwgenTestCase, tooLongCount *int, overageAllowed float64) {
 	t.Helper()
+
+	loops := getLoops()
 
 	for i := range testCaseGroup {
 		testCase := testCaseGroup[i]
