@@ -93,6 +93,15 @@ func (givens *Givens) calculatePower() {
 	setBottleneck(&givens.Power, powerFromComputationSpeed, powerFromEnergy)
 }
 
+func (givens *Givens) calculateGPS() {
+	var (
+		bremermannGPS = Bremermann * givens.Mass
+		powerGPS      = givens.Power / givens.EnergyPerGuess
+	)
+
+	setBottleneck(&givens.GuessesPerSecond, bremermannGPS, powerGPS)
+}
+
 func (givens *Givens) calculateEnergy() {
 	var (
 		energyFromMass  = givens.Mass * C * C
@@ -138,14 +147,7 @@ func (givens *Givens) Populate() error {
 
 	givens.calculatePower()
 
-	var bremermannGPS float64
-
-	if givens.GuessesPerSecond == 0 && givens.Mass != 0 {
-		bremermannGPS = Bremermann * givens.Mass
-	}
-
-	powerGPS := givens.Power / givens.EnergyPerGuess
-	setBottleneck(&givens.GuessesPerSecond, bremermannGPS, powerGPS)
+	givens.calculateGPS()
 
 	givens.calculateEnergy()
 

@@ -144,7 +144,8 @@ func buildFixedLengthPw(
 
 	for specialI := 0; currentLength < pwLength; currentLength++ {
 		if i := indexOf(specialIndexes, currentLength); i >= 0 {
-			addRuneToEnd(pwBuilder, cs[i].Runes()) // one of each charset @ a special index
+			// one of each charset @ a special index
+			addRuneToEnd(pwBuilder, cs[i].Runes())
 			specialI++
 
 			continue
@@ -158,8 +159,7 @@ func buildFixedLengthPw(
 
 func randomlyInsertRunesTillStrong(
 	maxLen int, pwRunes *[]rune, entropyWanted float64, combinedCharset []rune) {
-	for (maxLen == 0 || len(*pwRunes) < maxLen) &&
-		entropyWanted > entropy.Entropy(string(*pwRunes)) {
+	for (len(*pwRunes) < maxLen) && entropyWanted > entropy.Entropy(string(*pwRunes)) {
 		addRuneAtRandLoc(pwRunes, combinedCharset)
 	}
 }

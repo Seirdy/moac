@@ -54,7 +54,7 @@ func findCharsetsUsed(password string) charsets.CharsetCollection {
 
 	for _, charset := range charsets.DefaultCharsets {
 		if strings.ContainsAny(filteredPassword, charset.String()) {
-			charsetsUsed = append(charsetsUsed, charset)
+			charsetsUsed.AddDefault(charset)
 			filterFromString(&filteredPassword, charset.Runes())
 		}
 	}

@@ -82,7 +82,7 @@ func (cs *CharsetCollection) AddDefault(newCharsets ...DefaultCharset) {
 }
 
 func (cs *CharsetCollection) addSingle(c CustomCharset) {
-	for i := 0; i < len(*cs) && len(c) > 0; i++ {
+	for i := 0; i < len(*cs); i++ {
 		minimizeRedundancyInLatter(&(*cs)[i], &c)
 	}
 
@@ -99,7 +99,7 @@ func (cs *CharsetCollection) Combined() CustomCharset {
 		ccBuilder.WriteString(c.String())
 	}
 
-	return CustomCharset([]rune(ccBuilder.String()))
+	return []rune(ccBuilder.String())
 }
 
 // ParseCharsets creates a CharsetCollection from string identifiers.
