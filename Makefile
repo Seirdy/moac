@@ -99,7 +99,7 @@ lint: shfmt-lint go-consistent checkmake gokart-lint golangci-lint nancy archlin
 .PHONY: .fmt-go
 
 .fmt-sh: $(SH_SRC)
-	$(SHFMT) -p -s -w $(SH_SRC)
+	$(SHFMT) -p -s -w -bn $(SH_SRC)
 .PHONY: .fmt-sh
 
 # Format all go/shell files

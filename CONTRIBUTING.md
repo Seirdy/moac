@@ -20,19 +20,21 @@ I also check issues in the GitHub, GitLab, and Codeberg mirrors linked at the to
 
 ### Patches, questions, and feature requests
 
-Preferred location: <https://lists.sr.ht/~seirdy/moac>. Send emails and patches to [~seirdy/moac@lists.sr.ht](mailto:~seirdy/moac@lists.sr.ht). I also check the GitHub, GitLab, and Codeberg mirrors for issues and PRs.
+Preferred location: <https://lists.sr.ht/~seirdy/moac>. Send emails and patches to [~seirdy/moac@lists.sr.ht](mailto:~seirdy/moac@lists.sr.ht). I also check the GitHub, GitLab, and Codeberg mirrors for issues and PRs. In fact, I'll even accept a contribution as a link to a completely different Git remote; Sourcehut's CI is remote-neutral.
 
 #### Coding standards
 
 Contributions don't need to follow these standards to be useful. If a useful patch doesn't pass the below checks, I might clean it up myself.
 
-This project uses `gofumpt`, `fieldalignment`, `shfmt`, and `mdfmt -stxHeaders` for formatting; it uses `golangci-lint`, `gokart`, `go-consistent`, `shfmt` (again), and `checkmake` for linting. You can install all of them to your `GOBIN` by running `.builds/install-linters.sh`
+This project uses `gofumpt`, `fieldalignment`, `shfmt -ln posix -bn -p -s -d`, and `mdfmt -stxHeaders` for formatting; it uses `golangci-lint`, GoKart, `go-consistent`, `go-arch-lint`, ShellCheck, `shfmt` (again), and `checkmake` for linting. You can install all except ShellCheck to your `GOBIN` by running `.builds/install-linters.sh`
 
 Run `make fmt` to format code, `make lint` to run the linters (except `mdfmt`), and `make test` to run unit tests. `make pre-commit` runs all three. I recommend using [committer](https://github.com/Gusto/committer) to auto-run pre-commit checks; just add `committer` to your hooks.
 
 The linters are very opinionated. If you find this annoying, you can send your patch anyway; I'll clean it up if it looks useful.
 
 See the "Testing" section near the bottom for info about the tests.
+
+[`doc/SECURITY.md`](https://git.sr.ht/~seirdy/moac/tree/master/item/doc/SECURITY.md) lays out some additional requirements.
 
 ### Other ways to help
 
@@ -45,16 +47,18 @@ Quick architecture overview
 Excluding tests, MOAC has <1k SLOC; it shouldn't be hard to grok. Here's a one-minute overview:
 
 - `givens.go` handles given physical values (what you'd call "the givens" if you were solving a physics problem) and computes missing values/bottlenecks.
-- `charsets` handles parsing, building, and de-duplicating charsets to use when calculating password entropy or building passwords.
-- `entropy`, well, calculates entropy. It figures out what charsets are contained in a password (saving these in a data structure defined by `charsets`) and figures out how many combinations can fit in the resulting space.
-- `pwgen` contains the `GenPW` function builds passwords that match the given requirements: length bounds, target entropy, and charsets to use.
+- `charsets/` handles parsing, building, and de-duplicating charsets to use when calculating password entropy or building passwords.
+- `entropy/`, well, calculates entropy. It figures out what charsets are contained in a password (saving these in a data structure defined by `charsets`) and figures out how many combinations can fit in the resulting space.
+- `pwgen/` contains the `GenPW` function builds passwords that match the given requirements: length bounds, target entropy, and charsets to use.
+
+`.go-arch-lint.yml` in the repo root lists who-imports-whom.
 
 Testing
 -------
 
 For the library: everything possible should be covered by tests. If a branch that handles an error should be impossible to reach and is therefore uncovered, replace it with a panic to indicate the presence of a bug. Any uncovered line that isn't a panic or a deprecated function is in need of a test.
 
-That being said, don't write tests just for the sake of ticking off a box. Statement coverage isn't sufficient to show that most/all statements are useful and correct. One way to verify this is to check branch coverage (see [gobco](https://github.com/rillig/gobco) and mutation scores (see [go-mutesting](https://github.com/zimmski/go-mutesting)). Be aware of false positives, especially in the case of the latter.
+That being said, don't write tests just for the sake of ticking off a box. Statement coverage isn't sufficient to show that most/all statements are useful and correct. Other ways to measure test comprehensiveness include branch coverage (see [gobco](https://github.com/rillig/gobco)) and mutation scores (see [go-mutesting](https://github.com/zimmski/go-mutesting)). Should you choose to give these tools a spin (you don't have to), be aware of false positives. I try to keep the mutation score above 0.7 for now.
 
 For the CLI: this uses [testscript](https://godocs.io/github.com/rogpeppe/go-internal/testscript) to test CLI behavior.
 
