@@ -3,7 +3,6 @@ package moac
 import (
 	"errors"
 	"fmt"
-	"log"
 	"math"
 
 	"git.sr.ht/~seirdy/moac/v2/entropy"
@@ -76,41 +75,6 @@ func (givens *Givens) populateDefaults() {
 	}
 }
 
-func setBottleneck(given *float64, computedValues ...float64) {
-	for _, computedValue := range computedValues {
-		if *given == 0 || (computedValue > 0 && computedValue < *given) {
-			*given = computedValue
-		}
-	}
-}
-
-func (givens *Givens) calculatePower() {
-	var (
-		powerFromComputationSpeed = givens.GuessesPerSecond * givens.EnergyPerGuess
-		powerFromEnergy           = givens.Energy / givens.Time
-	)
-
-	setBottleneck(&givens.Power, powerFromComputationSpeed, powerFromEnergy)
-}
-
-func (givens *Givens) calculateGPS() {
-	var (
-		bremermannGPS = Bremermann * givens.Mass
-		powerGPS      = givens.Power / givens.EnergyPerGuess
-	)
-
-	setBottleneck(&givens.GuessesPerSecond, bremermannGPS, powerGPS)
-}
-
-func (givens *Givens) calculateEnergy() {
-	var (
-		energyFromMass  = givens.Mass * C * C
-		energyFromPower = givens.Power * givens.Time
-	)
-
-	setBottleneck(&givens.Energy, energyFromMass, energyFromPower)
-}
-
 // Errors for missing physical values that are required to compute desired values.
 var (
 	ErrMissingValue = errors.New("not enough given values")
@@ -141,19 +105,10 @@ func (givens *Givens) Populate() error {
 		return fmt.Errorf("invalid givens: %w", err)
 	}
 
-	if givens.Password != "" {
-		setBottleneck(&givens.Entropy, entropy.Entropy(givens.Password))
-	}
-
+	givens.calculateEntropy()
 	givens.calculatePower()
-
 	givens.calculateGPS()
-
 	givens.calculateEnergy()
-
-	if givens.Energy == 0 && givens.Time == 0 {
-		log.Panic("populating givens: failed to populate energy and time")
-	}
 
 	return nil
 }
@@ -173,14 +128,7 @@ func (givens *Givens) BruteForceability() (float64, error) {
 		return 0, fmt.Errorf("missing entropy: %w", ErrMissingPE)
 	}
 
-	computedBruteForceability := computeBruteForceability(givens)
-
-	// if bruteforceability isn't valid, we have a bug.
-	if computedBruteForceability == 0 || math.IsNaN(computedBruteForceability) {
-		log.Panicf("failed to compute BruteForceability: got %v", computedBruteForceability)
-	}
-
-	return computedBruteForceability, nil
+	return computeBruteForceability(givens), nil
 }
 
 // BruteForceabilityQuantum is equivalent to BruteForceability, but accounts for
@@ -237,4 +185,45 @@ func (givens *Givens) MinEntropyQuantum() (entropyNeeded float64, err error) {
 	minEntropyNonQuantum, err := givens.MinEntropy()
 
 	return minEntropyNonQuantum * 2, err
+}
+
+func setBottleneck(given *float64, computedValues ...float64) {
+	for _, computedValue := range computedValues {
+		if *given == 0 || (computedValue > 0 && computedValue < *given) {
+			*given = computedValue
+		}
+	}
+}
+
+func (givens *Givens) calculateEntropy() {
+	if givens.Password != "" {
+		setBottleneck(&givens.Entropy, entropy.Entropy(givens.Password))
+	}
+}
+
+func (givens *Givens) calculatePower() {
+	var (
+		powerFromComputationSpeed = givens.GuessesPerSecond * givens.EnergyPerGuess
+		powerFromEnergy           = givens.Energy / givens.Time
+	)
+
+	setBottleneck(&givens.Power, powerFromComputationSpeed, powerFromEnergy)
+}
+
+func (givens *Givens) calculateGPS() {
+	var (
+		bremermannGPS = Bremermann * givens.Mass
+		powerGPS      = givens.Power / givens.EnergyPerGuess
+	)
+
+	setBottleneck(&givens.GuessesPerSecond, bremermannGPS, powerGPS)
+}
+
+func (givens *Givens) calculateEnergy() {
+	var (
+		energyFromMass  = givens.Mass * C * C
+		energyFromPower = givens.Power * givens.Time
+	)
+
+	setBottleneck(&givens.Energy, energyFromMass, energyFromPower)
 }
