@@ -34,6 +34,7 @@ moac [OPTIONS...] [COMMAND]
 *-m* <mass>
 	Mass at attacker's disposal (kg). Used to compute mass-energy. Overrides the
 	value of *-e* if the computed mass-energy is lower.
+	Mass can also be used to calculate Bremermann's Limit.
 
 *-g* <energy>
 	Energy used per guess (J).
@@ -49,6 +50,10 @@ moac [OPTIONS...] [COMMAND]
 
 *-t* <time>
 	Time limit for brute-force attack (s).
+
+*-G* <guesses>
+	Guesses-per-second in a brute-force attack. Overridden by values computed from
+	Bremermann's Limit and the Landauer limit if those are smaller or if unset.
 
 *-p* <password>
 	Password to analyze. Use '-' to read the password from stdin.
@@ -68,7 +73,9 @@ values, *moac* uses the following default values:
 
 *energy per guess*: Landauer limit.
 
-*guesses per second*: product of Bremermann's Limit and mass.
+*guesses per second*: product of Bremermann's Limit and mass. If *-P* is
+specified and the quotient of power and the Landauer limit is smaller, set it to
+that instead.
 
 *temperature*: 2.7 K, a low estimate for the temperature of cosmic background
 radiation.

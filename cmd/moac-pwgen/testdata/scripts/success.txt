@@ -72,3 +72,9 @@ stdout '^....................$'
 moac-pwgen -L 8 ascii latin
 ! stderr '.'
 stdout '^........$'
+
+# actually somewhat realistic scenario: crack in 10 years
+# folding@home managed to hit around 2.5 exaflops once; let's try 10 exaflops
+moac-pwgen -t 3.1536e8 -G 1e18
+! stderr '.'
+stdout '^..............$'

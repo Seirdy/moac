@@ -50,3 +50,9 @@ stdout '^6\.1e\+29$'
 
 moac -t 1.45e17 -P 3.828e26 -T 1.5e7 -qs 396 strength
 stdout '^0\.962$'
+
+# actually somewhat realistic scenario: crack in 10 years
+# folding@home managed to hit around 2.5 exaflops once; let's try 10 exaflops
+moac -t 3.1536e8 -s 128 -G 1e18
+! stderr '.'
+stdout '^9\.27e-13$'

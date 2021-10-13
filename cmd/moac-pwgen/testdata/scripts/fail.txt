@@ -37,3 +37,7 @@ stderr 'moac: bad GenPW param: lengths and entropies cannot be negative: bad val
 ! moac-pwgen -l 4 -L 4 -s -128
 stderr 'moac: bad GenPW param: lengths and entropies cannot be negative: bad value -128 is below 0'
 ! stdout '.'
+
+! moac-pwgen -s 128 -G -1e18 -t 3.1536e8
+stderr 'moac: cannot compute MinEntropy: invalid givens: physical values cannot be negative: bad value -1e\+18 is below 0'
+! stdout '.'

@@ -29,6 +29,7 @@ OPTIONS:
   -P <power>	Power available to the computer (W)
   -T <temperature>	Temperature of the system (K)
   -t <time>	Time limit for brute-force attack (s)
+  -G <guesses>	Guesses per second in a brute-force attack
   -l <length>	minimum generated password length; can override (increase) -s
   -L <length>	maximum generated password length; can override (decrease) -s
 `
@@ -71,6 +72,8 @@ func parseOpts(
 			givens.Temperature, err = strconv.ParseFloat(opt.Value, 64)
 		case 't':
 			givens.Time, err = strconv.ParseFloat(opt.Value, 64)
+		case 'G':
+			givens.GuessesPerSecond, err = strconv.ParseFloat(opt.Value, 64)
 		case 'l':
 			minLen64, err = strconv.ParseInt(opt.Value, 10, 32)
 		case 'L':
@@ -116,7 +119,7 @@ func main() {
 }
 
 func main1() int {
-	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:l:L:")
+	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:G:l:L:")
 	if !cli.DisplayErr(err, usage) {
 		return 1
 	}

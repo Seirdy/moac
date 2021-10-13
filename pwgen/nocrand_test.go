@@ -27,7 +27,7 @@ func shouldPanic(t *testing.T) {
 	defer func() {
 		rand.Reader = csprng
 
-		if out := recover(); out != "can't generate passwords: crypto/rand unavailable: EOF" {
+		if out := recover(); out != "cannot generate passwords: crypto/rand unavailable: EOF" {
 			t.Errorf("panic due to CSPRNG unavailability sent unexpected message: %v", out)
 		}
 	}()

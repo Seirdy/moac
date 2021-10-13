@@ -13,7 +13,7 @@ import (
 func randInt(max int) int {
 	newInt, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
 	if err != nil {
-		log.Panicf("can't generate passwords: crypto/rand unavailable: %v", err)
+		log.Panicf("cannot generate passwords: crypto/rand unavailable: %v", err)
 	}
 
 	return int(newInt.Int64())

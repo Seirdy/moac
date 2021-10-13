@@ -151,6 +151,15 @@ func givensTestCases() []givensTestCase { //nolint:funlen // single statement; l
 			expectedErrME: bounds.ErrImpossibleNegative,
 		},
 		{
+			name: "negativeGPS",
+			given: moac.Givens{
+				Energy:           4.0e52,
+				GuessesPerSecond: -1.0e4,
+			},
+			expectedErrBF: bounds.ErrImpossibleNegative,
+			expectedErrME: bounds.ErrImpossibleNegative,
+		},
+		{
 			name:          "Mising energy, mass",
 			given:         moac.Givens{},
 			expectedBFQ:   0,

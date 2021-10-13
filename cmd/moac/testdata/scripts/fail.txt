@@ -22,6 +22,14 @@ stderr 'moac: not enough given values: missing password'
 stderr 'moac: bad arguments: unknown command ascii'
 ! stdout '.'
 
+! moac -q ascii
+stderr 'moac: bad arguments: unknown command ascii'
+! stdout '.'
+
 ! moac -m -8
 stderr 'moac.*BruteForceability.*negative'
+! stdout '.'
+
+! moac -s 128 -G -1e18 -t 3.1536e8
+stderr 'moac: cannot compute BruteForceability: invalid givens: physical values cannot be negative: bad value -1e\+18 is below 0'
 ! stdout '.'

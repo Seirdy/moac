@@ -30,6 +30,7 @@ OPTIONS:
   -P <power>	Power available to the computer (W)
   -T <temperature>	Temperature of the system (K)
   -t <time>	Time limit for brute-force attack (s)
+  -G <guesses>	Guesses per second in a brute-force attack
   -p <password>	Password to analyze; use "-" for stdin
 
 COMMANDS:
@@ -80,6 +81,8 @@ func parseOpts(
 			givens.Temperature, err = strconv.ParseFloat(opt.Value, 64)
 		case 't':
 			givens.Time, err = strconv.ParseFloat(opt.Value, 64)
+		case 'G':
+			givens.GuessesPerSecond, err = strconv.ParseFloat(opt.Value, 64)
 		case 'p':
 			givens.Password = opt.Value
 		}
@@ -141,7 +144,7 @@ func main1() int {
 }
 
 func getOutput() (output float64, exitEarly bool, err error) {
-	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:p:")
+	opts, optind, err := getopt.Getopts(os.Args, "hvqre:s:m:g:P:T:t:G:p:")
 	if err != nil {
 		return output, exitEarly, fmt.Errorf("%w\n%s", err, usage)
 	}

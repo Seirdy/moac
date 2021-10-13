@@ -30,6 +30,7 @@ moac-pwgen [OPTIONS...] [CHARSETS...]
 *-m* <mass>
 	Mass at attacker's disposal (kg). Used to compute mass-energy. Overrides the
 	value of *-e* if the computed mass-energy is lower.
+	Mass can also be used to calculate Bremermann's Limit.
 
 *-g* <energy>
 	Energy used per guess (J).
@@ -45,6 +46,10 @@ moac-pwgen [OPTIONS...] [CHARSETS...]
 
 *-t* <time>
 	Time limit for brute-force attack (s).
+
+*-G* <guesses>
+	Guesses-per-second in a brute-force attack. Overridden by values computed from
+	Bremermann's Limit and the Landauer limit if those are smaller or if unset.
 
 *-l* <length>
 	Minimum number of characters in generated password. Overrides value of *-s* if
