@@ -12,6 +12,7 @@ import (
 	"git.sr.ht/~seirdy/moac/v2/internal/cli"
 	"git.sr.ht/~sircmpwn/getopt"
 	"golang.org/x/term"
+	"github.com/rivo/uniseg"
 )
 
 const (
@@ -157,6 +158,14 @@ func getOutput() (output float64, exitEarly bool, err error) {
 	givens.Password, err = processPassword(givens.Password)
 	if err != nil {
 		return output, exitEarly, fmt.Errorf("moac: %w", err)
+	}
+
+	graphemes := uniseg.NewGraphemes(givens.Password)
+	for graphemes.Next() {
+		if len(graphemes.Runes()) > 1 {
+			fmt.Fprintf(os.Stderr, "warning: charsets contain grapheme clusters, will be treated as distinct codepoints\n")
+			break
+		}
 	}
 
 	cmd := strengthCmd
