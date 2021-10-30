@@ -191,11 +191,15 @@ See [`CONTRIBUTING.md`](https://git.sr.ht/~seirdy/moac/tree/master/CONTRIBUTING.
 Alternatives
 ------------
 
-- [libpwquality](https://github.com/libpwquality/libpwquality/)
 - [zxcvbn](https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/wheeler)
-- [pwgen](http://sf.net/projects/pwgen)
 - [cracklib](https://github.com/cracklib/cracklib)
-- The password generator/evaluator in [KeePassXC](https://keepassxc.org/)
 - [go-password-validator](https://github.com/wagslane/go-password-validator)
-- [go-password](https://github.com/sethvargo/go-password)
+- [pass-checker](https://github.com/devops-works/pass-checker)
 
+- [pwgen](http://sf.net/projects/pwgen)
+- [go-password](https://github.com/sethvargo/go-password)
+- [repassgen](https://github.com/ilius/repassgen)
+- [genpw](https://git.sr.ht/~seirdy/dotfiles/tree/master/Executables/shell-scripts/bin/genpw), my tiny shell script to generate passwords with  `tr`, `dd`, `/dev/urandom`, and optionally `iconv`.
+
+- [libpwquality](https://github.com/libpwquality/libpwquality/)
+- The password generator/evaluator in [KeePassXC](https://keepassxc.org/)
