@@ -17,7 +17,7 @@ _arguments \
 
 local -a subcommands
 subcommands=(
-	"strength:alculate the liklihood of a successful guess"
+	"strength:calculate the likelihood of a successful guess"
 	"entropy:calculate the entropy of the given password"
 	"entropy-limit:calculate the minimum entropy for a brute-force attack failure."
 )

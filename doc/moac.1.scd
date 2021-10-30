@@ -83,7 +83,7 @@ radiation.
 # COMMANDS
 
 *strength*
-	Calculate the liklihood of a successful guess.
+	Calculate the likelihood of a successful guess.
 
 *entropy*
 	Calculate the entropy of the given password

@@ -34,7 +34,7 @@ OPTIONS:
   -p <password>	Password to analyze; use "-" for stdin
 
 COMMANDS:
-  strength	Calculate the liklihood of a successful guess 
+  strength	Calculate the likelihood of a successful guess
   entropy	Calculate the entropy of the given password
   entropy-limit	Calculate the minimum entropy for a brute-force attack failure.
 `

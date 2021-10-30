@@ -114,7 +114,7 @@ func (givens *Givens) Populate() error {
 	return nil
 }
 
-// BruteForceability computes the liklihood that a password will be
+// BruteForceability computes the likelihood that a password will be
 // brute-forced given the contstraints in givens.
 // if 0 < BruteForceability <= 1, it represents the probability that the
 // password can be brute-forced.
