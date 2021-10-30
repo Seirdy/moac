@@ -8,9 +8,9 @@ I try to accommodate everyone's workflow. Here's ways to contribute and how, in 
 
 ### Security vulnerabilities, non-public contact
 
-If you want to connect with me directly: my email address is at the bottom of the man pages or in the commit logs. Vulnerability disclosures should be PGP-encrypted using the PGP key [1E892DB2A5F84479](https://seirdy.one/publickey.asc).
+If you want to connect with me directly: my email address is at the bottom of the man pages or in the commit logs. Vulnerability disclosures should be PGP-encrypted using the PGP key [1E892DB2A5F84479](https://seirdy.one/publickey.asc). Alternatively, send an encrypted message on Matrix to `@seirdy:envs.net`
 
-Alternatively, send an encrypted message on Matrix to `@seirdy:envs.net`
+Refer to [`doc/SECURITY.md`](https://git.sr.ht/~seirdy/moac/tree/master/item/doc/SECURITY.md) for information on security requirements.
 
 ### Bug reports and TODOs
 
@@ -60,7 +60,7 @@ For the library: everything possible should be covered by tests. If a branch tha
 
 That being said, don't write tests just for the sake of ticking off a box. Statement coverage isn't sufficient to show that most/all statements are useful and correct. Other ways to measure test comprehensiveness include branch coverage (see [gobco](https://github.com/rillig/gobco)) and mutation scores (see [go-mutesting](https://github.com/zimmski/go-mutesting)). Should you choose to give these tools a spin (you don't have to), be aware of false positives. I try to keep the mutation score above 0.7 for now.
 
-For the CLI: this uses [testscript](https://godocs.io/github.com/rogpeppe/go-internal/testscript) to test CLI behavior.
+For the CLI: this uses [testscript](https://godocs.io/github.com/rogpeppe/go-internal/testscript) for scenario tests.
 
 If you want live test feedback while hacking and find the tests to be too slow (they typically take under 3s by default on my low-end notebook), set the environment variable `LOOPS` to something below `64`; running `make test-quick` will set it to `10`. Test-cases for password generation run multiple times because of the non-determinism inherent to random password generation. Tests are a bit slow since `GenPW()`'s tests have thousands of test-cases generated from combinations of possible parameters.
 
