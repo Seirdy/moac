@@ -14,7 +14,7 @@ tasks:
       go version
       # go on openbsd must use libc for syscalls as of 1.16
       # due to syscall api instability
-      make BUILDMODE_CGO=exe EXTRA_SANITIZERS='undefined' NON_OPENBSD_FLAGS='' build-cgo
+      make BUILDMODE_CGO=exe EXTRA_SANITIZERS='' NON_OPENBSD_FLAGS='' build-cgo
       strip ./moac ./moac-pwgen
       sha256 ./moac
       sha256 ./moac-pwgen
