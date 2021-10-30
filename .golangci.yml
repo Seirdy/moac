@@ -29,7 +29,8 @@ issues:
         '(add-constant: (avoid magic numbers like|string literal "")|cyclomatic: function parseOpts|deep-exit: calls to log\.Panicf? only in main)'
     - linters: [revive]
       path: _test\.go
-      text: '^add-constant: '
+      # tests can have magic vals and up to 5 function args
+      text: '^(add-constant: |argument-limit: maximum number of arguments per function exceeded; max 4 but got 5)'
       # parseOpts length is soley determined by cli flag count.
     - linters: [funlen, cyclop]
       path: cmd/
@@ -112,7 +113,7 @@ linters:
     - whitespace
     - wrapcheck
     - wsl
-    # - gomodguard
+    # - gomodguard # obsoleted by go-arch-lint
     # - paralleltest # not always relevant
     # - tenv # only for go117+
     # - scopelint # deprecated
@@ -137,18 +138,25 @@ linters-settings:
       - performance
       - experimental
       - opinionated
+    disabled-checks:
+      - ioutilDeprecated # moac should work in Go 1.15+
     settings:
       captLocal:
         paramsOnly: false
       elseif:
         skipBalanced: false
       hugeParam:
-        sizeThreshold: 60
+        sizeThreshold: 64
       rangeExprCopy:
         sizeThreshold: 128
         skipTestFuncs: false
+      rangeValCopy:
+        sizeThreshold: 96
+        skipTestFuncs: false
       nestingReduce:
         bodyWidth: 3
+      truncateCmp:
+        skipArchDependent: false
   gomnd:
     settings:
       mnd:
@@ -182,7 +190,7 @@ linters-settings:
     rules:
       - name: add-constant
       - name: argument-limit
-        arguments: [5]
+        arguments: [4]
       - name: atomic
       - name: bare-return
       - name: blank-imports
