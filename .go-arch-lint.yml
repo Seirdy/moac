@@ -17,6 +17,8 @@ vendors:
     in: golang.org/x/term
   getopt:
     in: git.sr.ht/~sircmpwn/getopt
+  uniseg:
+    in: github.com/rivo/uniseg
 
 components:
   moac:
@@ -44,6 +46,7 @@ deps:
   pwgen-cli:
     canUse:
       - getopt
+      - uniseg
     mayDependOn:
       - moac
       - cliShared
@@ -54,6 +57,7 @@ deps:
     canUse:
       - getopt
       - term
+      - uniseg
     mayDependOn:
       - moac
       - cliShared
@@ -67,7 +71,7 @@ deps:
       - charsets
   pwgen:
     mayDependOn:
-      - moac # just needs DefaultEntropy, should be defined somewhere else
+      - moac # just needs const moac.DefaultEntropy, should be defined somewhere else in v3?
       - charsets
       - entropy
       - bounds

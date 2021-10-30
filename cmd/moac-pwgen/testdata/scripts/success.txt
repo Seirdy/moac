@@ -78,3 +78,13 @@ stdout '^........$'
 moac-pwgen -t 3.1536e8 -G 1e18
 ! stderr '.'
 stdout '^..............$'
+
+# grapheme clusters
+moac-pwgen -s 128 ascii 'ƩȞ6FÕʂ🏳️‍🌈.'
+stderr 'warning: charsets contain grapheme clusters, will be treated as distinct codepoints'
+stderr 'warning: charsets ƩȞ6FÕʂ🏳️‍🌈. contained invalid codepoints, removing them'
+stdout '^....................$'
+
+moac-pwgen ascii latin '🇩🇪'
+stderr 'warning: charsets contain grapheme clusters, will be treated as distinct codepoints'
+stdout '^............................$'

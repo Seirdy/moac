@@ -17,7 +17,7 @@ Security features users can and cannot expect:
 Third-party dependencies
 ------------------------
 
-MOAC is split into a library and two CLI utilities. The library has no third-party dependencies; the CLI utilities have two direct third-party dependencies and a third one just for tests. A CI job scans these dependencies and indirect dependencies against Sonatype's OSS Index on every push.
+MOAC is split into a library and two CLI utilities. The library has no third-party dependencies; the CLI utilities have a few. A CI job scans these dependencies and indirect dependencies against Sonatype's OSS Index on every push.
 
 Builds
 ------

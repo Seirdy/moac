@@ -56,3 +56,8 @@ stdout '^0\.962$'
 moac -t 3.1536e8 -s 128 -G 1e18
 ! stderr '.'
 stdout '^9\.27e-13$'
+
+# grapheme clusters
+moac -p '$ʙŤmÊÂçYɑ!ƨƍǽƅƣʤǟl?Ã🇩🇪ǖȣā3ɪ]Ó' entropy
+stderr 'warning: charsets contain grapheme clusters, will be treated as distinct codepoints'
+stdout '^269$'
