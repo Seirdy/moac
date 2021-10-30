@@ -7,11 +7,11 @@ set -e -u
 # Binaries made with `make dist-reprod` are reproducible for a given Go installation.
 # All builds with the below Go installation, for example, should have the same checksums.
 
-go_version=1.17.1
-go_hash=dab7d9c34361dc21ec237d584590d72500652e7c909bf082758fb63064fca0ef
+go_version=1.17.2
+go_hash=f242a9db6a0ad1846de7b6d94d507915d14062660616a61ef7c808a76e4f1676
 go_tarball="go$go_version.linux-amd64.tar.gz"
 
-curl -sSLo "$go_tarball" "https://storage.googleapis.com/golang/go$go_version.linux-amd64.tar.gz"
+curl -sSLo "$go_tarball" "https://dl.google.com/go/go$go_version.linux-amd64.tar.gz"
 found_hash="$(sha256sum "$go_tarball" | cut -d' ' -f1)"
 
 if [ "$found_hash" != "$go_hash" ]; then
