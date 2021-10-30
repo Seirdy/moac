@@ -46,7 +46,6 @@ deps:
   pwgen-cli:
     canUse:
       - getopt
-      - uniseg
     mayDependOn:
       - moac
       - cliShared
@@ -57,7 +56,6 @@ deps:
     canUse:
       - getopt
       - term
-      - uniseg
     mayDependOn:
       - moac
       - cliShared
@@ -75,3 +73,7 @@ deps:
       - charsets
       - entropy
       - bounds
+  cliShared:
+    canUse:
+      - uniseg
+

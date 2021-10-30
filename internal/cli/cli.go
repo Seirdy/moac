@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"runtime/debug"
+
+	"github.com/rivo/uniseg"
 )
 
 // FloatFmt defines how many digits of a float to print.
@@ -40,4 +42,16 @@ func GetVersion() string {
 	}
 
 	return version
+}
+
+// HasGrapheme returns true if a string contains any grapheme clusters, false otherwise.
+func HasGrapheme(str string) bool {
+	graphemes := uniseg.NewGraphemes(str)
+	for graphemes.Next() {
+		if len(graphemes.Runes()) > 1 {
+			return true
+		}
+	}
+
+	return false
 }

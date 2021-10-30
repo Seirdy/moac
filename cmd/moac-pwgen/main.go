@@ -12,7 +12,6 @@ import (
 	"git.sr.ht/~seirdy/moac/v2/internal/sanitize"
 	"git.sr.ht/~seirdy/moac/v2/pwgen"
 	"git.sr.ht/~sircmpwn/getopt"
-	"github.com/rivo/uniseg"
 )
 
 const (
@@ -153,12 +152,8 @@ func main1() int {
 		return 1
 	}
 
-	graphemes := uniseg.NewGraphemes(strings.Join(args, ""))
-	for graphemes.Next() {
-		if len(graphemes.Runes()) > 1 {
-			fmt.Fprintf(os.Stderr, "warning: charsets contain grapheme clusters, will be treated as distinct codepoints\n")
-			break
-		}
+	if cli.HasGrapheme(strings.Join(args, "")) {
+		fmt.Fprintf(os.Stderr, "warning: charsets contain grapheme clusters, will be treated as distinct codepoints\n")
 	}
 
 	pwr.CharsetsWanted = charsets.ParseCharsets(setCharsetNames(args))
