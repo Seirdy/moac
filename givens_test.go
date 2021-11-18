@@ -240,17 +240,17 @@ func TestMinEntropy(t *testing.T) {
 	for i := range tcs {
 		t.Run(tcs[i].name, func(t *testing.T) {
 			test := tcs[i]
-			me, errME := test.given.MinEntropy()
-			meq, errMEQ := test.given.MinEntropyQuantum()
+			minEnt, errMinEnt := test.given.MinEntropy()
+			minEntQ, errMinEntQ := test.given.MinEntropyQuantum()
 
-			validateErrors(t, errME, errMEQ, test.expectedErrME, "MinEntropy")
+			validateErrors(t, errMinEnt, errMinEntQ, test.expectedErrME, "MinEntropy")
 
-			if beyondAcceptableMargin(me, test.expectedME) {
-				t.Errorf("MinEntropy() = %.4g; want %.4g", me, test.expectedME)
+			if beyondAcceptableMargin(minEnt, test.expectedME) {
+				t.Errorf("MinEntropy() = %.4g; want %.4g", minEnt, test.expectedME)
 			}
 
-			if beyondAcceptableMargin(meq, me*2) {
-				t.Errorf("MinEntropyQuantum() = %.4g; want %.4g", meq, me*2)
+			if beyondAcceptableMargin(minEntQ, minEnt*2) {
+				t.Errorf("MinEntropyQuantum() = %.4g; want %.4g", minEntQ, minEnt*2)
 			}
 		})
 	}

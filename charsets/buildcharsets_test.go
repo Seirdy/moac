@@ -101,11 +101,11 @@ func buildCharsetsTables() []buildCharsetsTestCase { //nolint:funlen // single s
 
 func formerNotFoundInLatter(former, latter charsets.CharsetCollection) (missing charsets.CharsetCollection) {
 	// for each charset in former: add to missing if it isn't in latter
-	for _, f := range former {
+	for _, formerItem := range former {
 		isMissing := true
 
-		for _, l := range latter {
-			if f.String() == l.String() {
+		for _, latterItem := range latter {
+			if formerItem.String() == latterItem.String() {
 				isMissing = false
 
 				break
@@ -113,7 +113,7 @@ func formerNotFoundInLatter(former, latter charsets.CharsetCollection) (missing 
 		}
 
 		if isMissing {
-			missing = append(missing, f)
+			missing = append(missing, formerItem)
 		}
 	}
 

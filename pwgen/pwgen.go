@@ -96,7 +96,7 @@ func computePasswordLength(charsetSize int, pwEntropy float64, minLen, maxLen in
 func computeSpecialIndexes(pwLength, charsetCount int) []int {
 	res := make([]int, charsetCount)
 
-	for i := 0; i < charsetCount; i++ {
+	for i := 0; i < charsetCount; i++ { //nolint:varnamelen // the only index var
 		newInt := randInt(pwLength)
 
 		// must be unique

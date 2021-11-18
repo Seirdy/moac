@@ -18,14 +18,14 @@ import (
 func Entropy(password string) float64 {
 	charsetsUsed := findCharsetsUsed(password)
 
-	e, err := FromCharsets(charsetsUsed, utf8.RuneCountInString(password))
+	entropy, err := FromCharsets(charsetsUsed, utf8.RuneCountInString(password))
 	// Should be impossible for FromCharsets to return an error when
 	// charsetsUsed cannot be too long. If there's an error, we have a bug.
 	if err != nil {
 		log.Panicf("error measuring generated password entropy: %v", err)
 	}
 
-	return e
+	return entropy
 }
 
 // FromCharsets computes the number of entropy bits in a string

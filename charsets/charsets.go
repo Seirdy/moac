@@ -42,16 +42,16 @@ func (cc *CustomCharset) dedupe() {
 		return
 	}
 
-	n := 1
+	removals := 1
 
 	for i := 1; i < len(*cc); i++ {
 		if (*cc)[i] != (*cc)[i-1] {
-			(*cc)[n] = (*cc)[i]
-			n++
+			(*cc)[removals] = (*cc)[i]
+			removals++
 		}
 	}
 
-	*cc = (*cc)[:n]
+	*cc = (*cc)[:removals]
 }
 
 // CharsetCollection holds a list of charsets, and can bulk-convert them to strings, runes, and names.
@@ -146,17 +146,17 @@ func parseCharset(cs *CharsetCollection, charsetName string) {
 }
 
 //nolint:gocritic // c1 is ptr bc it's modified
-func minimizeRedundancyInLatter(c1 *Charset, c2 *CustomCharset) {
-	c1c := CustomCharset((*c1).Runes())
-	moveOverlapToSmaller(&c1c, c2)
+func minimizeRedundancyInLatter(former *Charset, latter *CustomCharset) {
+	c1c := CustomCharset((*former).Runes())
+	moveOverlapToSmaller(&c1c, latter)
 
 	if len(c1c) == 0 {
-		*c1, *c2 = *c2, c1c
+		*former, *latter = *latter, c1c
 
 		return
 	}
 
-	*c1 = c1c
+	*former = c1c
 }
 
 func moveOverlapToSmaller(c1, c2 *CustomCharset) {
@@ -168,14 +168,14 @@ func moveOverlapToSmaller(c1, c2 *CustomCharset) {
 		deleteFromMe = c2
 	}
 
-	for i := 0; i < len(*deleteFromMe); i++ {
-		for j := 0; j < len(*preserveMe); j++ {
-			if (*deleteFromMe)[i] != (*preserveMe)[j] {
+	for delI := 0; delI < len(*deleteFromMe); delI++ {
+		for presI := 0; presI < len(*preserveMe); presI++ {
+			if (*deleteFromMe)[delI] != (*preserveMe)[presI] {
 				continue
 			}
 
-			*deleteFromMe = append((*deleteFromMe)[:i], (*deleteFromMe)[i+1:]...)
-			i--
+			*deleteFromMe = append((*deleteFromMe)[:delI], (*deleteFromMe)[delI+1:]...)
+			delI--
 
 			break
 		}
