@@ -4,7 +4,7 @@
 set -e -u -x
 
 # golangci-lint is installed from master
-linters='github.com/golangci/golangci-lint/cmd/golangci-lint@1.43.0
+linters='github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
 github.com/praetorian-inc/gokart@latest
 github.com/mrtazz/checkmake/cmd/checkmake@latest
 github.com/quasilyte/go-consistent@latest

@@ -110,11 +110,11 @@ linters:
     - unparam
     - unused
     - varcheck
-    - varnamelen
     - wastedassign
     - whitespace
     - wrapcheck
     - wsl
+    # - varnamelen # not always applicable
     # - gomodguard # obsoleted by go-arch-lint
     # - paralleltest # not always relevant
     # - tenv # only for go117+; I'll require go117+ when go119 is out.
@@ -280,17 +280,6 @@ linters-settings:
     config:
       global:
         audit: enabled
-  varnamelen:
-    max-distance: 6
-    ignore-names:
-      - C
-      - G
-      - r # rune
-    ignore-decls:
-      - cs charsets.CharsetCollection
-      - cs *charsets.CharsetCollection
-      - cs CharsetCollection
-      - cs *CharsetCollection
   wsl:
     force-case-trailing-whitespace: 2
     # force-short-decl-cuddling: true
