@@ -41,6 +41,7 @@ linters:
   disable-all: true
   enable:
     - asciicheck
+    - bidichk
     - bodyclose
     - cyclop
     - deadcode
@@ -109,13 +110,14 @@ linters:
     - unparam
     - unused
     - varcheck
+    - varnamelen
     - wastedassign
     - whitespace
     - wrapcheck
     - wsl
     # - gomodguard # obsoleted by go-arch-lint
     # - paralleltest # not always relevant
-    # - tenv # only for go117+
+    # - tenv # only for go117+; I'll require go117+ when go119 is out.
     # - scopelint # deprecated
     # - maligned # deprecated
     # - golint # deprecated
@@ -124,6 +126,8 @@ linters-settings:
   cyclop:
     max-complexity: 9
     package-average: 5
+  unparam:
+    check-exported: true
   dupl:
     threshold: 40
   errcheck:
@@ -131,6 +135,11 @@ linters-settings:
     check-type-assertions: true
   goconst:
     numbers: true
+  staticcheck:
+    checks: ["all"]
+    initialisms: []
+  stylecheck:
+    checks: ["all"]
   gocritic:
     enabled-tags:
       - diagnostic
@@ -271,6 +280,17 @@ linters-settings:
     config:
       global:
         audit: enabled
+  varnamelen:
+    max-distance: 6
+    ignore-names:
+      - C
+      - G
+      - r # rune
+    ignore-decls:
+      - cs charsets.CharsetCollection
+      - cs *charsets.CharsetCollection
+      - cs CharsetCollection
+      - cs *CharsetCollection
   wsl:
     force-case-trailing-whitespace: 2
     # force-short-decl-cuddling: true
